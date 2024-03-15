@@ -1,0 +1,19 @@
+table {
+    border-collapse: collapse;
+    width: 500px;
+ }
+
+th, td {
+    padding: 0.25rem 0.5rem;
+    vertical-align: top;
+}
+
+th {
+    background-color: #F1F1F1;
+    text-align: left;
+    width: 10em;
+}
+
+tr {
+    border: 1px #EAEAEA solid;
+}
