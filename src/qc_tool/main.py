@@ -2,8 +2,9 @@ from pathlib import Path
 
 import pandas as pd
 from bokeh.layouts import layout
-from bokeh.models import Div, Dropdown
-from bokeh.plotting import curdoc, figure
+from bokeh.models import Dropdown
+from bokeh.plotting import curdoc
+from qc_tool.map import Map
 
 from qc_tool.parameter_slot import ParameterSlot
 from qc_tool.station import Station
@@ -11,28 +12,20 @@ from qc_tool.station_info import StationInfo
 
 
 class QcTool:
-    def __init__(self, data_path):
-        self._stations = []
-        self.parse_data(data_path)
+    def __init__(self, data):
+        self._data = None
+        self._stations = {}
+        self.parse_data(data)
         self._selected_station = None
 
         # Station
         self._station_dropdown = Dropdown(
-            label="Select station", button_type="default", menu=self._stations
+            label="Select station", button_type="default", menu=list(self._stations.keys())
         )
-        self._station_dropdown.on_click(self.select_new_station)
+        self._station_dropdown.on_click(self.station_dropdown_callback)
 
         self._station_info = StationInfo()
-
-        # Map
-        self._map = figure(
-            x_range=(880000, 3000000),
-            y_range=(7300000, 10000000),
-            x_axis_type="mercator",
-            y_axis_type="mercator",
-            width=500,
-        )
-        self._map.add_tile("CARTODBPOSITRON")
+        self._map = Map(self._stations, self.set_station)
 
         # Parameters
         first_parameter = ParameterSlot()
@@ -44,29 +37,29 @@ class QcTool:
 
         self.layout = layout(
             [
-                [self._station_dropdown],
-                [self._station_info.div, self._map],
                 [parameter.get_layout() for parameter in self._parameters],
+                [self._station_dropdown],
+                [self._station_info.div, self._map.layout],
             ],
         )
 
         curdoc().title = "QC Tool"
         curdoc().add_root(self.layout)
 
-    def select_new_station(self, event):
-        station_name = event.item
-        self._station_dropdown.label = station_name
-        self._selected_station = Station(
-            station_name,
-            self._data.loc[station_name]
-        )
+    def set_station(self, station_id):
+        self._station_dropdown.label = station_id
+        self._selected_station = Station(station_id, self._data.loc[station_id])
         self._station_info.set_station(self._selected_station)
-
+        self._map.set_station(self._selected_station.name)
         for parameter in self._parameters:
             parameter.update_station(self._selected_station)
 
-    def parse_data(self, data: pd.DataFrame):
+    def station_dropdown_callback(self, event):
+        station_id = event.item
+        self.set_station(station_id)
 
+
+    def parse_data(self, data: pd.DataFrame):
         self._data = data.pivot_table(
             values="value",
             index=[
@@ -78,11 +71,17 @@ class QcTool:
                 "WINDR",
                 "WINSP",
                 "AIRTEMP",
-                "AIRPRES"
+                "AIRPRES",
+                "LATIT",
+                "LONGI",
             ],
             columns="parameter",
-        ).reset_index(level=list(range(2,9)))
-        self._stations = list(self._data.index.get_level_values("STNCODE").unique())
+        ).reset_index(level=list(range(2, 11)))
+
+        self._stations = {
+            station_id: Station(station_id, self._data.loc[station_id])
+            for station_id in self._data.index.get_level_values("STNCODE").unique()
+        }
 
 
 def main():
@@ -90,7 +89,8 @@ def main():
         "/home/k000840/code/oceanografi/qc-tool/test_data/"
         "2024-03-14_1559-2023-LANDSKOD_77-FARTYGSKOD_10_row_format_utf8.txt"
     )
-    data = dataframe = pd.read_csv(data_path, sep="\t")
+
+    data = pd.read_csv(data_path, sep="\t")
     QcTool(data)
 
 

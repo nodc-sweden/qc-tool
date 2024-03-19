@@ -1,5 +1,15 @@
 class Station:
-    COMMON_COLUMNS = {"COMNT_VISIT", "WADEP", "STATN", "WINDR", "WINSP", "AIRTEMP", "AIRPRES"}
+    COMMON_COLUMNS = {
+        "COMNT_VISIT",
+        "WADEP",
+        "STATN",
+        "WINDR",
+        "WINSP",
+        "AIRTEMP",
+        "AIRPRES",
+        "LONGI",
+        "LATIT",
+    }
 
     def __init__(self, name: str, data):
         self._name = name
@@ -7,8 +17,7 @@ class Station:
         all_parameters = set(data.dropna(axis=1, how="all").columns)
 
         self._common = {
-            column:
-            self._data[column].unique()[0]
+            column: self._data[column].unique()[0]
             for column in all_parameters & self.COMMON_COLUMNS
         }
 
@@ -33,3 +42,11 @@ class Station:
     @property
     def water_depth(self):
         return self._common.get("WADEP")
+
+    @property
+    def longitude(self):
+        return self._common.get("LONGI") / 100
+
+    @property
+    def latitude(self):
+        return self._common.get("LATIT") / 100

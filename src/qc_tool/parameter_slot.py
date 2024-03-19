@@ -22,6 +22,7 @@ class ParameterSlot:
             "height": 500,
             "width": 500,
             "toolbar_location": "below",
+            "tools": "pan, wheel_zoom, reset"
         }
 
         self._plot_config = {
@@ -32,7 +33,7 @@ class ParameterSlot:
 
         self._figure = figure(**self._figure_config)
 
-        self._figure.image_url(url=['qc_tool/static/images/gull.png'], x=0, y=-500)
+        self._figure.image_url(url=["qc_tool/static/images/gull.png"], x=0, y=-500)
         sea_level = BoxAnnotation(bottom=0, fill_color="lightskyblue", fill_alpha=0.10)
         sea_level.level = "underlay"
         self._figure.add_layout(sea_level)
@@ -84,8 +85,8 @@ class ParameterSlot:
 
     def get_layout(self):
         return column(
-            self._figure,
             self._parameter_dropdown,
+            self._figure,
         )
 
     @property
