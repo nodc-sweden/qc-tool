@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg:svg
+   id="svg1"
+   sodipodi:docname="seagull.svg"
+   viewBox="0 0 116.79504 35.852798"
+   sodipodi:version="0.32"
+   inkscape:version="1.3.2 (091e20ef0f, 2023-11-25)"
+   version="1.1"
+   width="116.79504"
+   height="35.852798"
+   inkscape:export-filename="seagull.png"
+   inkscape:export-xdpi="96"
+   inkscape:export-ydpi="96"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <svg:defs
+     id="defs3">
+    <svg:linearGradient
+       id="linearGradient5572">
+      <svg:stop
+         id="stop5573"
+         style="stop-color:#000000"
+         offset="0" />
+      <svg:stop
+         id="stop5574"
+         style="stop-color:#727272"
+         offset="1" />
+    </svg:linearGradient>
+    <svg:linearGradient
+       id="linearGradient4936">
+      <svg:stop
+         id="stop4937"
+         style="stop-color:#d36100"
+         offset="0" />
+      <svg:stop
+         id="stop4938"
+         style="stop-color:#ff7400"
+         offset="1" />
+    </svg:linearGradient>
+  </svg:defs>
+  <sodipodi:namedview
+     id="base"
+     bordercolor="#666666"
+     inkscape:pageshadow="2"
+     inkscape:window-y="0"
+     pagecolor="#ffffff"
+     inkscape:window-height="1099"
+     inkscape:zoom="5.6568542"
+     inkscape:window-x="0"
+     borderopacity="1.0"
+     inkscape:current-layer="svg1"
+     inkscape:cx="66.202873"
+     inkscape:cy="19.003495"
+     inkscape:window-width="1920"
+     inkscape:pageopacity="0.0"
+     showgrid="false"
+     inkscape:window-maximized="1"
+     inkscape:showpageshadow="2"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1" />
+  <svg:metadata
+     id="metadata45">
+    <rdf:RDF>
+      <cc:Work>
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <cc:license
+           rdf:resource="http://creativecommons.org/publicdomain/zero/1.0/" />
+        <dc:publisher>
+          <cc:Agent
+             rdf:about="http://openclipart.org/">
+            <dc:title>Openclipart</dc:title>
+          </cc:Agent>
+        </dc:publisher>
+        <dc:date>2008-02-19T12:22:10</dc:date>
+        <dc:description>A flying seagull</dc:description>
+        <dc:source>https://openclipart.org/detail/14517/seagull-by-nicubunu</dc:source>
+        <dc:creator>
+          <cc:Agent>
+            <dc:title>nicubunu</dc:title>
+          </cc:Agent>
+        </dc:creator>
+        <dc:subject>
+          <rdf:Bag>
+            <rdf:li>animal</rdf:li>
+            <rdf:li>bird</rdf:li>
+            <rdf:li>sea</rdf:li>
+          </rdf:Bag>
+        </dc:subject>
+      </cc:Work>
+      <cc:License
+         rdf:about="http://creativecommons.org/publicdomain/zero/1.0/">
+        <cc:permits
+           rdf:resource="http://creativecommons.org/ns#Reproduction" />
+        <cc:permits
+           rdf:resource="http://creativecommons.org/ns#Distribution" />
+        <cc:permits
+           rdf:resource="http://creativecommons.org/ns#DerivativeWorks" />
+      </cc:License>
+    </rdf:RDF>
+  </svg:metadata>
+  <svg:g
+     transform="matrix(0.1135111,0,0,0.1135111,209.98715,-220.82014)"
+     style="display:inline"
+     id="g10114">
+    <svg:g
+       transform="translate(202.83327,-189.31105)"
+       id="g10096">
+      <svg:g
+         id="g10079">
+        <svg:path
+           sodipodi:nodetypes="ccccccccc"
+           id="rect8354-2-9-6-5-9"
+           d="m -1649.6187,2263.3796 -105.3499,6.7417 -132.8247,44.3067 -164.9661,136.0975 90.0967,-60.4293 -30.8726,30.054 253.1622,-139.4666 89.8336,-4.9324 z"
+           style="color:#000000;display:inline;overflow:visible;opacity:1;fill:#e3e3e3;fill-opacity:1;stroke:none;stroke-width:35.2038;stroke-linecap:square;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0"
+           inkscape:connector-curvature="0" />
+      </svg:g>
+      <svg:g
+         id="g10076">
+        <svg:path
+           sodipodi:nodetypes="ccccccccc"
+           inkscape:connector-curvature="0"
+           id="rect8354-4-3-8"
+           d="m -1500.2476,2265.5788 -27.39,6.1291 -26.0447,10.9561 -38.346,30.0258 -7.0164,20.2774 3.0214,37.6063 54.5823,-28.4582 17.5758,-40.4008 z"
+           style="color:#000000;display:inline;overflow:visible;opacity:1;fill:#505050;fill-opacity:1;stroke:none;stroke-width:25.2083;stroke-linecap:square;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0" />
+        <svg:path
+           sodipodi:nodetypes="ccccccccc"
+           inkscape:connector-curvature="0"
+           id="rect8354-4-3"
+           d="m -1455.3437,2225.7526 -6.1291,27.39 -10.9561,26.0447 -30.0258,38.346 -20.2774,7.0164 -37.6063,-3.0214 28.4582,-54.5823 40.4008,-17.5758 z"
+           style="color:#000000;display:inline;overflow:visible;opacity:1;fill:#505050;fill-opacity:1;stroke:none;stroke-width:25.2083;stroke-linecap:square;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0" />
+        <svg:path
+           sodipodi:nodetypes="cccccccccc"
+           id="rect8354-2-9-6-1-8"
+           d="m -1025.5672,2146.3279 -18.4049,-2.5086 -57.8064,-3.8637 -329.9354,4.5993 -127.8671,95.3294 7.1663,12.2246 25.7756,5.1942 22.7934,-22.8577 103.0182,-70.2478 z"
+           style="color:#000000;display:inline;overflow:visible;opacity:1;fill:#c5c5c5;fill-opacity:1;stroke:none;stroke-width:35.2038;stroke-linecap:square;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0"
+           inkscape:connector-curvature="0" />
+        <svg:path
+           sodipodi:nodetypes="ccccccccc"
+           inkscape:connector-curvature="0"
+           id="rect8354-4"
+           d="m -1559.042,2240.8928 43.6094,21.0356 6.6931,31.7044 -14.9244,29.163 -28.9355,17.3125 -45.8837,-1.5648 -29.1989,-19.3425 48.5857,-36.3946 z"
+           style="color:#000000;display:inline;overflow:visible;opacity:1;fill:#e9e9e9;fill-opacity:1;stroke:none;stroke-width:33;stroke-linecap:square;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0" />
+        <svg:path
+           style="color:#000000;display:inline;overflow:visible;opacity:1;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:33;stroke-linecap:square;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0"
+           d="m -1655.0433,2270.505 4.6892,-10.6461 34.668,-19.0403 38.9137,-9.0795 17.9389,0.3068 4.7167,5.6261 0.076,9.4795 -3.3296,11.7288 -6.7135,12.2712 -16.0918,34.5809 -19.2854,14.4758 -27.1849,-0.082 -16.6774,-19.8809 z"
+           id="rect8354-2-8"
+           inkscape:connector-curvature="0"
+           sodipodi:nodetypes="cccccccccccccc" />
+        <svg:path
+           style="color:#000000;display:inline;overflow:visible;opacity:1;fill:#ec903e;fill-opacity:1;stroke:none;stroke-width:40.2742;stroke-linecap:square;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0"
+           d="m -1608.2346,2310.9829 -2.1431,26.791 -5.0545,10.2101 -9.4141,-39.167 8.837,2.2698 z"
+           id="rect8354-0-2"
+           inkscape:connector-curvature="0"
+           sodipodi:nodetypes="cccccc" />
+        <svg:rect
+           style="color:#000000;display:inline;overflow:visible;opacity:1;fill:#000000;fill-opacity:1;stroke:none;stroke-width:44.8486;stroke-linecap:square;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0"
+           id="rect8419-1"
+           width="7.1212244"
+           height="11.256128"
+           x="-1757.9722"
+           y="2183.293"
+           transform="rotate(-3.2983011)" />
+        <svg:rect
+           style="color:#000000;display:inline;overflow:visible;opacity:1;fill:#000000;fill-opacity:1;stroke:none;stroke-width:44.8486;stroke-linecap:square;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0"
+           id="rect8419-1-7"
+           width="7.1212244"
+           height="11.256128"
+           x="-1181.2802"
+           y="2523.8037"
+           transform="rotate(9.9802372)" />
+        <svg:path
+           sodipodi:nodetypes="cccccccc"
+           id="rect8354-2-9-6-1"
+           d="m -1023.8289,2141.9191 -60.6741,-7.2464 -347.2109,9.8822 -128.8233,88.1582 5.6912,7.379 21.8373,-12.8179 115.4483,-77.8972 z"
+           style="color:#000000;display:inline;overflow:visible;opacity:1;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:35.2038;stroke-linecap:square;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0"
+           inkscape:connector-curvature="0" />
+        <svg:path
+           sodipodi:nodetypes="cccccccc"
+           id="rect8354-2-9-6-5"
+           d="m -1647.5904,2261.3513 -110.0826,3.3611 -78.7359,20.6428 -51.3794,31.9764 94.8294,-34.0609 62.7275,-13.4049 79.0158,3.1809 z"
+           style="color:#000000;display:inline;overflow:visible;opacity:1;fill:#f4f4f4;fill-opacity:1;stroke:none;stroke-width:35.2038;stroke-linecap:square;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0"
+           inkscape:connector-curvature="0" />
+        <svg:path
+           style="color:#000000;display:inline;overflow:visible;opacity:1;fill:#ec903e;fill-opacity:1;stroke:none;stroke-width:13.7003;stroke-linecap:square;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0"
+           d="m -1529.7397,2318.9794 -2.3212,6.043 13.6709,14.6896 19.1253,28.9715 6.9216,-20.6517 -20.3874,-10.356 z"
+           id="rect8354-6-1-7"
+           inkscape:connector-curvature="0"
+           sodipodi:nodetypes="ccccccc" />
+        <svg:path
+           style="color:#000000;display:inline;overflow:visible;opacity:1;fill:#ec903e;fill-opacity:1;stroke:none;stroke-width:13.7003;stroke-linecap:square;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0"
+           d="m -1546.1695,2328.9437 -2.3212,6.043 13.6709,14.6896 19.1253,28.9715 6.9216,-20.6517 -20.3874,-10.356 z"
+           id="rect8354-6-1-7-5"
+           inkscape:connector-curvature="0"
+           sodipodi:nodetypes="ccccccc" />
+      </svg:g>
+    </svg:g>
+  </svg:g>
+  <script
+     id="bw-fido2-page-script" />
+</svg:svg>
