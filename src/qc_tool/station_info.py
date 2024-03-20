@@ -35,7 +35,7 @@ class StationInfo:
         self._div.text = f"""
         <table>
             <tr>
-                <th>Station</>
+                <th>Series</>
                 <td>{self._station.name if self._station else ""}</td>
             </tr>
 {''.join(table_rows)}        </table>

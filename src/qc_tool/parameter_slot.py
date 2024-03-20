@@ -48,7 +48,7 @@ class ParameterSlot:
         self._figure.add_layout(self._ocean_floor)
         self._ocean_floor.visible = False
 
-        self._figure.circle("x", "y", source=self._source, **self._plot_config)
+        self._figure.scatter("x", "y", source=self._source, **self._plot_config)
         if linked_y_range:
             self._figure.y_range = linked_y_range
         else:

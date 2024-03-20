@@ -1,8 +1,7 @@
 from bokeh.models import PanTool, ResetTool, TapTool, WheelZoomTool, ColumnDataSource, \
-    Circle
-from bokeh.models.callbacks import CustomJS
+    Circle, Scatter
 from bokeh.plotting import figure
-from pyproj import CRS, transform, Transformer
+from pyproj import Transformer
 
 
 class Map:
@@ -17,6 +16,8 @@ class Map:
         self._map = figure(
             x_axis_type="mercator",
             y_axis_type="mercator",
+            x_range=(700000, 2500000),
+            y_range=(7000000, 8500000),
             width=500,
             height=300,
             tools=[PanTool(), tap, wheel_zoom, ResetTool()],
@@ -28,23 +29,25 @@ class Map:
         longitudes = [station.longitude for station in self._stations.values()]
         latitudes = [station.latitude for station in self._stations.values()]
         longitudes, latitudes = self.convert_projection(longitudes, latitudes)
-        self._map_unselected_source = ColumnDataSource(
-            data={"latitudes": latitudes, "longitudes": longitudes}
+        self._map_source = ColumnDataSource(
+            data={"latitudes": latitudes, "longitudes": longitudes},
         )
 
-        renderer = self._map.circle(
+        renderer = self._map.scatter(
             x="longitudes",
             y="latitudes",
+            source=self._map_source,
             size=7,
-            fill_color="blue",
-            fill_alpha=0.8,
-            source=self._map_unselected_source,
+            selection_fill_alpha=0.8,
+            selection_fill_color="red",
+            nonselection_fill_alpha=0.8,
+            nonselection_fill_color="blue",
         )
 
-        renderer.selection_glyph = Circle(fill_alpha=0.8, fill_color="red", size=9)
-        renderer.nonselection_glyph = Circle(fill_alpha=0.8, fill_color="blue", size=7)
+        #renderer.selection_glyph = Scatter(fill_alpha=0.8, fill_color="red", size=9)
+        #renderer.nonselection_glyph = Scatter(fill_alpha=0.8, fill_color="blue", size=7)
 
-        self._map_unselected_source.selected.on_change("indices", self.callback)
+        self._map_source.selected.on_change("indices", self.callback)
         self.set_station("")
 
     def set_station(self, station_id: str):
@@ -61,7 +64,7 @@ class Map:
             unselected_longitudes, unselected_latitudes
         )
 
-        self._map_unselected_source.data = {
+        self._map_source.data = {
             "longitudes": unselected_longitudes,
             "latitudes": unselected_latitudes,
             "names": unselected_names,
@@ -74,7 +77,7 @@ class Map:
     def callback(self, attr, old, new):
         if new:
             selection = new[0]
-            station_id = self._map_unselected_source.data["names"][selection]
+            station_id = self._map_source.data["names"][selection]
             self._set_station_callback(station_id)
 
     def convert_projection(self, longitudes, latitudes):

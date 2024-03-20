@@ -6,10 +6,11 @@ authors = [
     {name = "Jonatan Skogsfors", email = "jonatan.skogsfors@smhi.se"},
 ]
 dependencies = [
-    "bokeh>=3.1.1",
-    "pyproj>=3.5.0",
+    "bokeh>=3.4.0",
+    "pyproj>=3.6.1",
+    "pandas>=2.2.1",
 ]
-requires-python = ">=3.8"
+requires-python = ">=3.11"
 readme = "README.md"
 license = {file = "LICENSE"}
 
@@ -30,7 +31,7 @@ dev = [
 [tool.ruff]
 line-length = 90
 indent-width = 4
-target-version = "py38"
+target-version = "py311"
 
 [tool.ruff.lint]
 select = ["F"]
