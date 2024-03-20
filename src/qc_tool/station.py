@@ -1,14 +1,21 @@
 class Station:
     COMMON_COLUMNS = {
+        "AIRPRES",
+        "AIRTEMP",
         "COMNT_VISIT",
-        "WADEP",
+        "CRUISE_NO",
+        "CTRYID",
+        "DEPH",
+        "LATIT",
+        "LONGI",
+        "SDATE",
+        "SHIPC",
         "STATN",
+        "STIME",
+        "STNNO",
+        "WADEP",
         "WINDR",
         "WINSP",
-        "AIRTEMP",
-        "AIRPRES",
-        "LONGI",
-        "LATIT",
     }
 
     def __init__(self, name: str, data):
@@ -45,8 +52,11 @@ class Station:
 
     @property
     def longitude(self):
-        return self._common.get("LONGI") / 100
+        degrees, remainder = divmod(self._common.get("LONGI"), 100)
+        return degrees + remainder / 60
 
     @property
     def latitude(self):
-        return self._common.get("LATIT") / 100
+        degrees, remainder = divmod(self._common.get("LATIT"), 100)
+        return degrees + remainder / 60
+

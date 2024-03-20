@@ -1,22 +1,24 @@
-from bokeh.models import PanTool, ResetTool, TapTool, WheelZoomTool, ColumnDataSource
+from bokeh.models import PanTool, ResetTool, TapTool, WheelZoomTool, ColumnDataSource, \
+    Circle
 from bokeh.models.callbacks import CustomJS
 from bokeh.plotting import figure
-from pyproj import CRS, transform
+from pyproj import CRS, transform, Transformer
 
 
 class Map:
     def __init__(self, stations, set_station_callback):
         self._set_station_callback = set_station_callback
+        self._transformer = Transformer.from_crs("EPSG:4326", "EPSG:3857")
 
         tap = TapTool()
-        wheel_zoom = WheelZoomTool()
+        wheel_zoom = WheelZoomTool(zoom_on_axis=False)
 
         self._stations = stations
         self._map = figure(
             x_axis_type="mercator",
             y_axis_type="mercator",
             width=500,
-            height=500,
+            height=300,
             tools=[PanTool(), tap, wheel_zoom, ResetTool()],
             match_aspect=True,
         )
@@ -25,19 +27,22 @@ class Map:
 
         longitudes = [station.longitude for station in self._stations.values()]
         latitudes = [station.latitude for station in self._stations.values()]
-        longitudes, latitudes = convert_projection(longitudes, latitudes)
+        longitudes, latitudes = self.convert_projection(longitudes, latitudes)
         self._map_unselected_source = ColumnDataSource(
             data={"latitudes": latitudes, "longitudes": longitudes}
         )
-        self._map_selected_source = ColumnDataSource(
-            data={"latitudes": [], "longitudes": []}
+
+        renderer = self._map.circle(
+            x="longitudes",
+            y="latitudes",
+            size=7,
+            fill_color="blue",
+            fill_alpha=0.8,
+            source=self._map_unselected_source,
         )
 
-        self._map.circle(x="longitudes", y="latitudes", size=7, fill_color="blue",
-                         fill_alpha=0.8, source=self._map_unselected_source)
-
-        self._map.circle(x="longitudes", y="latitudes", size=9, fill_color="red",
-                         fill_alpha=0.8, source=self._map_selected_source)
+        renderer.selection_glyph = Circle(fill_alpha=0.8, fill_color="red", size=9)
+        renderer.nonselection_glyph = Circle(fill_alpha=0.8, fill_color="blue", size=7)
 
         self._map_unselected_source.selected.on_change("indices", self.callback)
         self.set_station("")
@@ -48,16 +53,18 @@ class Map:
             for station in self._stations.values()
         ]
 
-        unselected_names, unselected_longitudes, unselected_latitudes = zip(*unselected_locations) if unselected_locations else ((), (), ())
+        unselected_names, unselected_longitudes, unselected_latitudes = (
+            zip(*unselected_locations) if unselected_locations else ((), (), ())
+        )
 
-        unselected_longitudes, unselected_latitudes = convert_projection(
+        unselected_longitudes, unselected_latitudes = self.convert_projection(
             unselected_longitudes, unselected_latitudes
         )
 
         self._map_unselected_source.data = {
             "longitudes": unselected_longitudes,
             "latitudes": unselected_latitudes,
-            "names": unselected_names
+            "names": unselected_names,
         }
 
     @property
@@ -65,24 +72,18 @@ class Map:
         return self._map
 
     def callback(self, attr, old, new):
-        selection = new[0]
-        station_id = self._map_unselected_source.data["names"][selection]
-        self._set_station_callback(station_id)
+        if new:
+            selection = new[0]
+            station_id = self._map_unselected_source.data["names"][selection]
+            self._set_station_callback(station_id)
 
+    def convert_projection(self, longitudes, latitudes):
+        if not longitudes or not latitudes:
+            return longitudes, latitudes
 
+        transformed_longitudes, transformed_latitudes = self._transformer.transform(
+            yy=longitudes,
+            xx=latitudes,
+        )
 
-def convert_projection(longitudes, latitudes):
-    # TODO: https://pyproj4.github.io/pyproj/stable/gotchas.html#upgrading-to-pyproj-2-from-pyproj-1
-    if not longitudes or not latitudes:
-        return longitudes, latitudes
-
-    project_projection = CRS('EPSG:4326')
-    google_projection = CRS('EPSG:3857')
-    transformed_longitudes, transformed_latitudes = transform(
-        project_projection,
-        google_projection,
-        longitudes,
-        latitudes,
-        always_xy=True
-    )
-    return transformed_longitudes, transformed_latitudes
+        return transformed_longitudes, transformed_latitudes

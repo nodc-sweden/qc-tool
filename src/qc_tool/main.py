@@ -20,7 +20,9 @@ class QcTool:
 
         # Station
         self._station_dropdown = Dropdown(
-            label="Select station", button_type="default", menu=list(self._stations.keys())
+            label="Select station",
+            button_type="default",
+            menu=list(map(str, self._stations.keys())),
         )
         self._station_dropdown.on_click(self.station_dropdown_callback)
 
@@ -28,18 +30,19 @@ class QcTool:
         self._map = Map(self._stations, self.set_station)
 
         # Parameters
-        first_parameter = ParameterSlot()
+        first_parameter = ParameterSlot(default_parameter="DOXY_BTL")
         self._parameters = [
             first_parameter,
-            ParameterSlot(linked_y_range=first_parameter.y_range),
-            ParameterSlot(linked_y_range=first_parameter.y_range),
+            ParameterSlot(linked_y_range=first_parameter.y_range, default_parameter="PHOS"),
+            ParameterSlot(linked_y_range=first_parameter.y_range, default_parameter="NTRZ"),
         ]
 
         self.layout = layout(
             [
-                [parameter.get_layout() for parameter in self._parameters],
                 [self._station_dropdown],
-                [self._station_info.div, self._map.layout],
+                [self._map.layout, self._station_info.div],
+                [parameter.get_layout() for parameter in self._parameters],
+
             ],
         )
 
@@ -58,16 +61,20 @@ class QcTool:
         station_id = event.item
         self.set_station(station_id)
 
-
     def parse_data(self, data: pd.DataFrame):
-        self._data = data.pivot_table(
+        data['STNNO'] = data['STNNO'].astype(str)
+        data = data.pivot_table(
             values="value",
             index=[
-                "STNCODE",
+                "STNNO",
                 "DEPH",
+                "SDATE",
+                "STIME",
+                "CTRYID",
+                "SHIPC",
+                "CRUISE_NO",
                 "COMNT_VISIT",
                 "WADEP",
-                "STATN",
                 "WINDR",
                 "WINSP",
                 "AIRTEMP",
@@ -76,18 +83,20 @@ class QcTool:
                 "LONGI",
             ],
             columns="parameter",
-        ).reset_index(level=list(range(2, 11)))
+        ).reset_index(level=list(range(2, 15)))
+
+        self._data = data
 
         self._stations = {
             station_id: Station(station_id, self._data.loc[station_id])
-            for station_id in self._data.index.get_level_values("STNCODE").unique()
+            for station_id in self._data.index.get_level_values("STNNO").unique()
         }
 
 
 def main():
     data_path = Path(
         "/home/k000840/code/oceanografi/qc-tool/test_data/"
-        "2024-03-14_1559-2023-LANDSKOD_77-FARTYGSKOD_10_row_format_utf8.txt"
+        "2024-03-19_1656-2024-LANDSKOD_77-FARTYGSKOD_10_row_format.txt"
     )
 
     data = pd.read_csv(data_path, sep="\t")

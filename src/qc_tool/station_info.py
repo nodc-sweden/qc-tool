@@ -1,6 +1,7 @@
 from bokeh.models import Div
 from station import Station
 
+
 class StationInfo:
     STATION_DATA_FIELDS = (
         ("STATN", "Station name"),
