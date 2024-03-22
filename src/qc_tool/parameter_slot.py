@@ -35,7 +35,7 @@ class ParameterSlot:
         self._figure = figure(**self._figure_config)
         self._figure.toolbar.active_scroll = wheel_zoom
 
-        #self._figure.image_url(url=["qc_tool/static/images/gull.png"], x=0, y=-500)
+        self._figure.image_url(url=["qc_tool/static/images/gull.png"], x=0, y=-500)
         sea_level = BoxAnnotation(bottom=0, fill_color="lightskyblue", fill_alpha=0.10)
         sea_level.level = "underlay"
         self._figure.add_layout(sea_level)
@@ -46,6 +46,7 @@ class ParameterSlot:
         self._figure.add_layout(self._ocean_floor)
         self._ocean_floor.visible = False
 
+        self._figure.line("x", "y", source=self._source, line_width=1)
         self._figure.scatter("x", "y", source=self._source, **self._plot_config)
         if linked_y_range:
             self._figure.y_range = linked_y_range

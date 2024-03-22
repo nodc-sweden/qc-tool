@@ -5,11 +5,11 @@
 groups = ["default", "dev"]
 strategy = ["cross_platform", "inherit_metadata"]
 lock_version = "4.4.1"
-content_hash = "sha256:5d6627da76bfaf6182f9cc83d2db20fa754cad2118d4da90b703616824d632d4"
+content_hash = "sha256:7bf4283147b6659a66850d65f83eba08a5cb3bbb8334005126fa92ffe83e237a"
 
 [[package]]
 name = "bokeh"
-version = "3.3.0"
+version = "3.3.4"
 requires_python = ">=3.9"
 summary = "Interactive plots and applications in the browser from Python"
 groups = ["default"]
@@ -25,8 +25,8 @@ dependencies = [
     "xyzservices>=2021.09.1",
 ]
 files = [
-    {file = "bokeh-3.3.0-py3-none-any.whl", hash = "sha256:65e36824c99fd46530c559263c6d14eabed6945370cd3beffc2eeedb62d6db6d"},
-    {file = "bokeh-3.3.0.tar.gz", hash = "sha256:cdbe268f842c139ba8fa0fb43c0c55c172c8215ec5a69a2629482c63c9d4039c"},
+    {file = "bokeh-3.3.4-py3-none-any.whl", hash = "sha256:ad7b6f89d0a7c2be01eff1db0ca24e2755ac41de14539db919a62e791809c309"},
+    {file = "bokeh-3.3.4.tar.gz", hash = "sha256:73b7982dc2b8df15bf660cdddc8d3825e829195c438015a5d09824f1a7028368"},
 ]
 
 [[package]]

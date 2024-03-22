@@ -85,7 +85,7 @@ class QcTool:
                 "CTRYID-SHIPC-CRUISE_NO-STNNO",
             ],
             columns="parameter",
-        ).reset_index(level=list(range(2, 17)))
+        ).reset_index(level=list(range(2, 17))).sort_values(["STNNO", "DEPH"])
 
         self._data = data
 

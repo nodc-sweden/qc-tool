@@ -1,0 +1,203 @@
+Display name (en)	Display name (swe)	Units	Detection_limit	Metadata parameter	P01	P06	All	Archive	SHARKint	Leveransmall (header 2)	QC	InfoC_prio	InfoC_all	InfoC_units	InfoC_from_db	BVVF	Exp_xlist	InfoC_hydrography	Sharkint_like_LIMS	ICES	Anna_Edman	#SHARKweb_fyskem_kolumner_svenska	#SHARKweb_fyskem_kolumner_internt_name
+Year	År			x			MYEAR	MYEAR	year	År		Year	Year	Year	MYEAR	År			MYEAR		Yr	År	visit_year
+Project	Projekt			x			PROJ	PROJ	projid	Projekt/Undersökning (kod)						Projekt/Undersökning (kod)			PROJ			Projekt	sample_project_name_sv
+Orderer				x			ORDERER	ORDERER		Beställare (kod)						Beställare (kod)			ORDERER			Beställare	sample_orderer_name_sv
+Deliverer				x			DELIVERER		deliverer														
+Start date	Datum			x			SDATE	SDATE	¤year¤||'-'||¤month¤||'-'||¤day¤	Start provtagningsdatum (YYYY-MM-DD)						Provtagningsdatum (YYYY-MM-DD)			SDATE	Date		Provtagningsdatum	visit_date
+Start time	Tid			x			STIME	STIME	¤hour¤||':'||¤minute¤	Start tid (UTC)						Tid (UTC)			STIME	time		Provtagningstid (start)	sample_time
+				x			EDATE	EDATE		Slut provtagningsdatum (YYYY-MM-DD)									EDATE			Provtagningsdatum (slut)	sample_enddate
+				x			ETIME	ETIME		Slut tid (UTC)									ETIME			Provtagningstid (slut)	sample_endtime
+Country	Land			x			CTRYID		ctryid	Landskod (kod)		%CtryID	%CtryID	%CtryID	CTRYID	Landskod (kod)			CTRYID		Lk	Land (kod)	country_code
+Ship code	Fartygskod			x			SHIPC	SHIPC	shipid	Fartyg/Mätplattform (kod)		ShipID	ShipID	ShipID	SHIPC	Fartyg/Mätplattform (kod)			SHIPC	Ship	Fk	Provtagningsplattform (kod)	platform_code
+				x			CRUISE_NO	CRUISE_NO		Expeditionsnummer						Expeditionsnummer			CRUISE_NO			Expeditions-ID	expedition_id
+Series	Serienummer			x			SERNO	SERNO	serie	Serienummer		Serie	Serie	Serie	SERIE	Serienummer			STNNO	St no	Sn	Besöks-ID	visit_id
+				x			SEQNO	SEQNO															
+				x			STATN_REPORTED	STATN	visit.stnname	Stationsnamn		Station	Station	Station	STATN	Stationsnamn	Station		STATN	Station name	statn	Rapporterat stationsnamn	reported_station_name
+Station	Station			x			STATN		stnreg.stnname														
+Latitude (nom)	Latitud (nom)			x			LATIT_NOM			Latitud, nominell (DDMM.mm)		Lat	Lat	Lat	LATIT	Latitud, nominell (DDMM.mm)			LATIT_NOM	latitude			
+Longitude (nom)	Longitud (nom)			x			LONGI_NOM			Longitud, nominell (DDMM.MM)		Lon	Lon	Lon	LONGI	Longitud, nominell (DDMM.MM)			LONGI_NOM	longitude			
+Latitude	Latitud			x			LATIT	LATIT	CAST(visit.latitud AS FLOAT)	Latitud, verklig (DDMM.mm)						Latitud, verklig (DDMM.mm)			LATIT		LaDmm	Provets latitud (DM)	sample_latitude_dm
+Longitude	Longitud			x			LONGI	LONGI	CAST(visit.longitud AS FLOAT)	Longitud, verklig (DDMM.MM)						Longitud, verklig (DDMM.MM)			LONGI		LoDmm	Provets longitud (DM)	sample_longitude_dm
+				x			POSYS	POSYS		Positioneringssystem, verklig (kod)						Positioneringssystem, verklig (kod)			POSYS			Positioneringssystem (kod)	positioning_system_code
+Statin depth	Stationsdjup	m		x			WADEP	WADEP	bottomd	Vattendjup vid stationen (m)	VATTENDJUP					Vattendjup vid stationen (m)			WADEP	sounding		Vattendjup vid stationen	water_depth_m
+Number of depths	Antal djup			x			NODEPTH	NODEPTH		Antal djup						Antal djup			NODEPTH				
+				x			ADD_SMP	ADD_SMP															
+	Besökskommentar			x			COMNT_VISIT	COMNT_VISIT		Besökskommentar (fritext)						Besökskommentar (fritext)			COMNT_VISIT			Besökskommentar	visit_comment
+	SMHI_intern_kommentar						COMNT_INTERN																
+Wind direction	Vindriktning			x			WINDIR	WINDIR		Vindriktning (deka°)						Vindriktning (deka°)			WINDIR			Vindriktning (dekagrad)	wind_direction_code
+Wind speed	Vindstyrka	m/s		x			WINSP	WINSP		Vindhastighet (m/s)						Vindhastighet (m/s)			WINSP			Vindhastighet (m/s)	wind_speed_ms
+Air temperature	Lufttemperatur			x			AIRTEMP	AIRTEMP		Lufttemperatur (°C)						Lufttemperatur (°C)			AIRTEMP			Lufttemperatur (C)	air_temperature_degc
+Air pressure	Lufttryck			x			AIRPRES	AIRPRES		Luftrryck (hPa) 						Luftrryck (hPa) 			AIRPRES			Lufttryck (hpa)	air_pressure_hpa
+Weather code	Väderkod			x			WEATH	WEATH		Väder (kod)						Väder (kod)			WEATH			Väderlek (kod)	weather_observation_code
+Cloude code	Molnkod			x			CLOUD	CLOUD		Moln (kod)						Moln (kod)			CLOUD			Molnighet (kod)	cloud_observation_code
+Wave code	Vågkod			x			WAVES	WAVES		Sjöhävning (kod)						Sjöhävning (kod)			WAVES			Vågobservation (kod)	wave_observation_code
+Ice code	Iskod			x			ICEOB	ICEOB		Is (kod)						Is (kod)			ICEOB			Is (kod)	ice_observation_code
+Secchi depth	Secchi	m		x			SECCHI	SECCHI	secchi	Siktdjup (m)	SIKTDJUP	Secchi	Secchi	Secchi (m)	SECCHI	Siktdjup (m)			SECCHI	transparency/Secchi	Secchi	Siktdjup (m)	Secchi depth (m)
+							Q_SECCHI	Q_SECCHI	qsecchi	Q-flag Siktdjup (kod)						Q-flag Siktdjup (kod)			Q_SECCHI			Q-flagga Siktdjup	QFLAG Secchi depth
+							SMPNO	SMPNO		Prov-id						Prov-id			SMPNO			Shark prov id	shark_sample_id
+		m			ADEPZZ01	ULAA	DEPH	DEPH	CAST(¤depth¤ AS DECIMAL(6,1))	Provtagningsdjup (m)	PROVTAGNINGSDJUP	Depth	Depth	Depth (m)	DEPH	Provtagningsdjup (m)		Djup	DEPH	measurement depth	Djp	Provtagningsdjup (m)	sample_depth_m
+							PRES_CTD	PRES_CTD															
+							Q_PRES_CTD	Q_PRES_CTD															
+Temperature (bottle)	Temperatur (flaska)	C					TEMP_BTL	TEMP_BTL	temp	Temperatur-vattenhämtare (°C)	TEMPERATUR-(VATTENHÄMTARE)		Temp BTL		TEMP_BTL	Temperatur-vattenhämtare (°C)	Temp		TEMP_BTL			Temperatur vattenhämtare (C)	Temperature bottle (C)
+							Q_TEMP_BTL	Q_TEMP_BTL	qtemp	Q-flag Temperatur-vattenhämtare 						Q-flag Temperatur-vattenhämtare 			Q_TEMP_BTL			Q-flagga Temperatur vattenhämtare	QFLAG Temperature bottle
+Temperature (CTD)	Temperatur (CTD)	C					TEMP_CTD	TEMP_CTD	ctdtemp	Temperatur-CTD (°C)	TEMPERATUR-(CTD)	Temp CTD	Temp CTD	Temp (C)	TEMP_CTD	Temperatur-CTD (°C)		Temp	TEMP_CTD	water temperature		Temperatur CTD (C)	Temperature CTD (C)
+							Q_TEMP_CTD	Q_TEMP_CTD	qctdtemp	Q-flag Temperatur-CTD						Q-flag Temperatur-CTD			Q_TEMP_CTD			Q-flagga Temperatur CTD	QFLAG Temperature CTD
+Salinity (bottle)	Salinitet (flaska)	psu					SALT_BTL	SALT_BTL	salt	Salinitet-vattenhämtare (psu)	SALINITET-(VATTENHÄMTARE)		Salt BTL		SALT_BTL	Salinitet-vattenhämtare (psu)	Salt		SALT_BTL			Salinitet vattenhämtare (o/oo psu)	Salinity bottle (o/oo psu)
+							Q_SALT_BTL	Q_SALT_BTL	qsalt	Q-flag Salinitet-vattenhämtare						Q-flag Salinitet-vattenhämtare			Q_SALT_BTL			Q-flagga Salinitet vattenhämtare	QFLAG Salinity bottle
+Salinity (CTD)	Salinitet (CTD)	psu					SALT_CTD	SALT_CTD	ctdsalt	Salinitet-CTD (psu)	SALINITET-(CTD)	Salt CTD	Salt CTD	Salt (psu o/oo)	SALT_CTD	Salinitet-CTD (psu)		Salin	SALT_CTD	salinity		Salinitet CTD (o/oo psu)	Salinity CTD (o/oo psu)
+							Q_SALT_CTD	Q_SALT_CTD	qctdsalt	Q-flag Salinitet-CTD						Q-flag Salinitet-CTD			Q_SALT_CTD			Q-flagga Salinitet CTD	QFLAG Salinity CTD
+							CNDC_25	CNDC_25		Konduktivitet_25-vattenhämtare (mS/m)						Konduktivitet_25-vattenhämtare (mS/m)						Konduktivitet_25 vattenhämtare (mS/m)	Conductivity_25 bottle (mS/m)
+							Q_CNDC_25	Q_CNDC_25		Q-flag Konduktivitet_25-vattenhämtare						Q-flag Konduktivitet_25-vattenhämtare						Q-flagga Konduktivitet_25 vattenhämtare	QFLAG Conductivity_25 bottle
+							CNDC_CTD	CNDC_CTD														Konduktivitet CTD (mS/m)	Conductivity CTD (mS/m)
+							Q_CNDC_CTD	Q_CNDC_CTD														Q-flagga Konduktivitet CTD	QFLAG Conductivity CTD
+Oxygen (bottle)	Syre (flaska)	ml/l					DOXY_BTL	DOXY_BTL	o2	Syrgashalt-vattenhämtare (ml/l)	OXYGEN-(WINKLER)		O2 BTL	O2 (ml/l)	DOXY_BTL	Syrgashalt-vattenhämtare (ml/l)		Oxygen	DOXY_BTL	O2		Syrgashalt O2 vattenhämtare (ml/l)	Dissolved oxygen O2 bottle (ml/l)
+							Q_DOXY_BTL	Q_DOXY_BTL	qo2	Q-flag Syrgashalt-vattenhämtare						Q-flag Syrgashalt-vattenhämtare			Q_DOXY_BTL			Q-flagga Syrgashalt O2 vattenhämtare	QFLAG Dissolved oxygen O2 bottle
+Oxygen (CTD)	Syre (CTD)	ml/l					DOXY_CTD	DOXY_CTD		Syrgashalt-CTD (ml/l)		O2_CTD				Syrgashalt-CTD (ml/l)			DOXY_CTD			Syrgashalt O2 CTD (ml/l)	Dissolved oxygen O2 CTD (ml/l)
+							Q_DOXY_CTD	Q_DOXY_CTD		Q-flag Syrgashalt-CTD						Q-flag Syrgashalt-CTD			Q_DOXY_CTD			Q-flagga Syrgashalt O2 CTD	QFLAG Dissolved oxygen CTD
+							FLUO_CTD	FLUO_CTD							CHLFL								
+							Q_FLUO_CTD	Q_FLUO_CTD							Q_CHLFL								
+Hydrogen sulfide	Svavelväte	umol/l			H2SXZZXX	UPOX	H2S	H2S	h2s	Svavelväte (µmol/l)	SVAVELVÄTE	H2S	H2S	H2S (æmol/l)	H2S	Svavelväte (µmol/l)		H2S	H2S	H2S		Svavelväte H2S (umol/l)	Hydrogen sulphide H2S (umol/l)
+							Q_H2S	Q_H2S	qh2s	Q-flag H2S-S						Q-flag H2S-S			Q_H2S			Q-flagga Svavelväte H2S-S	QFLAG Hydrogen sulphide H2S
+pH	pH				PHXXZZXX	UUPH	PH	PH	ph	pH		PH	PH	PH	pH	pH	pH		PH	pH		pH	pH
+							Q_PH	Q_PH	qph	Q-flag pH						Q-flag pH			Q_PH			Q-flagga pH	QFLAG pH
+							PH_LAB	PH_LAB														pH Laboratorium	pH Laboratory
+							Q_PH_LAB	Q_PH_LAB														Q-flagga pH Laboratorium	QFLAG pH Laboratory
+							PH_LAB_TEMP	PH_LAB_TEMP														Temperatur pH Laboratorium (C)	Temperature pH Laboratory (C)
+							Q_PH_LAB_TEMP	Q_PH_LAB_TEMP														Q-flagga Temperatur pH Laboratorium	QFLAG Temperature pH Laboratory
+Alkalinity	Alkalinitet	mmol/kg			ALKYZZXX	UPOX	ALKY	ALKY	alk	Alkalinitet (mmol/kg)		Alk	Alk	Alk (mmol/kg)	alk	Alkalinitet (mmol/kg)	Alk		ALKY	Alkalinity		Alkalinitet (mmol/kg)	Alkalinity (mmol/kg)
+							Q_ALKY	Q_ALKY	qalk	Q-flag Alkalinitet						Q-flag Alkalinitet			Q_ALKY			Q-flagga Alkalinitet	QFLAG Alkalinity
+Alkalinity_2	Alkalinitet_2	mmol/l					ALKY_2	ALKY_2	alk2	Alkalinitet (mmol/l)		Alk_2	Alk_2	Alk_2 (mmol/l)	alk	Alkalinitet_2 (mmol/l)	Alk		ALKY_2	Alkalinity_2		Alkalinitet_2 (mmol/l)	Alkalinity_2 (mmol/l)
+							Q_ALKY_2	Q_ALKY_2	qalk2	Q-flag Alkalinitet_2						Q-flag Alkalinitet_2			Q_ALKY_2			Q-flagga Alkalinitet_2	QFLAG Alkalinity_2
+Phosphate	Fosfat	umol/l			PHOSZZXX	UPOX	PHOS	PHOS	po4	Fosfatfosfor, PO4-P (µmol/l)	FOSFATFOSFOR	PO4	PO4	PO4 (æmol/l)	PHOS	Fosfatfosfor, PO4-P (µmol/l)	PO4	PO4-P	PHOS	PO4	PO4	Fosfatfosfor PO4-P (umol/l)	Phosphate PO4-P (umol/l)
+							Q_PHOS	Q_PHOS	qpo4	Q-flag Fosfatfosfor						Q-flag Fosfatfosfor			Q_PHOS			Q-flagga Fosfatfosfor PO4-P	QFLAG Phosphate PO4-P
+Totalfosfor	Totalfosfor	umol/l			TPHSZZXX	UPOX	PTOT	PTOT	totp	Totalfosfor, Tot-P (µmol/l)	TOTALFOSFOR	TotP	TotP	TotP (æmol/l)	PTOT	Totalfosfor, Tot-P (µmol/l)	Tot P		PTOT	TotP	TP	Total fosfor Tot-P (umol/l)	Total phosphorus Tot-P (umol/l)
+							Q_PTOT	Q_PTOT	qtotp	Q-flag Totalfosfor						Q-flag Totalfosfor			Q_PTOT			Q-flagga Total fosfor Tot-P	QFLAG Total phosphorus Tot-P
+Nitrite	Nitrit	umol/l	0.02		NTRIZZXX	UPOX	NTRI	NTRI	no2	Nitritkväve, NO2-N (µmol/l)	NITRITKVÄVE	NO2	NO2	NO2 (æmol/l)	NTRI	Nitritkväve, NO2-N (µmol/l)	NO2	NO2-N	NTRI	NO2	NO2	Nitritkväve NO2-N (umol/l)	Nitrite NO2-N (umol/l)
+							Q_NTRI	Q_NTRI	qno2	Q-flag Nitritkväve						Q-flag Nitritkväve			Q_NTRI			Q-flagga Nitritkväve NO2-N	QFLAG Nitrite NO2-N
+Nitrate	Nitrat	umol/l	0.10		NTRAZZXX	UPOX	NTRA	NTRA	no3	Nitratkväve, NO3-N (µmol/l)	NITRATKVÄVE	NO3	NO3	NO3 (æmol/l)	NO3	Nitratkväve, NO3-N (µmol/l)	NO3		NTRA	NO3	NO3	Nitratkväve NO3-N (umol/l)	Nitrate NO3-N (umol/l)
+							Q_NTRA	Q_NTRA	qno3	Q-flag Nitratkväve						Q-flag Nitratkväve			Q_NTRA			Q-flagga Nitratkväve NO3-N	QFLAG Nitrate NO3-N
+Nitrate + Nitrite	Nitrat + Nitrit	umol/l	0.10				NTRZ	NTRZ	nox	Nitrit+Nitratkväve, NO2+NO3-N (µmol/l)	NITRIT+NITRATKVÄVE					Nitrit+Nitratkväve, NO2+NO3-N (µmol/l)		NO23-N	NTRZ			Nitrit+Nitratkväve NO2+NO3-N (umol/l)	Nitrite+Nitrate NO2+NO3-N (umol/l)
+							Q_NTRZ	Q_NTRZ	qnox	Q-flag Nitrit+Nitratkväve						Q-flag Nitrit+Nitratkväve			Q_NTRZ			Q-flagga Nitrit+Nitratkväve NO2+NO3-N	QFLAG Nitrite+Nitrate NO2+NO3-N
+Ammonium	Ammonium	umol/l			AMONZZXX	UPOX	AMON	AMON	nh4	Ammoniumkväve, NH4-N (µmol/l)	AMMONIUMKVÄVE	NH4	NH4	NH4 (æmol/l)	AMON	Ammoniumkväve, NH4-N (µmol/l)	NH4	NH4-N	AMON	NH4	NH4	Ammoniumkväve NH4-N (umol/l)	Ammonium NH4-N (umol/l)
+							Q_AMON	Q_AMON	qnh4	Q-flag Ammoniumkväve						Q-flag Ammoniumkväve			Q_AMON			Q-flagga Ammoniumkväve NH4-N	QFLAG Ammonium NH4-N
+Total nitrogen	Totalkväve	umol/l			NTOTZZXX	UPOX	NTOT	NTOT	totn	Totalkväve, Tot-N (µmol/l)	TOTALKVÄVE	TotN	TotN	TotN (æmol/l)	NTOT	Totalkväve, Tot-N (µmol/l)	Tot N		NTOT	TotN	TN	Total kväve Tot-N (umol/l)	Total Nitrogen Tot-N (umol/l)
+							Q_NTOT	Q_NTOT	qtotn	Q-flag Totalkväve						Q-flag Totalkväve			Q_NTOT			Q-flagga Total kväve Tot-N	QFLAG Total Nitrogen Tot-N
+Silicate	Silikat	umol/l			SLCAZZXX	UPOX	SIO3-SI	SIO3-SI	sio4	Silikat, SiO3-Si (µmol/l)	SILIKAT	SiO4	SiO4	SiO4 (æmol/l)	SIO3-SI	Silikat, SiO3-Si (µmol/l)	SiO2	SiO3	SIO3-SI	SiO4	Si	Silicate SiO3-Si (umol/l)	Silicate SiO3-Si (umol/l)
+							Q_SIO3-SI	Q_SIO3-SI	qsio4	Q-flag Silikat						Q-flag Silikat			Q_SIO3-SI			QFLAG Silicate SiO3-Si	QFLAG Silicate SiO3-Si
+Humus	Humusämen						HUMUS 	HUMUS 	humus	Humus mg/l		Humus	Humus	Humus	HUMUS	Humus mg/l	Humus		HUMUS			Humus (mg/l)	Humus (mg/l)
+							Q_HUMUS	Q_HUMUS	qhumus	Q-flag Humus						Q-flag Humus			Q_HUMUS			Q-flagga Humus	QFLAG Humus
+Chlorophyll-a	Klorofyll-a	ug/l			CPHLZZXX	UMMC	CPHL	CPHL	chla	Klorofyll a (µg/l)	KLOROFYLL A	Chla	Chla	Chla (ug/l)	Chla-a	Klorofyll a (µg/l)	Klorofyll	Chl-a	CPHL	chlorophyl	Chla	Klorofyll-a vattenhämtare (ug/l)	Chlorophyll-a bottle (ug/l)
+							Q_CPHL	Q_CPHL	qchla	Q-flag Klorofyll a						Q-flag Klorofyll a			Q_CPHL			Q-flagga Klorofyll-a vattenhämtare	QFLAG Chlorophyll-a bottle
+							DOC	DOC	doc	Löst Organiskt Kol, DOC (µmol/l)						Löst Organiskt Kol, DOC (mg/l)			DOC			Löst Organiskt Kol DOC (umol/l)	Dissovled organic carbon DOC (umol/l)
+							Q_DOC	Q_DOC	qdoc	Q-flag Löst Organsikt Kol 						Q-flag Löst Organiskt Kol 			Q_DOC			Q-flagga Löst Organsikt Kol DOC	QFLAG Dissovled organic carbon DOC
+		umol/l			MDMAP010	UPOX	POC	POC	poc	Partikulärt Organiskt Kol, POC (µmol/l)		POC	POC	POC (æmol/l)	poc	Partikulärt Organiskt Kol, POC (µmol/l)			POC		POC	Partikulärt Organiskt Kol POC (umol/l)	Particulate organic carbon POC (umol/l)
+							Q_POC	Q_POC	qpoc	Q-flag Partikulärt Organsikt Kol						Q-flag Partikulärt Organiskt Kol			Q_POC			Q-flagga Partikulärt Organsikt Kol POC	QFLAG Particulate organic carbon POC
+		mg/l			CORGZZTL	UPOX	TOC	TOC	toc	Total Orgaiskt Kol, TOC (mg/l)		TOC	TOC	TOC (mg/l)	toc	Total Organiskt Kol, TOC (mg/l)			TOC			Total Orgaiskt Kol TOC (mg/l)	Total organic carbon TOC (mg/l)
+							Q_TOC	Q_TOC	qtoc	Q-flag Total Organsikt Kol						Q-flag Total Organiskt Kol			Q_TOC			Q-flagga Total Organsikt Kol TOC	QFLAG Total organic carbon TOC
+		umol/l			NTOTZZZZ	UPOX	PON	PON	pon	Partikulärt Organsikt Kväve, PON (µmol/l)		PON	PON	PON (æmol/l)	pon	Partikulärt Organiskt Kväve, PON (µmol/l)					PON	Partikulärt Organiskt Kväve PON (umol/l)	Particulate organic nitrogen PON (umol/l)
+							Q_PON	Q_PON	qpon	Q-flag Partikulärt Organsikt Kväve						Q-flag Partikulärt Organiskt Kväve			Q_PON			Q-flagga Partikulärt Organsikt Kväve PON	QFLAG Particulate organic nitrogen PON
+							CURDIR	CURDIR		Strömriktning (dekagrader)						Strömriktning (dekagrader)			CURDIR			Strömriktning (dekagrader)	Current direction (deca degrees)
+							Q_CURDIR	Q_CURDIR		Q-flag Strömriktning						Q-flag Strömriktning			Q_CURDIR			Q-flagga Strömriktning	QFLAG Current direction
+							CURVEL	CURVEL		Strömhastighet (m/s)						Strömhastighet (m/s)			CURVEL			Strömhastighet (m/s)	Current velocity (cm/s)
+							Q_CURVEL	Q_CURVEL		Q-flag Strömhastighet						Q-flag Strömhastighet			Q_CURVEL			Q-flagga Strömhastighet	QFLAG Current velocity
+							LIGNIN	LIGNIN		Lignin (mg/l)						Lignin (mg/l)			LIGNIN			Lignin (mg/l)	Lignin (mg/l)
+							Q_LIGNIN	Q_LIGNIN		Q-flag Lignin						Q-flag Lignin			Q_LIGNIN			Q-flagga Lignin	QFLAG Lignin
+							YELLOW	YELLOW		Gulämne, CDOM (1/l)						Gulämne, CDOM (1/l)			YELLOW			Gulämne (1/l)	Yellow substance (1/l)
+							Q_YELLOW	Q_YELLOW		Q-flag Gulämne						Q-flag Gulämne			Q_YELLOW			Q-flagga Gulämne	QFLAG Yellow substance
+							AL	AL		Aluminium (ug/l)						Aluminium (ug/l)			AL			Aluminium (ug/l)	Aluminium (ug/l)
+							Q_AL	Q_AL		Q-flag Aluminium						Q-flag Aluminium			Q_AL			Q-flagga Aluminium	QFLAG Aluminium
+							UREA	UREA		Urea (µmol/l)						Urea (µmol/l)			UREA			Urea (umol/l)	Urea (umol/l)
+							Q_UREA	Q_UREA		Q-flag Urea						Q-flag Urea			Q_UREA			Q-flagga Urea	QFLAG Urea
+							CDOM	CDOM			CDOM_BTL				CDOM_BTL				CDOM_BTL			CDOM (1/m)	Colored dissolved organic matter CDOM (1/m)
+							Q_CDOM	Q_CDOM			Q_CDOM_BTL				Q_CDOM_BTL				Q_CDOM_BTL			Q-flagga CDOM	QFLAG Colored dissolved organic matter CDOM
+							TURB	TURB			TURB				TURB				TURB			TURB (FNU)	Turbidity TURB (FNU)
+							Q_TURB	Q_TURB			Q_TURB				Q_TURB				Q_TURB			Q-flagga TURB	QFLAG Turbidity TURB
+Sample comment	Sample comment						COMNT_SAMP	COMNT_SAMP		Provkommentar per djup (fritext)						Provkommentar per djup (fritext)			COMNT_SAMP			Provkommentar	sample_comment
+				x			TRAWLNO	TRAWLNO															
+Trawl type	Tråltyp			x			TRAWLTYP	TRAWLTYP															
+Quadrant	Kvadrant			x			KVADRANT																
+Station code	Stationskod			x			STNCODE		stnreg.sea1id||stnreg.sea2id||stnreg.sea3id||stnreg.stnid		STNCODE												
+				x			GROUP		grpid														
+Month	Månad			x			MONTH		month			Month	Month	MONTH							Mo		
+Visit day	Dag			x			VISIT_DAY					Day	Day	DAY									
+Mixed layer depth	Mixed layer depth			x			MLD																
+Mixed layer depth bottom	Mixed layer depth bottom			x			MLDX																
+				x			ATEMPW																
+							SIGMA_BTL				SIGMA_BTL				SIGMA_BTL				SIGMA_BTL				
+							Q_SIGMA_BTL				Q_SIGMA_BTL				Q_SIGMA_BTL				Q_SIGMA_BTL				
+							SIGMA_CTD				SIGMA_CTD	Sigma CTD	SigmaT	SIGMA_CTD	SIGMA_CTD				SIGMA_CTD				
+							Q_SIGMA_CTD				Q_SIGMA_CTD				Q_SIGMA_CTD				Q_SIGMA_CTD				
+							O2SAT_BTL				O2SAT_BTL		O2Sat (%)	O2SAT_BTL	O2SAT_BTL				O2SAT_BTL				
+							Q_O2SAT_BTL				Q_O2SAT_BTL				Q_O2SAT_BTL				Q_O2SAT_BTL				
+		%					O2SAT_CTD				O2SAT_CTD	O2Sat CTD			O2SAT_CTD				O2SAT_CTD				
+							Q_O2SAT_CTD				Q_O2SAT_CTD				Q_O2SAT_CTD				Q_O2SAT_CTD				
+Project name	Projektnamn			x			PROJ_NAME										PROJ_NAME						
+				x			SLABO										SLABO					Provtagningslaboratorium (hyd)	sampling_laboratory_code_phyche
+				x			SMTYP										SMTYP						
+				x			ALABO										ALABO					Analyslaboratorium	analytical_laboratory_name_sv
+				x			METDC										METDC						
+							Own_comment																
+							SIGMA_CTD_KUST																
+							Q_SIGMA_CTD_KUST																
+							SALT_CTD_KUST																
+							Q_SALT_CTD_KUST																
+							TEMP_CTD_KUST																
+							Q_TEMP_CTD_KUST																
+							DOXY_CTD_KUST																
+							Q_DOXY_CTD_KUST																
+							DEPH2					Depth2	Depth2 (m)	DEPTH2									
+				x			DecDate					Dec Date	Dec Date	decdate							dYr		
+				x			zoo_vinkel																
+				x			zoo_mindepth																
+				x			zoo_maxdepth																
+							FLOWMETER_READING_START																
+							FLOWMETER_READING_STOP																
+							SAL_REF																
+							DEPTH_CTD																
+							Q_DEPTH_CTD																
+							DOXY_BTL_MAN																
+							Q_DOXY_BTL_MAN																
+							key_depth																
+																						Datatyp	delivery_datatype
+																						Stationsnamn	station_name
+																						Provets latitud (DD)	sample_latitude_dd
+																						Provets longitud (DD)	sample_longitude_dd
+																						Luftens våttemperatur (C)	air_temperature_wet_degc
+																						Analysmetod (kod)	analysis_method_code
+																						Analysmetod referens (kod)	analysis_method_reference_code
+																						Variabel-kommentar	variable_comment
+																						Mätosäkerhet	estimation_uncertainty
+																						Beräkningsosäkerhetsmetod (kod)	method_calculation_uncertainty
+																						Rapporteringsgräns	quantification_limit
+																						Detektionsgräns	detection_limit
+																						Mätområde	analysis_range
+																						Analyslaboratorium ackrediterat	analytical_laboratory_accreditated
+																						Provtagartyp (hyd)	sampler_type_code_phyche
+																						Provtagningsmetod referens (hyd)	sampling_method_reference_code_phyche
+																						Kommentar till provtagningsmetod (hyd)	sampling_method_comment_phyche
+																						Provtagande laboratorium ackrediterat (hyd)	sampling_laboratory_accreditated_phyche
+																						Vattenkategori	location_water_category
+																						Vattendistrikt	location_water_district
+																						Vattenförekomst	location_svar_sea_area_name
+																						Vattenförekomst-kod	location_svar_sea_area_code
+																						Typområde	location_type_area
+																						Havsbassäng	location_sea_basin
+																						HELCOM/OSPAR-område	location_helcom_ospar_area
+																						Ekonomisk zon	location_economic_zone
+																						Län	location_county
+																						Kommun	location_municipality
+																						Stationid VISS	station_viss_eu_id
+																						Rapporterande institut	reporting_institute_name_sv
+																						Datavärd	data_holding_centre
+																						Kontrollstatus	check_status_sv
+																						Kontrollerad av	data_checked_by_sv
+																						Internetåtkomst	internet_access
+																						Leveranspaket	dataset_name
+																						Filnamn	dataset_file_name
+							FLOWMETER_READING																
+							TRAWL_TYPE																
+							WATER_VOLUME																
+							DIN_LAB									DIN (µmol/l)							
+							Q_DIN_LAB									Q-flag DIN							
+							DIP_LAB									DIP (µmol/l)							
+							Q_DIP_LAB									Q-flag DIP							
