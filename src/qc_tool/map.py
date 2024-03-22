@@ -1,18 +1,26 @@
-from bokeh.models import PanTool, ResetTool, TapTool, WheelZoomTool, ColumnDataSource, \
-    Circle, Scatter
+from typing import Optional
+
+from bokeh.models import (
+    ColumnDataSource,
+    PanTool,
+    ResetTool,
+    TapTool,
+    WheelZoomTool,
+)
 from bokeh.plotting import figure
 from pyproj import Transformer
 
 
 class Map:
-    def __init__(self, stations, set_station_callback):
+    def __init__(self, set_station_callback):
         self._set_station_callback = set_station_callback
         self._transformer = Transformer.from_crs("EPSG:4326", "EPSG:3857")
+        self._selected_station = None
 
-        tap = TapTool()
+        tap = TapTool(mode="replace")
         wheel_zoom = WheelZoomTool(zoom_on_axis=False)
 
-        self._stations = stations
+        self._stations = {}
         self._map = figure(
             x_axis_type="mercator",
             y_axis_type="mercator",
@@ -26,59 +34,70 @@ class Map:
         self._map.toolbar.active_scroll = wheel_zoom
         self._map.add_tile("Esri.OceanBasemap")
 
-        longitudes = [station.longitude for station in self._stations.values()]
-        latitudes = [station.latitude for station in self._stations.values()]
-        longitudes, latitudes = self.convert_projection(longitudes, latitudes)
-        self._map_source = ColumnDataSource(
-            data={"latitudes": latitudes, "longitudes": longitudes},
+        self._map_unselected_source = ColumnDataSource(
+            data={"latitudes": [], "longitudes": [], "series": []},
+        )
+        self._map_selected_source = ColumnDataSource(
+            data={"latitudes": [], "longitudes": [], "series": []},
         )
 
-        renderer = self._map.scatter(
+        self._map.scatter(
             x="longitudes",
             y="latitudes",
-            source=self._map_source,
-            size=7,
-            selection_fill_alpha=0.8,
-            selection_fill_color="red",
-            nonselection_fill_alpha=0.8,
+            source=self._map_unselected_source,
+            line_width=0,
+            fill_alpha=0.7,
+            nonselection_fill_alpha=0.7,
+            selection_fill_alpha=0.7,
+            size=9,
+            fill_color="blue",
             nonselection_fill_color="blue",
+            selection_fill_color="red",
         )
 
-        #renderer.selection_glyph = Scatter(fill_alpha=0.8, fill_color="red", size=9)
-        #renderer.nonselection_glyph = Scatter(fill_alpha=0.8, fill_color="blue", size=7)
+        self._map_unselected_source.selected.on_change(
+            "indices", self.station_selected_callback
+        )
 
-        self._map_source.selected.on_change("indices", self.callback)
-        self.set_station("")
+        self.set_station(None)
 
-    def set_station(self, station_id: str):
-        unselected_locations = [
-            (station.name, station.longitude, station.latitude)
+    def load_stations(self, stations):
+        self._stations = stations
+
+        all_stations = [
+            (station.series, station.longitude, station.latitude)
             for station in self._stations.values()
         ]
 
-        unselected_names, unselected_longitudes, unselected_latitudes = (
-            zip(*unselected_locations) if unselected_locations else ((), (), ())
-        )
+        station_names, longitudes, latitudes = zip(*all_stations)
+        longitudes, latitudes = self.convert_projection(longitudes, latitudes)
 
-        unselected_longitudes, unselected_latitudes = self.convert_projection(
-            unselected_longitudes, unselected_latitudes
-        )
-
-        self._map_source.data = {
-            "longitudes": unselected_longitudes,
-            "latitudes": unselected_latitudes,
-            "names": unselected_names,
+        self._map_unselected_source.data = {
+            "longitudes": longitudes,
+            "latitudes": latitudes,
+            "series": station_names,
         }
+
+    def set_station(self, station_series: Optional[str]):
+        self._selected_station = station_series
+        if station_series:
+            station_index = self._map_unselected_source.data["series"].index(
+                station_series
+            )
+            self._map_unselected_source.selected.indices = [station_index]
+        else:
+            self._map_unselected_source.selected.indices = []
 
     @property
     def layout(self):
         return self._map
 
-    def callback(self, attr, old, new):
+    def station_selected_callback(self, attr, old, new):
         if new:
-            selection = new[0]
-            station_id = self._map_source.data["names"][selection]
-            self._set_station_callback(station_id)
+            selected_index = new[0]
+            station_series = self._map_unselected_source.data["series"][selected_index]
+            if station_series != self._selected_station:
+                self._set_station_callback(station_series)
 
     def convert_projection(self, longitudes, latitudes):
         if not longitudes or not latitudes:

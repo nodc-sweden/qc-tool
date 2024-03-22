@@ -3,6 +3,7 @@ class Station:
         "AIRPRES",
         "AIRTEMP",
         "COMNT_VISIT",
+        "CTRYID-SHIPC-CRUISE_NO-STNNO",
         "CRUISE_NO",
         "CTRYID",
         "DEPH",
@@ -18,11 +19,10 @@ class Station:
         "WINSP",
     }
 
-    def __init__(self, name: str, data):
-        self._name = name
+    def __init__(self, series: str, data):
+        self._series = series
         self._data = data
         all_parameters = set(data.dropna(axis=1, how="all").columns)
-
         self._common = {
             column: self._data[column].unique()[0]
             for column in all_parameters & self.COMMON_COLUMNS
@@ -39,8 +39,8 @@ class Station:
         return self._data
 
     @property
-    def name(self):
-        return self._name
+    def series(self):
+        return self._series
 
     @property
     def common(self):
@@ -59,4 +59,3 @@ class Station:
     def latitude(self):
         degrees, remainder = divmod(self._common.get("LATIT"), 100)
         return degrees + remainder / 60
-

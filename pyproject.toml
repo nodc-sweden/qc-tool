@@ -6,13 +6,17 @@ authors = [
     {name = "Jonatan Skogsfors", email = "jonatan.skogsfors@smhi.se"},
 ]
 dependencies = [
-    "bokeh>=3.4.0",
+    "bokeh==3.3.0",
     "pyproj>=3.6.1",
     "pandas>=2.2.1",
 ]
 requires-python = ">=3.11"
 readme = "README.md"
 license = {file = "LICENSE"}
+
+[project.gui-scripts]
+qc-tool  = "qc_tool.scripts.start_server:main"
+
 
 [build-system]
 requires = ["pdm-backend"]
@@ -34,7 +38,7 @@ indent-width = 4
 target-version = "py311"
 
 [tool.ruff.lint]
-select = ["F"]
+select = ["F", "E", "W", "I001"]
 
 [tool.ruff.format]
 quote-style = "double"
