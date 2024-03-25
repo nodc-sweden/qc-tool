@@ -62,30 +62,38 @@ class QcTool:
 
     def _parse_data(self, data: pd.DataFrame):
         data["STNNO"] = data["STNNO"].map("{:03}".format)
-        data["CTRYID-SHIPC-CRUISE_NO-STNNO"] = data[["CTRYID", "SHIPC", "CRUISE_NO", "STNNO"]].astype(str).agg('-'.join, axis=1)
-        data = data.pivot_table(
-            values="value",
-            index=[
-                "STNNO",
-                "DEPH",
-                "STATN",
-                "SDATE",
-                "STIME",
-                "CTRYID",
-                "SHIPC",
-                "CRUISE_NO",
-                "COMNT_VISIT",
-                "WADEP",
-                "WINDR",
-                "WINSP",
-                "AIRTEMP",
-                "AIRPRES",
-                "LATIT",
-                "LONGI",
-                "CTRYID-SHIPC-CRUISE_NO-STNNO",
-            ],
-            columns="parameter",
-        ).reset_index(level=list(range(2, 17))).sort_values(["STNNO", "DEPH"])
+        data["CTRYID-SHIPC-CRUISE_NO-STNNO"] = (
+            data[["CTRYID", "SHIPC", "CRUISE_NO", "STNNO"]]
+            .astype(str)
+            .agg("-".join, axis=1)
+        )
+        data = (
+            data.pivot_table(
+                values="value",
+                index=[
+                    "STNNO",
+                    "DEPH",
+                    "STATN",
+                    "SDATE",
+                    "STIME",
+                    "CTRYID",
+                    "SHIPC",
+                    "CRUISE_NO",
+                    "COMNT_VISIT",
+                    "WADEP",
+                    "WINDR",
+                    "WINSP",
+                    "AIRTEMP",
+                    "AIRPRES",
+                    "LATIT",
+                    "LONGI",
+                    "CTRYID-SHIPC-CRUISE_NO-STNNO",
+                ],
+                columns="parameter",
+            )
+            .reset_index(level=list(range(2, 17)))
+            .sort_values(["STNNO", "DEPH"])
+        )
 
         self._data = data
 

@@ -1,4 +1,4 @@
-from bokeh.models import DataTable, Div, Styles, ImportedStyleSheet
+from bokeh.models import DataTable, Div, ImportedStyleSheet
 
 from qc_tool.station import Station
 
@@ -17,7 +17,10 @@ class StationInfo:
 
     def __init__(self):
         self._table = DataTable()
-        self._div = Div(width=500, stylesheets=[ImportedStyleSheet(url="qc_tool/static/css/style.css")])
+        self._div = Div(
+            width=500,
+            stylesheets=[ImportedStyleSheet(url="qc_tool/static/css/style.css")],
+        )
         self._station = None
         self._update()
 

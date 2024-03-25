@@ -56,7 +56,7 @@ class Map:
         )
 
         self._map_unselected_source.selected.on_change(
-            "indices", self.station_selected_callback
+            "indices", self._station_selected_callback
         )
 
         self.set_station(None)
@@ -70,7 +70,7 @@ class Map:
         ]
 
         station_names, longitudes, latitudes = zip(*all_stations)
-        longitudes, latitudes = self.convert_projection(longitudes, latitudes)
+        longitudes, latitudes = self._convert_projection(longitudes, latitudes)
 
         self._map_unselected_source.data = {
             "longitudes": longitudes,
@@ -92,14 +92,14 @@ class Map:
     def layout(self):
         return self._map
 
-    def station_selected_callback(self, attr, old, new):
+    def _station_selected_callback(self, attr, old, new):
         if new:
             selected_index = new[0]
             station_series = self._map_unselected_source.data["series"][selected_index]
             if station_series != self._selected_station:
                 self._set_station_callback(station_series)
 
-    def convert_projection(self, longitudes, latitudes):
+    def _convert_projection(self, longitudes, latitudes):
         if not longitudes or not latitudes:
             return longitudes, latitudes
 

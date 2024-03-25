@@ -3,7 +3,7 @@ import subprocess
 
 
 def main():
-    arguments = setup_arguments()
+    _ = setup_arguments()
     start_server()
 
 
