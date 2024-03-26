@@ -4,8 +4,10 @@ from base64 import b64decode
 import pandas as pd
 from bokeh.models import Column, Div, FileInput
 
+from qc_tool.protocols import Layoutable
 
-class FileHandler:
+
+class FileHandler(Layoutable):
     def __init__(self, external_load_file_callback):
         self._file_name = None
         self._external_load_file_callback = external_load_file_callback

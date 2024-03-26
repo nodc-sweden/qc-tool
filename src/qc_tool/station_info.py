@@ -1,12 +1,14 @@
 from bokeh.models import DataTable, Div, ImportedStyleSheet
 
+from qc_tool.protocols import Layoutable
 from qc_tool.station import Station
 
 
-class StationInfo:
+class StationInfo(Layoutable):
     STATION_DATA_FIELDS = (
         ("STATN", "Station name"),
-        ("CTRYID-SHIPC-CRUISE_NO-STNNO", "Country-Ship-Cruise-Series"),
+        ("CTRYID+SHIPC+CRUISE_NO+STNNO", "Country-Ship-Cruise-Series"),
+        ("SDATE+STIME", "Time"),
         ("WADEP", "Water depth"),
         ("AIRTEMP", "Air temperature"),
         ("AIRPRES", "Air pressure"),
@@ -29,12 +31,13 @@ class StationInfo:
         self._update()
 
     def _update(self):
+        common_data = self._station.common if self._station else {}
         table_rows = (
             f"""<tr>
             <th>{title}</>
-            <td>{self._station.common.get(column) if self._station else ""}</td>
+            <td>{common_data.get(key, "")}</td>
             </tr>"""
-            for column, title in self.STATION_DATA_FIELDS
+            for key, title in self.STATION_DATA_FIELDS
         )
 
         self._div.text = f"""

@@ -22,15 +22,11 @@ class QcTool:
         self._map = Map(self.set_station)
 
         # Parameters
-        first_parameter = ParameterSlot(default_parameter="DOXY_BTL")
+        first_parameter = ParameterSlot(parameter="DOXY_BTL")
         self._parameters = [
             first_parameter,
-            ParameterSlot(
-                linked_y_range=first_parameter.y_range, default_parameter="PHOS"
-            ),
-            ParameterSlot(
-                linked_y_range=first_parameter.y_range, default_parameter="NTRZ"
-            ),
+            ParameterSlot(linked_parameter=first_parameter, parameter="PHOS"),
+            ParameterSlot(linked_parameter=first_parameter, parameter="NTRZ"),
         ]
 
         self._file_handler = FileHandler(self.load_file_callback)
@@ -62,11 +58,6 @@ class QcTool:
 
     def _parse_data(self, data: pd.DataFrame):
         data["STNNO"] = data["STNNO"].map("{:03}".format)
-        data["CTRYID-SHIPC-CRUISE_NO-STNNO"] = (
-            data[["CTRYID", "SHIPC", "CRUISE_NO", "STNNO"]]
-            .astype(str)
-            .agg("-".join, axis=1)
-        )
         data = (
             data.pivot_table(
                 values="value",
@@ -87,16 +78,13 @@ class QcTool:
                     "AIRPRES",
                     "LATIT",
                     "LONGI",
-                    "CTRYID-SHIPC-CRUISE_NO-STNNO",
                 ],
                 columns="parameter",
             )
-            .reset_index(level=list(range(2, 17)))
+            .reset_index(level=list(range(2, 16)))
             .sort_values(["STNNO", "DEPH"])
         )
-
         self._data = data
-
         station_series = sorted(self._data.index.get_level_values("STNNO").unique())
 
         self._stations = {

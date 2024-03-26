@@ -10,8 +10,10 @@ from bokeh.models import (
 from bokeh.plotting import figure
 from pyproj import Transformer
 
+from qc_tool.protocols import Layoutable
 
-class Map:
+
+class Map(Layoutable):
     def __init__(self, set_station_callback):
         self._set_station_callback = set_station_callback
         self._transformer = Transformer.from_crs("EPSG:4326", "EPSG:3857")

@@ -1,16 +1,26 @@
+from typing import Self
+
 import numpy as np
+from bokeh.colors import RGB
+from bokeh.core.enums import Align
 from bokeh.core.property.primitive import Bool
+from bokeh.events import MenuItemClick
 from bokeh.layouts import column
 from bokeh.model import DataModel
 from bokeh.models import (
     BoxAnnotation,
     CheckboxButtonGroup,
     ColumnDataSource,
+    CrosshairTool,
     Dropdown,
+    HoverTool,
+    Label,
+    Span,
     WheelZoomTool,
 )
 from bokeh.plotting import figure
 
+from qc_tool.protocols import Layoutable
 from qc_tool.station import Station
 
 PARAMETER_ABBREVIATIONS = {
@@ -48,38 +58,67 @@ def expand_abbreviation(abbreviation: str) -> str:
     return PARAMETER_ABBREVIATIONS.get(abbreviation, abbreviation)
 
 
-class ParameterSlot:
+class ParameterSlot(Layoutable):
     def __init__(
         self,
         parameter: str = None,
-        linked_y_range=None,
-        default_parameter: str = None,
+        linked_parameter: Self = None,
     ):
-        self._default_parameter = default_parameter
-        self._parameter = parameter or self._default_parameter
+        self._wídth = 500
+        self._height = 500
+        self._parameter = parameter
         self._station = None
         self._source = ColumnDataSource(data={"x": [], "y": []})
-
         self._parameter_options = ParameterOptions()
 
-        wheel_zoom = WheelZoomTool()
-        self._figure_config = {
-            "height": 500,
-            "width": 500,
-            "toolbar_location": "below",
-            "tools": ["pan", wheel_zoom, "reset"],
-        }
+        self._initialize_map(linked_parameter)
 
-        self._plot_config = {
+        # Add buttons for parameter options
+        self._parameter_options_checkbox = CheckboxButtonGroup(
+            labels=["Lines", "Bounds"], align=Align.center
+        )
+        self._parameter_options_checkbox.on_change(
+            "active", self._toggle_parameter_options
+        )
+        self._sync_parameter_options()
+
+    def _initialize_map(self, linked_parameter):
+        wheel_zoom = WheelZoomTool()
+        hover = HoverTool()
+        if linked_parameter:
+            self._crosshair_width = linked_parameter._crosshair_width
+            self._crosshair_height = linked_parameter._crosshair_height
+        else:
+            self._crosshair_width = Span(
+                dimension="width", line_dash="dashed", line_width=1
+            )
+            self._crosshair_height = Span(
+                dimension="height", line_dash="dashed", line_width=1
+            )
+        crosshair = CrosshairTool(overlay=[self._crosshair_width, self._crosshair_height])
+        self._figure_config = {
+            "height": self._height,
+            "width": self._wídth,
+            "toolbar_location": "below",
+            "tools": ["reset", "pan", wheel_zoom, hover, crosshair],
+            "tooltips": [("Value", "$x"), ("Depth", "$y")],
+        }
+        self._plot_values_config = {
             "size": 7,
             "color": "navy",
             "alpha": 0.8,
+            "name": "values",
         }
-
+        self._plot_line_config = {
+            "line_width": 1,
+            "color": "navy",
+            "alpha": 0.8,
+            "name": "connecting_line",
+        }
         self._figure = figure(**self._figure_config)
         self._figure.toolbar.active_scroll = wheel_zoom
 
-        # Add sea level abd sky
+        # Add sea level and sky
         self._sky = self._figure.image_url(
             url=["qc_tool/static/images/gull.png"], x=0, y=-500
         )
@@ -90,17 +129,36 @@ class ParameterSlot:
         self._figure.add_layout(self._sea_level)
 
         # Add ocean floor
-        self._ocean_floor = BoxAnnotation(fill_color="saddlebrown", fill_alpha=0.75)
+        self._ocean_floor = BoxAnnotation(fill_color=RGB(60, 25, 0), fill_alpha=0.50)
         self._ocean_floor.level = "underlay"
         self._figure.add_layout(self._ocean_floor)
 
-        # Add points and lines
-        self._lines = self._figure.line("x", "y", source=self._source, line_width=1)
-        self._figure.scatter("x", "y", source=self._source, **self._plot_config)
-        if linked_y_range:
-            self._figure.y_range = linked_y_range
+        # Add values and lines
+        self._parameter_values = self._figure.scatter(
+            "x", "y", source=self._source, **self._plot_values_config
+        )
+        hover.renderers = [self._parameter_values]
+
+        self._lines = self._figure.line(
+            "x", "y", source=self._source, **self._plot_line_config
+        )
+        if linked_parameter:
+            self._figure.y_range = linked_parameter.y_range
         else:
             self._figure.y_range.flipped = True
+
+        # Add label to show when parameter is missing
+        self._no_data_label = Label(
+            x=self._wídth // 2,
+            y=self._height // 2,
+            x_units="screen",
+            y_units="screen",
+            text="No data",
+            text_align="center",
+            text_baseline="middle",
+            text_font_style="bold",
+        )
+        self._figure.add_layout(self._no_data_label)
 
         # Add parameter selector
         self._parameter_dropdown = Dropdown(
@@ -110,15 +168,7 @@ class ParameterSlot:
             name="parameter",
             width=200,
         )
-        self._parameter_dropdown.on_click(self.parameter_selected)
-
-        # Add checkbox to toggle lines
-        self._parameter_options_checkbox = CheckboxButtonGroup(labels=["Lines", "Bounds"])
-        self._parameter_options_checkbox.on_change(
-            "active", self._toggle_parameter_options
-        )
-
-        self._sync_parameter_options()
+        self._parameter_dropdown.on_click(self._parameter_selected)
 
     def update_station(self, station: Station):
         self._station = station
@@ -130,15 +180,17 @@ class ParameterSlot:
         if self._parameter in self._station.parameters:
             x = self._station.data[self._parameter]
             self._parameter_dropdown.label = expand_abbreviation(self._parameter)
+            self._no_data_label.visible = False
         else:
             x = [np.nan] * len(y)
+            self._no_data_label.visible = True
 
         self._source.data = {"x": x, "y": y}
 
         self._ocean_floor.top = self._station.water_depth
         self._sync_parameter_options()
 
-    def parameter_selected(self, event):
+    def _parameter_selected(self, event: MenuItemClick):
         self._parameter = event.item
         self._source.data["x"] = self._station.data[self._parameter]
         self._parameter_dropdown.label = expand_abbreviation(self._parameter)
@@ -159,6 +211,7 @@ class ParameterSlot:
             self._sync_parameter_options()
 
     def _sync_parameter_options(self):
+        # Setting visibility of elements according to parameter options
         self._lines.visible = self._parameter_options.show_lines
         self._ocean_floor.visible = self._parameter_options.show_bounds and bool(
             self._station
@@ -166,6 +219,7 @@ class ParameterSlot:
         self._sea_level.visible = self._parameter_options.show_bounds
         self._sky.visible = self._parameter_options.show_bounds
 
+        # Setting button states according to parameter options
         self._parameter_options_checkbox.active = self._parameter_options.active_buttons
 
 
