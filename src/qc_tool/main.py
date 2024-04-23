@@ -1,12 +1,13 @@
 import pandas as pd
 from bokeh.layouts import layout
-from bokeh.models import Column, TabPanel, Tabs
+from bokeh.models import Column, Tabs, TabPanel, Row
 from bokeh.plotting import curdoc
 
 from qc_tool.file_handler import FileHandler
 from qc_tool.flag_info import FlagInfo
 from qc_tool.map import Map
 from qc_tool.profile_slot import ProfileSlot
+from qc_tool.scatter_slot import ScatterSlot
 from qc_tool.static.station_navigator import StationNavigator
 from qc_tool.station import Station
 from qc_tool.station_info import StationInfo
@@ -24,11 +25,16 @@ class QcTool:
 
         # Parameters
         first_parameter = ProfileSlot(parameter="DOXY_BTL")
-        self._parameters = [
+        self._profile_parameters = [
             first_parameter,
             ProfileSlot(linked_parameter=first_parameter, parameter="PHOS"),
             ProfileSlot(linked_parameter=first_parameter, parameter="NTRZ"),
-        ]
+            ]
+        self._scatter_parameters = [
+            ScatterSlot(x_parameter="DOXY_BTL", y_parameter="DOXY_CTD"),
+            ScatterSlot(x_parameter="ALKY", y_parameter="SALT_CTD"),
+            ScatterSlot(x_parameter="PHOS", y_parameter="NTRZ")
+            ]
 
         self._file_handler = FileHandler(self.load_file_callback)
         self._flag_info = FlagInfo()
@@ -45,10 +51,21 @@ class QcTool:
                         ]
                     ),
                 ],
-                [parameter.layout for parameter in self._parameters],
+                [Tabs(
+                    tabs=[TabPanel(
+                        child=Row(
+                            children=[parameter.layout for parameter in self._profile_parameters]
+                        ), title='profiles'
+                    ),
+                    TabPanel(
+                        child=Row(
+                            children=[parameter.layout for parameter in self._scatter_parameters]
+                        ), title='scatter'
+                    )]
+                )],
             ],
         )
-
+        
         curdoc().title = "QC Tool"
         curdoc().add_root(self.layout)
 
@@ -60,7 +77,10 @@ class QcTool:
         self._selected_station = self._stations[station_series]
         self._station_info.set_station(self._selected_station)
         self._map.set_station(self._selected_station.series)
-        for parameter in self._parameters:
+        for parameter in self._profile_parameters:
+            parameter.update_station(self._selected_station)
+
+        for parameter in self._scatter_parameters:
             parameter.update_station(self._selected_station)
 
     def _parse_data(self, data: pd.DataFrame):
