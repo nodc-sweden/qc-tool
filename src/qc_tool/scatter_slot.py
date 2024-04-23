@@ -1,7 +1,16 @@
+from typing import Self
+
+import numpy as np
 import pandas as pd
+from bokeh.colors import RGB
+from bokeh.core.enums import Align
+from bokeh.core.property.primitive import Bool
 from bokeh.events import MenuItemClick
 from bokeh.layouts import column
+from bokeh.model import DataModel
 from bokeh.models import (
+    BoxAnnotation,
+    CheckboxButtonGroup,
     ColumnDataSource,
     CrosshairTool,
     Dropdown,
@@ -68,10 +77,12 @@ class ScatterSlot(Layoutable):
     def _initialize_map(self):
         wheel_zoom = WheelZoomTool()
         hover = HoverTool()
-        self._crosshair_width = Span(dimension="width", line_dash="dashed", line_width=1)
+        self._crosshair_width = Span(
+                dimension="width", line_dash="dashed", line_width=1
+            )
         self._crosshair_height = Span(
-            dimension="height", line_dash="dashed", line_width=1
-        )
+                dimension="height", line_dash="dashed", line_width=1
+            )
         crosshair = CrosshairTool(overlay=[self._crosshair_width, self._crosshair_height])
         self._figure_config = {
             "height": self._height,

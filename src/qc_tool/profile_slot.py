@@ -66,8 +66,8 @@ class ProfileSlot(Layoutable):
         parameter: str = None,
         linked_parameter: Self = None,
     ):
-        self._width = 500
-        self._height = 500
+        self._width = 300
+        self._height = 400
         self._parameter = parameter
         self._station = None
         self._source = ColumnDataSource(
@@ -115,8 +115,8 @@ class ProfileSlot(Layoutable):
             "toolbar_location": "below",
             "tools": ["reset", "pan", wheel_zoom, hover, crosshair, select],
             "tooltips": [
-                ("Value", "$x"),
-                ("Depth", "$y"),
+                ("Value", "@x"),
+                ("Depth", "@y"),
                 ("QC", "@qc"),
                 ("Incoming QC", "@qc_incoming"),
                 ("Automatic QC", "@qc_automatic"),

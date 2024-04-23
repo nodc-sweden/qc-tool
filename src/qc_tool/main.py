@@ -1,5 +1,6 @@
 import pandas as pd
 from bokeh.models import Column, Row, TabPanel, Tabs
+from bokeh.layouts import layout
 from bokeh.plotting import curdoc
 
 from qc_tool.file_handler import FileHandler
@@ -24,10 +25,13 @@ class QcTool:
 
         # Parameters
         first_parameter = ProfileSlot(parameter="DOXY_BTL")
+        first_parameter._figure.yaxis.axis_label = 'Depth [m]'
         self._profile_parameters = [
             first_parameter,
             ProfileSlot(linked_parameter=first_parameter, parameter="PHOS"),
             ProfileSlot(linked_parameter=first_parameter, parameter="NTRZ"),
+            ProfileSlot(linked_parameter=first_parameter, parameter="AMON"),
+            ProfileSlot(linked_parameter=first_parameter, parameter="SALT_CTD"),
         ]
         self._scatter_parameters = [
             ScatterSlot(x_parameter="DOXY_BTL", y_parameter="DOXY_CTD"),
@@ -64,7 +68,6 @@ class QcTool:
 
         # Full layout
         self.layout = Column(top_row, bottom_row)
-
         curdoc().title = "QC Tool"
         curdoc().add_root(self.layout)
 
@@ -84,11 +87,13 @@ class QcTool:
 
     def _parse_data(self, data: pd.DataFrame):
         data["SERNO"] = data["SERNO"].map("{:03}".format)
+        data["SERNO_STN"] = data["SERNO"] + ' - ' + data["STATN"]
         self._data = data
 
-        station_series = sorted(self._data["SERNO"].unique())
+        station_series = sorted(data["SERNO_STN"].unique())
+        # en dict med stationsobjekt, nyckel stationens serie
         self._stations = {
-            series: Station(series, self._data[self._data["SERNO"] == series])
+            series: Station(series, self._data[self._data["SERNO_STN"] == series])
             for series in station_series
         }
 
