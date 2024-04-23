@@ -6,7 +6,7 @@ from bokeh.plotting import curdoc
 from qc_tool.file_handler import FileHandler
 from qc_tool.flag_info import FlagInfo
 from qc_tool.map import Map
-from qc_tool.parameter_slot import ParameterSlot
+from qc_tool.profile_slot import ProfileSlot
 from qc_tool.static.station_navigator import StationNavigator
 from qc_tool.station import Station
 from qc_tool.station_info import StationInfo
@@ -23,11 +23,11 @@ class QcTool:
         self._map = Map(self.set_station)
 
         # Parameters
-        first_parameter = ParameterSlot(parameter="DOXY_BTL")
+        first_parameter = ProfileSlot(parameter="DOXY_BTL")
         self._parameters = [
             first_parameter,
-            ParameterSlot(linked_parameter=first_parameter, parameter="PHOS"),
-            ParameterSlot(linked_parameter=first_parameter, parameter="NTRZ"),
+            ProfileSlot(linked_parameter=first_parameter, parameter="PHOS"),
+            ProfileSlot(linked_parameter=first_parameter, parameter="NTRZ"),
         ]
 
         self._file_handler = FileHandler(self.load_file_callback)

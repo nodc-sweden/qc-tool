@@ -60,7 +60,7 @@ def expand_abbreviation(abbreviation: str) -> str:
     return PARAMETER_ABBREVIATIONS.get(abbreviation, abbreviation)
 
 
-class ParameterSlot(Layoutable):
+class ProfileSlot(Layoutable):
     def __init__(
         self,
         parameter: str = None,
