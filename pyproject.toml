@@ -9,6 +9,10 @@ dependencies = [
     "bokeh==3.3.4",
     "pyproj>=3.6.1",
     "pandas>=2.2.1",
+    "sharkadm @ file:///${PROJECT_ROOT}/../SHARKadm",
+    "nodc-codes @ git+https://github.com/nodc-sweden/nodc-codes@v0.1.1",
+    "fyskemqc @ git+https://github.com/nodc-sweden/fyskemqc@v2024.2",
+    "Jinja2>=3.1.3",
 ]
 requires-python = ">=3.11"
 readme = "README.md"

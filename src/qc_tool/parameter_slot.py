@@ -1,6 +1,5 @@
 from typing import Self
 
-import numpy as np
 from bokeh.colors import RGB
 from bokeh.core.enums import Align
 from bokeh.core.property.primitive import Bool
@@ -15,10 +14,13 @@ from bokeh.models import (
     Dropdown,
     HoverTool,
     Label,
+    PolySelectTool,
     Span,
     WheelZoomTool,
 )
 from bokeh.plotting import figure
+from fyskemqc.qc_flag import QC_FLAG_CSS_COLORS, QcFlag
+from fyskemqc.qc_flags import QcFlags
 
 from qc_tool.protocols import Layoutable
 from qc_tool.station import Station
@@ -64,14 +66,24 @@ class ParameterSlot(Layoutable):
         parameter: str = None,
         linked_parameter: Self = None,
     ):
-        self._wídth = 500
+        self._width = 500
         self._height = 500
         self._parameter = parameter
         self._station = None
-        self._source = ColumnDataSource(data={"x": [], "y": []})
+        self._source = ColumnDataSource(
+            data={
+                "x": [],
+                "y": [],
+                "color": [],
+                "QC": [],
+                "qc_incoming": [],
+                "qc_automatic": [],
+                "qc_manual": [],
+            }
+        )
         self._parameter_options = ParameterOptions()
 
-        self._initialize_map(linked_parameter)
+        self._initialize_plot(linked_parameter)
 
         # Add buttons for parameter options
         self._parameter_options_checkbox = CheckboxButtonGroup(
@@ -82,9 +94,10 @@ class ParameterSlot(Layoutable):
         )
         self._sync_parameter_options()
 
-    def _initialize_map(self, linked_parameter):
+    def _initialize_plot(self, linked_parameter):
         wheel_zoom = WheelZoomTool()
         hover = HoverTool()
+        select = PolySelectTool()
         if linked_parameter:
             self._crosshair_width = linked_parameter._crosshair_width
             self._crosshair_height = linked_parameter._crosshair_height
@@ -98,14 +111,20 @@ class ParameterSlot(Layoutable):
         crosshair = CrosshairTool(overlay=[self._crosshair_width, self._crosshair_height])
         self._figure_config = {
             "height": self._height,
-            "width": self._wídth,
+            "width": self._width,
             "toolbar_location": "below",
-            "tools": ["reset", "pan", wheel_zoom, hover, crosshair],
-            "tooltips": [("Value", "$x"), ("Depth", "$y")],
+            "tools": ["reset", "pan", wheel_zoom, hover, crosshair, select],
+            "tooltips": [
+                ("Value", "$x"),
+                ("Depth", "$y"),
+                ("QC", "@qc"),
+                ("Incoming QC", "@qc_incoming"),
+                ("Automatic QC", "@qc_automatic"),
+                ("Manual QC", "@qc_manual"),
+            ],
         }
         self._plot_values_config = {
             "size": 7,
-            "color": "navy",
             "alpha": 0.8,
             "name": "values",
         }
@@ -134,14 +153,15 @@ class ParameterSlot(Layoutable):
         self._figure.add_layout(self._ocean_floor)
 
         # Add values and lines
-        self._parameter_values = self._figure.scatter(
-            "x", "y", source=self._source, **self._plot_values_config
-        )
-        hover.renderers = [self._parameter_values]
-
         self._lines = self._figure.line(
             "x", "y", source=self._source, **self._plot_line_config
         )
+
+        self._parameter_values = self._figure.scatter(
+            "x", "y", source=self._source, color="color", **self._plot_values_config
+        )
+        hover.renderers = [self._parameter_values]
+
         if linked_parameter:
             self._figure.y_range = linked_parameter.y_range
         else:
@@ -149,7 +169,7 @@ class ParameterSlot(Layoutable):
 
         # Add label to show when parameter is missing
         self._no_data_label = Label(
-            x=self._wídth // 2,
+            x=self._width // 2,
             y=self._height // 2,
             x_units="screen",
             y_units="screen",
@@ -176,29 +196,67 @@ class ParameterSlot(Layoutable):
             (expand_abbreviation(parameter), parameter)
             for parameter in self._station.parameters
         ]
-        y = self._station.data.index
+        self._source.data = {
+            "x": [],
+            "y": [],
+            "color": [],
+            "qc": [],
+            "qc_incoming": [],
+            "qc_automatic": [],
+            "qc_manual": [],
+        }
+
         if self._parameter in self._station.parameters:
-            x = self._station.data[self._parameter]
-            self._parameter_dropdown.label = expand_abbreviation(self._parameter)
+            self._load_parameter()
             self._no_data_label.visible = False
         else:
-            x = [np.nan] * len(y)
             self._no_data_label.visible = True
-
-        self._source.data = {"x": x, "y": y}
 
         self._ocean_floor.top = self._station.water_depth
         self._sync_parameter_options()
 
     def _parameter_selected(self, event: MenuItemClick):
         self._parameter = event.item
-        self._source.data["x"] = self._station.data[self._parameter]
+        self._load_parameter()
+
+    def _load_parameter(self):
+        parameter_data = self._station.data[
+            self._station.data["parameter"] == self._parameter
+        ].sort_values("DEPH")
+
+        if "quality_flag_long" not in parameter_data:
+            parameter_data["quality_flag_long"] = parameter_data["quality_flag"].map(
+                lambda x: str(QcFlags(QcFlag(x), None, None))
+            )
+
+        parameter_data["QC"] = [
+            flags.total
+            for flags in map(QcFlags.from_string, parameter_data["quality_flag_long"])
+        ]
+
+        qc_flags = list(map(QcFlags.from_string, parameter_data["quality_flag_long"]))
+
+        colors = parameter_data["QC"].map(lambda flag: QC_FLAG_CSS_COLORS[flag])
+
+        self._source.data = {
+            "x": parameter_data["value"],
+            "y": parameter_data["DEPH"],
+            "color": colors,
+            "qc": [f"{flags.total} ({flags.total.value})" for flags in qc_flags],
+            "qc_incoming": [
+                f"{flags.incoming} ({flags.incoming.value})" for flags in qc_flags
+            ],
+            "qc_automatic": [str(flags.automatic) for flags in qc_flags],
+            "qc_manual": [f"{flags.manual} ({flags.manual.value})" for flags in qc_flags],
+        }
         self._parameter_dropdown.label = expand_abbreviation(self._parameter)
 
     @property
     def layout(self):
         return column(
-            self._parameter_dropdown, self._figure, self._parameter_options_checkbox
+            self._parameter_dropdown,
+            self._figure,
+            self._parameter_options_checkbox,
         )
 
     @property

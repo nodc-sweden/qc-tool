@@ -13,7 +13,7 @@ class FileHandler(Layoutable):
         self._external_load_file_callback = external_load_file_callback
         self._div = Div(width=500)
         self._file_input = FileInput(
-            title="Select file:", accept=".txt,.json", max_width=500
+            title="Select file:", accept=".txt,.csv", max_width=500
         )
         self._file_input.on_change("filename", self._internal_load_file_callback)
         self._update_info()
