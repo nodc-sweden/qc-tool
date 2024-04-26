@@ -6,7 +6,6 @@ class Station:
         "AIRPRES",
         "AIRTEMP",
         "COMNT_VISIT",
-        "CTRYID-SHIPC-CRUISE_NO-STNNO",
         "CRUISE_NO",
         "CTRYID",
         "DEPH",
@@ -25,13 +24,12 @@ class Station:
     def __init__(self, series: str, data):
         self._series = series
         self._data = data
-        all_parameters = set(data.dropna(axis=1, how="all").columns)
+
         self._common = {
-            column: self._data[column].unique()[0]
-            for column in all_parameters & self.COMMON_COLUMNS
+            column: self._data[column].unique()[0] for column in self.COMMON_COLUMNS
         }
 
-        self._parameters = sorted(all_parameters - self.COMMON_COLUMNS)
+        self._parameters = sorted(data["parameter"].unique())
 
     @property
     def parameters(self) -> list[str]:

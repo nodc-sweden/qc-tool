@@ -1,9 +1,10 @@
 import pandas as pd
 from bokeh.layouts import layout
-from bokeh.models import Column
+from bokeh.models import Column, TabPanel, Tabs
 from bokeh.plotting import curdoc
 
 from qc_tool.file_handler import FileHandler
+from qc_tool.flag_info import FlagInfo
 from qc_tool.map import Map
 from qc_tool.parameter_slot import ParameterSlot
 from qc_tool.static.station_navigator import StationNavigator
@@ -30,13 +31,19 @@ class QcTool:
         ]
 
         self._file_handler = FileHandler(self.load_file_callback)
+        self._flag_info = FlagInfo()
 
         self.layout = layout(
             [
                 [
                     self._map.layout,
                     Column(self._station_navigator.layout, self._station_info.layout),
-                    self._file_handler.layout,
+                    Tabs(
+                        tabs=[
+                            TabPanel(title="Files", child=self._file_handler.layout),
+                            TabPanel(title="QC Flags", child=self._flag_info.layout),
+                        ]
+                    ),
                 ],
                 [parameter.layout for parameter in self._parameters],
             ],
@@ -50,7 +57,7 @@ class QcTool:
 
     def set_station(self, station_series: str):
         self._station_navigator.set_station(station_series)
-        self._selected_station = Station(station_series, self._data.loc[station_series])
+        self._selected_station = self._stations[station_series]
         self._station_info.set_station(self._selected_station)
         self._map.set_station(self._selected_station.series)
         for parameter in self._parameters:
@@ -58,37 +65,12 @@ class QcTool:
 
     def _parse_data(self, data: pd.DataFrame):
         data["STNNO"] = data["STNNO"].map("{:03}".format)
-        data = (
-            data.pivot_table(
-                values="value",
-                index=[
-                    "STNNO",
-                    "DEPH",
-                    "STATN",
-                    "SDATE",
-                    "STIME",
-                    "CTRYID",
-                    "SHIPC",
-                    "CRUISE_NO",
-                    "COMNT_VISIT",
-                    "WADEP",
-                    "WINDR",
-                    "WINSP",
-                    "AIRTEMP",
-                    "AIRPRES",
-                    "LATIT",
-                    "LONGI",
-                ],
-                columns="parameter",
-            )
-            .reset_index(level=list(range(2, 16)))
-            .sort_values(["STNNO", "DEPH"])
-        )
         self._data = data
-        station_series = sorted(self._data.index.get_level_values("STNNO").unique())
 
+        station_series = sorted(self._data["STNNO"].unique())
         self._stations = {
-            series: Station(series, self._data.loc[series]) for series in station_series
+            series: Station(series, self._data[self._data["STNNO"] == series])
+            for series in station_series
         }
 
         self._station_navigator.load_stations(self._stations)
