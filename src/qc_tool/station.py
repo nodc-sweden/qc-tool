@@ -15,7 +15,7 @@ class Station:
         "SHIPC",
         "STATN",
         "STIME",
-        "STNNO",
+        "SERNO",
         "WADEP",
         "WINDR",
         "WINSP",
@@ -26,7 +26,9 @@ class Station:
         self._data = data
 
         self._common = {
-            column: self._data[column].unique()[0] for column in self.COMMON_COLUMNS
+            column: self._data[column].unique()[0]
+            for column in self.COMMON_COLUMNS
+            if column in self._data
         }
 
         self._parameters = sorted(data["parameter"].unique())
@@ -65,7 +67,7 @@ class Station:
     def common(self):
         compound_values = {
             "SDATE+STIME": self.datetime,
-            "CTRYID+SHIPC+CRUISE_NO+STNNO": self.country_ship_cruise_series,
+            "CTRYID+SHIPC+CRUISE_NO+SERNO": self.country_ship_cruise_series,
         }
         return self._common | compound_values
 

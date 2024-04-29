@@ -7,7 +7,7 @@ from qc_tool.station import Station
 class StationInfo(Layoutable):
     STATION_DATA_FIELDS = (
         ("STATN", "Station name"),
-        ("CTRYID+SHIPC+CRUISE_NO+STNNO", "Country-Ship-Cruise-Series"),
+        ("CTRYID+SHIPC+CRUISE_NO+SERNO", "Country-Ship-Cruise-Series"),
         ("SDATE+STIME", "Time"),
         ("WADEP", "Water depth"),
         ("AIRTEMP", "Air temperature"),

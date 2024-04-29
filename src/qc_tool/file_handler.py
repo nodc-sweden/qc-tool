@@ -1,8 +1,11 @@
-import io
-from base64 import b64decode
+import tkinter
+import tkinter.filedialog
+from pathlib import Path
 
 import pandas as pd
-from bokeh.models import Column, Div, FileInput
+import sharkadm
+import sharkadm.data
+from bokeh.models import Button, Column, Div, FileInput
 
 from qc_tool.protocols import Layoutable
 
@@ -15,18 +18,34 @@ class FileHandler(Layoutable):
         self._file_input = FileInput(
             title="Select file:", accept=".txt,.csv", max_width=500
         )
-        self._file_input.on_change("filename", self._internal_load_file_callback)
+        self._file_button = Button(label="Select data...")
+        self._file_button.on_click(self._internal_load_file_callback)
         self._update_info()
 
-    def _internal_load_file_callback(self, attr, old, new):
-        self._file_name = new
-        encoded_bytes = self._file_input.value
-        decoded_bytes = b64decode(encoded_bytes)
-        byte_buffer = io.BytesIO(decoded_bytes)
+    def _internal_load_file_callback(self, event):
+        try:
+            root = tkinter.Tk()
+            root.iconify()
+            selected_path = tkinter.filedialog.askopenfilename()
+            root.destroy()
+        except tkinter.TclError:
+            selected_path = None
 
-        data = pd.read_csv(byte_buffer, sep="\t")
+        if not selected_path:
+            return
+        selected_path = Path(selected_path)
+
+        lims_directory = sharkadm.data.lims.directory_is_lims(selected_path)
+        if lims_directory:
+            self._file_name = lims_directory.name
+            self._update_info()
+            data = sharkadm.lims_data.get_row_data_from_lims_export(lims_directory)
+        else:
+            self._file_name = selected_path.name
+            self._update_info()
+            data = pd.read_csv(selected_path, sep="\t")
+
         self._external_load_file_callback(data)
-        self._update_info()
 
     def _update_info(self):
         if self._file_name:
@@ -37,4 +56,4 @@ class FileHandler(Layoutable):
 
     @property
     def layout(self):
-        return Column(self._file_input, self._div)
+        return Column(self._file_button, self._div)
