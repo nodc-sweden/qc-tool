@@ -1,6 +1,5 @@
 import pandas as pd
-from bokeh.layouts import layout
-from bokeh.models import Column, Tabs, TabPanel, Row
+from bokeh.models import Column, Row, TabPanel, Tabs
 from bokeh.plotting import curdoc
 
 from qc_tool.file_handler import FileHandler
@@ -29,43 +28,43 @@ class QcTool:
             first_parameter,
             ProfileSlot(linked_parameter=first_parameter, parameter="PHOS"),
             ProfileSlot(linked_parameter=first_parameter, parameter="NTRZ"),
-            ]
+        ]
         self._scatter_parameters = [
             ScatterSlot(x_parameter="DOXY_BTL", y_parameter="DOXY_CTD"),
             ScatterSlot(x_parameter="ALKY", y_parameter="SALT_CTD"),
-            ScatterSlot(x_parameter="PHOS", y_parameter="NTRZ")
-            ]
+            ScatterSlot(x_parameter="PHOS", y_parameter="NTRZ"),
+        ]
 
         self._file_handler = FileHandler(self.load_file_callback)
         self._flag_info = FlagInfo()
 
-        self.layout = layout(
-            [
-                [
-                    self._map.layout,
-                    Column(self._station_navigator.layout, self._station_info.layout),
-                    Tabs(
-                        tabs=[
-                            TabPanel(title="Files", child=self._file_handler.layout),
-                            TabPanel(title="QC Flags", child=self._flag_info.layout),
-                        ]
-                    ),
-                ],
-                [Tabs(
-                    tabs=[TabPanel(
-                        child=Row(
-                            children=[parameter.layout for parameter in self._profile_parameters]
-                        ), title='profiles'
-                    ),
-                    TabPanel(
-                        child=Row(
-                            children=[parameter.layout for parameter in self._scatter_parameters]
-                        ), title='scatter'
-                    )]
-                )],
-            ],
+        # Top row
+        station_info_column = Column(
+            self._station_navigator.layout, self._station_info.layout
         )
-        
+        files_tab = TabPanel(title="Files", child=self._file_handler.layout)
+        flags_tab = TabPanel(title="QC Flags", child=self._flag_info.layout)
+        extra_info_tabs = Tabs(tabs=[files_tab, flags_tab])
+        top_row = Row(self._map.layout, station_info_column, extra_info_tabs)
+
+        # Bottom row
+        profile_tab = TabPanel(
+            child=Row(
+                children=[parameter.layout for parameter in self._profile_parameters]
+            ),
+            title="profiles",
+        )
+        scatter_tab = TabPanel(
+            child=Row(
+                children=[parameter.layout for parameter in self._scatter_parameters]
+            ),
+            title="scatter",
+        )
+        bottom_row = Row(Tabs(tabs=[profile_tab, scatter_tab]))
+
+        # Full layout
+        self.layout = Column(top_row, bottom_row)
+
         curdoc().title = "QC Tool"
         curdoc().add_root(self.layout)
 

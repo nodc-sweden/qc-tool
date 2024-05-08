@@ -1,15 +1,7 @@
-from typing import Self
-
-import numpy as np
-from bokeh.colors import RGB
-from bokeh.core.enums import Align
-from bokeh.core.property.primitive import Bool
+import pandas as pd
 from bokeh.events import MenuItemClick
 from bokeh.layouts import column
-from bokeh.model import DataModel
 from bokeh.models import (
-    BoxAnnotation,
-    CheckboxButtonGroup,
     ColumnDataSource,
     CrosshairTool,
     Dropdown,
@@ -57,13 +49,14 @@ PARAMETER_ABBREVIATIONS = {
 def expand_abbreviation(abbreviation: str) -> str:
     return PARAMETER_ABBREVIATIONS.get(abbreviation, abbreviation)
 
+
 class ScatterSlot(Layoutable):
     def __init__(
         self,
-        x_parameter: str = '',
-        y_parameter: str = '',
+        x_parameter: str = "",
+        y_parameter: str = "",
     ):
-        self._wídth = 500
+        self._width = 500
         self._height = 500
         self._x_parameter = x_parameter
         self._y_parameter = y_parameter
@@ -75,16 +68,14 @@ class ScatterSlot(Layoutable):
     def _initialize_map(self):
         wheel_zoom = WheelZoomTool()
         hover = HoverTool()
-        self._crosshair_width = Span(
-                dimension="width", line_dash="dashed", line_width=1
-            )
+        self._crosshair_width = Span(dimension="width", line_dash="dashed", line_width=1)
         self._crosshair_height = Span(
-                dimension="height", line_dash="dashed", line_width=1
-            )
+            dimension="height", line_dash="dashed", line_width=1
+        )
         crosshair = CrosshairTool(overlay=[self._crosshair_width, self._crosshair_height])
         self._figure_config = {
             "height": self._height,
-            "width": self._wídth,
+            "width": self._width,
             "toolbar_location": "below",
             "tools": ["reset", "pan", wheel_zoom, hover, crosshair],
             "tooltips": [(self._x_parameter, "$x"), (self._y_parameter, "$y")],
@@ -95,12 +86,7 @@ class ScatterSlot(Layoutable):
             "alpha": 0.8,
             "name": "values",
         }
-        self._plot_line_config = {
-            "line_width": 1,
-            "color": "navy",
-            "alpha": 0.8,
-            "name": "connecting_line",
-        }
+
         self._figure = figure(**self._figure_config)
         self._figure.toolbar.active_scroll = wheel_zoom
 
@@ -110,10 +96,10 @@ class ScatterSlot(Layoutable):
             "x", "y", source=self._source, **self._plot_values_config
         )
         hover.renderers = [self._parameter_values]
-        
+
         # Add label to show when parameter is missing
         self._no_data_label = Label(
-            x=self._wídth // 2,
+            x=self._width // 2,
             y=self._height // 2,
             x_units="screen",
             y_units="screen",
@@ -146,15 +132,35 @@ class ScatterSlot(Layoutable):
 
     def _x_parameter_selected(self, event: MenuItemClick):
         self._x_parameter = event.item
-        self._source.data["x"] = self._station.data[self._x_parameter]
         self._x_parameter_dropdown.label = expand_abbreviation(self._x_parameter)
+        self._load_parameters()
 
     def _y_parameter_selected(self, event: MenuItemClick):
         self._y_parameter = event.item
-        self._source.data["y"] = self._station.data[self._y_parameter]
         self._y_parameter_dropdown.label = expand_abbreviation(self._y_parameter)
+        self._load_parameters()
 
-    
+    def _load_parameters(self):
+        if {self._x_parameter, self._y_parameter} <= set(self._station.parameters):
+            x_data = self._station.data[
+                self._station.data["parameter"] == self._x_parameter
+            ].sort_values("DEPH")
+
+            y_data = self._station.data[
+                self._station.data["parameter"] == self._y_parameter
+            ].sort_values("DEPH")
+
+            merged_data = pd.merge(x_data, y_data, on="DEPH", suffixes=("_x", "_y"))
+
+            self._source.data = {
+                "x": merged_data["value_x"],
+                "y": merged_data["value_y"],
+            }
+            self._no_data_label.visible = False
+        else:
+            self._source.data = {"x": [], "y": []}
+            self._no_data_label.visible = True
+
     def update_station(self, station: Station):
         self._station = station
         self._x_parameter_dropdown.menu = [
@@ -165,17 +171,7 @@ class ScatterSlot(Layoutable):
             (expand_abbreviation(parameter), parameter)
             for parameter in self._station.parameters
         ]
-
-        x = self._station.data[self._x_parameter]
-        self._x_parameter_dropdown.label = expand_abbreviation(self._x_parameter)
-        self._no_data_label.visible = False
-
-        y = self._station.data[self._y_parameter]
-        self._y_parameter_dropdown.label = expand_abbreviation(self._y_parameter)
-        self._no_data_label.visible = False
-
-        self._source.data = {"x": x, "y": y}
-
+        self._load_parameters()
 
     @property
     def layout(self):
