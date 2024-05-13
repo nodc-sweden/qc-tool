@@ -1,7 +1,8 @@
 from bokeh.models import Button, Dropdown, Row
+from qc_tool.protocols import Layoutable
 
 
-class StationNavigator:
+class StationNavigator(Layoutable):
     def __init__(self, set_station_callback):
         self._stations = None
         self._set_station_callback = set_station_callback

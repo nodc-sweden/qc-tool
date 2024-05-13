@@ -4,6 +4,7 @@ version = "2024.1"
 description = "Kvalitetskontroll av lågupplöst data"
 authors = [
     {name = "Jonatan Skogsfors", email = "jonatan.skogsfors@smhi.se"},
+    {name = "Lena Viktorsson", email = "lena.viktorsson@smhi.se"},
 ]
 dependencies = [
     "bokeh==3.3.4",
