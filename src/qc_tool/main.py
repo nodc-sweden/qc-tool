@@ -1,6 +1,5 @@
 import pandas as pd
 from bokeh.models import Column, Row, TabPanel, Tabs
-from bokeh.layouts import layout
 from bokeh.plotting import curdoc
 
 from qc_tool.file_handler import FileHandler
@@ -25,7 +24,7 @@ class QcTool:
 
         # Parameters
         first_parameter = ProfileSlot(parameter="DOXY_BTL")
-        first_parameter._figure.yaxis.axis_label = 'Depth [m]'
+        first_parameter._figure.yaxis.axis_label = "Depth [m]"
         self._profile_parameters = [
             first_parameter,
             ProfileSlot(linked_parameter=first_parameter, parameter="PHOS"),
@@ -87,7 +86,7 @@ class QcTool:
 
     def _parse_data(self, data: pd.DataFrame):
         data["SERNO"] = data["SERNO"].map("{:03}".format)
-        data["SERNO_STN"] = data["SERNO"] + ' - ' + data["STATN"]
+        data["SERNO_STN"] = data["SERNO"] + " - " + data["STATN"]
         self._data = data
 
         station_series = sorted(data["SERNO_STN"].unique())

@@ -16,7 +16,7 @@ class StationNavigator(Layoutable):
         self._station_dropdown = Dropdown(
             label="Select station",
             button_type="default",
-            min_width = 400,
+            min_width=400,
         )
         self._station_dropdown.on_click(self._select_station_callback)
         self._layout = Row(
