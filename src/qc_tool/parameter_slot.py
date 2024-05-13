@@ -225,9 +225,13 @@ class ParameterSlot(Layoutable):
         ].sort_values("DEPH")
 
         if "quality_flag_long" not in parameter_data:
-            parameter_data["quality_flag_long"] = parameter_data["quality_flag"].map(
-                lambda x: str(QcFlags(QcFlag(x), None, None))
-            )
+            try:
+                parameter_data["quality_flag_long"] = parameter_data["quality_flag"].map(
+                    lambda x: str(QcFlags(QcFlag.parse(x), None, None))
+                )
+            except Exception:
+                print(self._parameter)
+                raise
 
         parameter_data["QC"] = [
             flags.total

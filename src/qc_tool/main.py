@@ -64,12 +64,12 @@ class QcTool:
             parameter.update_station(self._selected_station)
 
     def _parse_data(self, data: pd.DataFrame):
-        data["STNNO"] = data["STNNO"].map("{:03}".format)
+        data["SERNO"] = data["SERNO"].map("{:03}".format)
         self._data = data
 
-        station_series = sorted(self._data["STNNO"].unique())
+        station_series = sorted(self._data["SERNO"].unique())
         self._stations = {
-            series: Station(series, self._data[self._data["STNNO"] == series])
+            series: Station(series, self._data[self._data["SERNO"] == series])
             for series in station_series
         }
 

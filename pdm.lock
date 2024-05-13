@@ -5,7 +5,7 @@
 groups = ["default", "dev"]
 strategy = ["cross_platform", "inherit_metadata"]
 lock_version = "4.4.1"
-content_hash = "sha256:b39fa746f9b009100f2e6e25402fa7fa048c77be2eed6729be33987ce24e01ed"
+content_hash = "sha256:76d7f4eb5c35e0b4ef14d8d617643c43fb674cda3726e52c8ba45839416ec9e5"
 
 [[package]]
 name = "bokeh"
@@ -174,11 +174,11 @@ files = [
 
 [[package]]
 name = "fyskemqc"
-version = "2024.2"
+version = "2024.2.1"
 requires_python = ">=3.9"
 git = "https://github.com/nodc-sweden/fyskemqc"
-ref = "v2024.2"
-revision = "80d01938c9688ef756cba42893e2c730af5cb287"
+ref = "v2024.2.1"
+revision = "6237694c1fa4d750c84f2d058bd8ec41232a52a1"
 summary = "Automatisk kvalitetskontroll av lågupplöst data"
 groups = ["default"]
 dependencies = [
@@ -693,9 +693,11 @@ files = [
 
 [[package]]
 name = "sharkadm"
-version = "0.1.3"
+version = "0.1.4"
 requires_python = ">=3.11"
-path = "../SHARKadm"
+git = "https://github.com/nodc-sweden/SHARKadm"
+ref = "54-export-till-mappad-dataframe"
+revision = "5707e45c261488fe8ccae4841b6c0542548cabb9"
 summary = "Handles workflows for Swedish NODC"
 groups = ["default"]
 dependencies = [
