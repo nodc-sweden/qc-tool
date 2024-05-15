@@ -22,6 +22,8 @@ from bokeh.plotting import figure
 from fyskemqc.qc_flag import QC_FLAG_CSS_COLORS, QcFlag
 from fyskemqc.qc_flags import QcFlags
 
+#from statistics import get_statistics
+
 from qc_tool.protocols import Layoutable
 from qc_tool.station import Station
 
@@ -74,6 +76,10 @@ class ProfileSlot(Layoutable):
             data={
                 "x": [],
                 "y": [],
+                "statistics_depth": [],
+                "mean": [],
+                "std_low": [],
+                "std_high": [],
                 "color": [],
                 "QC": [],
                 "qc_incoming": [],
@@ -134,6 +140,15 @@ class ProfileSlot(Layoutable):
             "alpha": 0.8,
             "name": "connecting_line",
         }
+        self._plot_line_statistics_config = {
+            "line_width": 1,
+            "color": "black",
+            "alpha": 0.8,
+        }
+        self._plot_area_statistics_config = {
+            "color": "grey",
+            "alpha": 0.3,
+        }
         self._figure = figure(**self._figure_config)
         self._figure.toolbar.active_scroll = wheel_zoom
 
@@ -151,6 +166,14 @@ class ProfileSlot(Layoutable):
         self._ocean_floor = BoxAnnotation(fill_color=RGB(60, 25, 0), fill_alpha=0.50)
         self._ocean_floor.level = "underlay"
         self._figure.add_layout(self._ocean_floor)
+
+        # Add statistics
+        self._mean_values = self._figure.line(
+            "mean", "y", source=self._source, **self._plot_line_statistics_config
+        ) 
+        self._std_low = self._figure.harea(
+            x1="std_low", x2="std_high", y="statistics_depth", source=self._source, **self._plot_area_statistics_config
+        ) 
 
         # Add values and lines
         self._lines = self._figure.line(
@@ -245,6 +268,10 @@ class ProfileSlot(Layoutable):
         self._source.data = {
             "x": parameter_data["value"],
             "y": parameter_data["DEPH"],
+            "statistics_depth": parameter_data["DEPH"],
+            # mean: statistics["median"]
+            "std_low": parameter_data["value"]*0.9,
+            "std_high": parameter_data["value"]*1.1,
             "color": colors,
             "qc": [f"{flags.total} ({flags.total.value})" for flags in qc_flags],
             "qc_incoming": [
