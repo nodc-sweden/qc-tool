@@ -15,6 +15,8 @@ class StationInfo(Layoutable):
         ("WINDIR", "Wind direction"),
         ("WINSP", "Wind speed"),
         ("COMNT_VISIT", "Comment"),
+        ("LATIT", "Latitude"),
+        ("LONGI", "Longitude"),
     )
 
     def __init__(self):

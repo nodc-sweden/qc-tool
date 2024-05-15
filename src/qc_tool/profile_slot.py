@@ -21,6 +21,8 @@ from bokeh.models import (
 from bokeh.plotting import figure
 from ocean_data_qc.fyskem.qc_flag import QC_FLAG_CSS_COLORS, QcFlag
 from ocean_data_qc.fyskem.qc_flags import QcFlags
+import pandas as pd
+from nodc_statistics import statistic
 
 from qc_tool.protocols import Layoutable
 from qc_tool.station import Station
@@ -69,7 +71,7 @@ class ProfileSlot(Layoutable):
         self._width = 300
         self._height = 400
         self._parameter = parameter
-        self._station = None
+        self._station: Station = None
         self._source = ColumnDataSource(
             data={
                 "x": [],
@@ -81,8 +83,19 @@ class ProfileSlot(Layoutable):
                 "qc_manual": [],
             }
         )
+
+        self._statistics_source = ColumnDataSource(
+            data={
+                "depth": [],
+                "mean": [],
+                "lower_limit": [],
+                "upper_limit": [],
+            }
+        )
+
         self._parameter_options = ParameterOptions()
 
+        self._primary_plot = linked_parameter is None
         self._initialize_plot(linked_parameter)
 
         # Add buttons for parameter options
@@ -134,6 +147,21 @@ class ProfileSlot(Layoutable):
             "alpha": 0.8,
             "name": "connecting_line",
         }
+        self._plot_line_statistics_config = {
+            "line_width": 4,
+            "color": "black",
+            "alpha": 0.3,
+        }
+        self._plot_dash_statistics_config = {
+            "line_width": 2,
+            "size": 10,
+            "color": "black",
+            "alpha": 0.3,
+        }
+        self._plot_area_statistics_config = {
+            "color": "grey",
+            "alpha": 0.1,
+        }
         self._figure = figure(**self._figure_config)
         self._figure.toolbar.active_scroll = wheel_zoom
 
@@ -151,6 +179,27 @@ class ProfileSlot(Layoutable):
         self._ocean_floor = BoxAnnotation(fill_color=RGB(60, 25, 0), fill_alpha=0.50)
         self._ocean_floor.level = "underlay"
         self._figure.add_layout(self._ocean_floor)
+
+        # Add statistics
+        self._mean_values_line = self._figure.line(
+            "mean",
+            "depth",
+            source=self._statistics_source,
+            **self._plot_line_statistics_config,
+        )
+        self._mean_values_dash = self._figure.dash(
+            "mean",
+            "depth",
+            source=self._statistics_source,
+            **self._plot_dash_statistics_config,
+        )
+        self._stdlimits_area = self._figure.harea(
+            x1="lower_limit",
+            x2="upper_limit",
+            y="depth",
+            source=self._statistics_source,
+            **self._plot_area_statistics_config,
+        )
 
         # Add values and lines
         self._lines = self._figure.line(
@@ -206,6 +255,13 @@ class ProfileSlot(Layoutable):
             "qc_manual": [],
         }
 
+        self._statistics_source.data = {
+            "depth": [],
+            "mean": [],
+            "lower_limit": [],
+            "upper_limit": [],
+        }
+
         if self._parameter in self._station.parameters:
             self._load_parameter()
             self._no_data_label.visible = False
@@ -242,6 +298,15 @@ class ProfileSlot(Layoutable):
 
         colors = parameter_data["quality_flag"].map(lambda flag: QC_FLAG_CSS_COLORS[flag])
 
+        parameter_statistics = (
+            statistic.get_profile_statistics_for_parameter_and_position(
+                self._parameter,
+                self._station.longitude,
+                self._station.latitude,
+                self._station.datetime,
+            )
+        )
+
         self._source.data = {
             "x": parameter_data["value"],
             "y": parameter_data["DEPH"],
@@ -253,7 +318,25 @@ class ProfileSlot(Layoutable):
             "qc_automatic": [str(flags.automatic) for flags in qc_flags],
             "qc_manual": [f"{flags.manual} ({flags.manual.value})" for flags in qc_flags],
         }
+
+        self._update_statistics(parameter_statistics=parameter_statistics)
+
         self._parameter_dropdown.label = expand_abbreviation(self._parameter)
+
+    def _update_statistics(self, parameter_statistics):
+        # Convert the statistical data to a DataFrame for easier filtering
+        stats_df = pd.DataFrame(parameter_statistics)
+
+        # Filter rows where 'depth' is less than or equal to self._station.water_depth
+        filtered_stats = stats_df[stats_df["depth"] <= self._station.water_depth*1.1]
+
+        # Update the Bokeh data source with the filtered statistics
+        self._statistics_source.data = {
+            "depth": filtered_stats["depth"].tolist(),
+            "mean": filtered_stats["mean"].tolist(),
+            "lower_limit": filtered_stats["lower_limit"].tolist(),
+            "upper_limit": filtered_stats["upper_limit"].tolist(),
+        }
 
     @property
     def layout(self):
