@@ -22,7 +22,7 @@ from bokeh.plotting import figure
 from fyskemqc.qc_flag import QC_FLAG_CSS_COLORS, QcFlag
 from fyskemqc.qc_flags import QcFlags
 
-#from statistics import get_statistics
+from nodc_statistics import statistics
 
 from qc_tool.protocols import Layoutable
 from qc_tool.station import Station
@@ -71,15 +71,11 @@ class ProfileSlot(Layoutable):
         self._width = 300
         self._height = 400
         self._parameter = parameter
-        self._station = None
+        self._station: Station = None
         self._source = ColumnDataSource(
             data={
                 "x": [],
                 "y": [],
-                "statistics_depth": [],
-                "mean": [],
-                "std_low": [],
-                "std_high": [],
                 "color": [],
                 "QC": [],
                 "qc_incoming": [],
@@ -87,8 +83,19 @@ class ProfileSlot(Layoutable):
                 "qc_manual": [],
             }
         )
+
+        self._statistics_source = ColumnDataSource(
+            data={
+                "depth": [],
+                "mean": [],
+                "lower_limit": [],
+                "upper_limit": [],
+            }
+        )
+
         self._parameter_options = ParameterOptions()
 
+        self._primary_plot = linked_parameter is None
         self._initialize_plot(linked_parameter)
 
         # Add buttons for parameter options
@@ -141,13 +148,13 @@ class ProfileSlot(Layoutable):
             "name": "connecting_line",
         }
         self._plot_line_statistics_config = {
-            "line_width": 1,
+            "line_width": 4,
             "color": "black",
-            "alpha": 0.8,
+            "alpha": 0.3,
         }
         self._plot_area_statistics_config = {
             "color": "grey",
-            "alpha": 0.3,
+            "alpha": 0.1,
         }
         self._figure = figure(**self._figure_config)
         self._figure.toolbar.active_scroll = wheel_zoom
@@ -169,11 +176,18 @@ class ProfileSlot(Layoutable):
 
         # Add statistics
         self._mean_values = self._figure.line(
-            "mean", "y", source=self._source, **self._plot_line_statistics_config
-        ) 
-        self._std_low = self._figure.harea(
-            x1="std_low", x2="std_high", y="statistics_depth", source=self._source, **self._plot_area_statistics_config
-        ) 
+            "mean",
+            "depth",
+            source=self._statistics_source,
+            **self._plot_line_statistics_config,
+        )
+        self._limits = self._figure.harea(
+            x1="lower_limit",
+            x2="upper_limit",
+            y="depth",
+            source=self._statistics_source,
+            **self._plot_area_statistics_config,
+        )
 
         # Add values and lines
         self._lines = self._figure.line(
@@ -229,6 +243,13 @@ class ProfileSlot(Layoutable):
             "qc_manual": [],
         }
 
+        self._statistics_source.data = {
+            "depth": [],
+            "mean": [],
+            "lower_limit": [],
+            "upper_limit": [],
+        }
+
         if self._parameter in self._station.parameters:
             self._load_parameter()
             self._no_data_label.visible = False
@@ -237,6 +258,11 @@ class ProfileSlot(Layoutable):
 
         self._ocean_floor.top = self._station.water_depth
         self._sync_parameter_options()
+
+        # TODO: Gör detta senare eller stäng av dynamisk range på något sätt
+        if self._primary_plot:
+            self._figure.y_range.start = 0
+            self._figure.y_range.end = self._station.water_depth
 
     def _parameter_selected(self, event: MenuItemClick):
         self._parameter = event.item
@@ -265,13 +291,19 @@ class ProfileSlot(Layoutable):
 
         colors = parameter_data["QC"].map(lambda flag: QC_FLAG_CSS_COLORS[flag])
 
+        parameter_name = self._parameter.replace("_CTD", "").replace("_BTL", "")
+        parameter_statistics = (
+            statistics.get_profile_statistics_for_parameter_and_position(
+                parameter_name,
+                self._station.longitude,
+                self._station.latitude,
+                self._station.datetime,
+            )
+        )
+
         self._source.data = {
             "x": parameter_data["value"],
             "y": parameter_data["DEPH"],
-            "statistics_depth": parameter_data["DEPH"],
-            # mean: statistics["median"]
-            "std_low": parameter_data["value"]*0.9,
-            "std_high": parameter_data["value"]*1.1,
             "color": colors,
             "qc": [f"{flags.total} ({flags.total.value})" for flags in qc_flags],
             "qc_incoming": [
@@ -279,6 +311,13 @@ class ProfileSlot(Layoutable):
             ],
             "qc_automatic": [str(flags.automatic) for flags in qc_flags],
             "qc_manual": [f"{flags.manual} ({flags.manual.value})" for flags in qc_flags],
+        }
+
+        self._statistics_source.data = {
+            "depth": parameter_statistics["depth"],
+            "mean": parameter_statistics["mean"],
+            "lower_limit": parameter_statistics["lower_limit"],
+            "upper_limit": parameter_statistics["upper_limit"],
         }
         self._parameter_dropdown.label = expand_abbreviation(self._parameter)
 

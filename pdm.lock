@@ -5,7 +5,7 @@
 groups = ["default", "dev"]
 strategy = ["cross_platform", "inherit_metadata"]
 lock_version = "4.4.1"
-content_hash = "sha256:38624c3e711c2840130012497d35c09acd25b7f72d910108cd8d902ad5a08f05"
+content_hash = "sha256:0466adc4aa51425065c6cbf0f6ccd246ebbeb1826f88700bcbd64edcf7ff3e0b"
 
 [[package]]
 name = "bokeh"
@@ -304,6 +304,14 @@ groups = ["default"]
 dependencies = [
     "requests>=2.31.0",
 ]
+
+[[package]]
+name = "nodc-statistics"
+version = "2024.1"
+requires_python = ">=3.9"
+path = "../nodc-statistics"
+summary = "Statistics for NODC"
+groups = ["default"]
 
 [[package]]
 name = "nodeenv"
