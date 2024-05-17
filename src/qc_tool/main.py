@@ -1,6 +1,7 @@
 import pandas as pd
 from bokeh.models import Column, Row, TabPanel, Tabs
 from bokeh.plotting import curdoc
+from fyskemqc.fyskemqc import FysKemQc
 
 from qc_tool.file_handler import FileHandler
 from qc_tool.flag_info import FlagInfo
@@ -38,7 +39,9 @@ class QcTool:
             ScatterSlot(x_parameter="PHOS", y_parameter="NTRZ"),
         ]
 
-        self._file_handler = FileHandler(self.load_file_callback)
+        self._file_handler = FileHandler(
+            self.load_file_callback, self.automatic_qc_callback
+        )
         self._flag_info = FlagInfo()
 
         # Top row
@@ -72,6 +75,14 @@ class QcTool:
 
     def load_file_callback(self, data):
         self._parse_data(data)
+
+    def automatic_qc_callback(self):
+        print("Nu börjas det")
+        fys_kem_qc = FysKemQc(self._data)
+        fys_kem_qc.run_automatic_qc()
+        print("KLART!")
+        for parameter in self._profile_parameters:
+            parameter.update_station(self._selected_station)
 
     def set_station(self, station_series: str):
         self._station_navigator.set_station(station_series)
