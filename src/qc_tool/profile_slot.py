@@ -224,7 +224,7 @@ class ProfileSlot(Layoutable):
             self._station.data["parameter"] == self._parameter
         ].sort_values("DEPH")
 
-        if "quality_flag_long" not in parameter_data:
+        if "quality_flag_long" not in parameter_data.columns:
             try:
                 parameter_data["quality_flag_long"] = parameter_data["quality_flag"].map(
                     lambda x: str(QcFlags(QcFlag.parse(x), None, None))
@@ -233,14 +233,14 @@ class ProfileSlot(Layoutable):
                 print(self._parameter)
                 raise
 
-        parameter_data["QC"] = [
+        parameter_data["quality_flag"] = [
             flags.total
             for flags in map(QcFlags.from_string, parameter_data["quality_flag_long"])
         ]
 
         qc_flags = list(map(QcFlags.from_string, parameter_data["quality_flag_long"]))
 
-        colors = parameter_data["QC"].map(lambda flag: QC_FLAG_CSS_COLORS[flag])
+        colors = parameter_data["quality_flag"].map(lambda flag: QC_FLAG_CSS_COLORS[flag])
 
         self._source.data = {
             "x": parameter_data["value"],

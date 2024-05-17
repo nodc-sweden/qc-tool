@@ -1,6 +1,10 @@
+import time
+
 import pandas as pd
 from bokeh.models import Column, Row, TabPanel, Tabs
 from bokeh.plotting import curdoc
+from fyskemqc.fyskemqc import FysKemQc
+from fyskemqc.qc_flag_tuple import QcField
 
 from qc_tool.file_handler import FileHandler
 from qc_tool.flag_info import FlagInfo
@@ -38,7 +42,9 @@ class QcTool:
             ScatterSlot(x_parameter="PHOS", y_parameter="NTRZ"),
         ]
 
-        self._file_handler = FileHandler(self.load_file_callback)
+        self._file_handler = FileHandler(
+            self.load_file_callback, self.automatic_qc_callback
+        )
         self._flag_info = FlagInfo()
 
         # Top row
@@ -73,6 +79,15 @@ class QcTool:
     def load_file_callback(self, data):
         self._parse_data(data)
 
+    def automatic_qc_callback(self):
+        print("Automatic QC started...")
+        t0 = time.perf_counter()
+        fys_kem_qc = FysKemQc(self._data)
+        fys_kem_qc.run_automatic_qc()
+        t1 = time.perf_counter()
+        print(f"Automatic QC finished ({t1-t0:.3f} .s)")
+        self._parse_data(self._data, self._selected_station.series)
+
     def set_station(self, station_series: str):
         self._station_navigator.set_station(station_series)
         self._selected_station = self._stations[station_series]
@@ -84,13 +99,21 @@ class QcTool:
         for parameter in self._scatter_parameters:
             parameter.update_station(self._selected_station)
 
-    def _parse_data(self, data: pd.DataFrame):
+    def _parse_data(self, data: pd.DataFrame, station: str = None):
+        # Create station name with zero padded serial number
         data["SERNO"] = data["SERNO"].map("{:03}".format)
         data["SERNO_STN"] = data["SERNO"] + " - " + data["STATN"]
+
+        # Create the long qc string using "quality_flag" as incoming qc
+        if "quality_flag_long" not in data.columns and "quality_flag" in data.columns:
+            data["quality_flag_long"] = data["quality_flag"] + f"_{'0' * len(QcField)}_0"
+
         self._data = data
 
+        # Extract list of all station visits
         station_series = sorted(data["SERNO_STN"].unique())
-        # en dict med stationsobjekt, nyckel stationens serie
+
+        # Initialize all stations
         self._stations = {
             series: Station(series, self._data[self._data["SERNO_STN"] == series])
             for series in station_series
@@ -98,7 +121,7 @@ class QcTool:
 
         self._station_navigator.load_stations(self._stations)
         self._map.load_stations(self._stations)
-        self.set_station(station_series[0])
+        self.set_station(station or station_series[0])
 
 
 QcTool()
