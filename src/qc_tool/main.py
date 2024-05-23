@@ -81,8 +81,7 @@ class QcTool:
         fys_kem_qc = FysKemQc(self._data)
         fys_kem_qc.run_automatic_qc()
         print("KLART!")
-        for parameter in self._profile_parameters:
-            parameter.update_station(self._selected_station)
+        self._parse_data(self._data)
 
     def set_station(self, station_series: str):
         self._station_navigator.set_station(station_series)

@@ -31,7 +31,7 @@ class Station:
             if column in self._data
         }
 
-        # self._parameters = sorted(data["parameter"].unique())
+        self._parameters = sorted(data["parameter"].unique())
 
     @property
     def parameters(self) -> list[str]:
