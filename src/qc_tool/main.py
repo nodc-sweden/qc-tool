@@ -78,7 +78,8 @@ class QcTool:
 
     def automatic_qc_callback(self):
         print("Nu börjas det")
-        fys_kem_qc = FysKemQc(self._data)
+        fys_kem_qc = FysKemQc(self._data, {series: station._data for series, station in self._stations.items()})
+        fys_kem_qc.loopa_series()
         fys_kem_qc.run_automatic_qc()
         print("KLART!")
         self._parse_data(self._data)
