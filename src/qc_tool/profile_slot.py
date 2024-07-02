@@ -115,7 +115,7 @@ class ProfileSlot(Layoutable):
             "toolbar_location": "below",
             "tools": ["reset", "pan", wheel_zoom, hover, crosshair, select],
             "tooltips": [
-                ("Value", "@x"),
+                ("Parameter", "@x"),
                 ("Depth", "@y"),
                 ("QC", "@qc"),
                 ("Incoming QC", "@qc_incoming"),

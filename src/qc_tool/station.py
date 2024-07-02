@@ -40,6 +40,10 @@ class Station:
     @property
     def data(self):
         return self._data
+    
+    @property
+    def indices(self):
+        return self._data.index
 
     @property
     def datetime(self):

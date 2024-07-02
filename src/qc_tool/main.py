@@ -77,12 +77,38 @@ class QcTool:
         self._parse_data(data)
 
     def automatic_qc_callback(self):
+        """
+        Kör automatisk qc på en station i taget.
+        self._stations har skapats första gången _parse_data har körts
+        """
+        # lägg till variable quality_flag_long i data
+        if "quality_flag_long" not in self._data:
+            self._data["quality_flag_long"] = ""
+
         print("Nu börjas det")
-        fys_kem_qc = FysKemQc(self._data, {series: station._data for series, station in self._stations.items()})
-        fys_kem_qc.loopa_series()
-        fys_kem_qc.run_automatic_qc()
-        print("KLART!")
+        print(f"len self_data i main: {len(self._data)}")
+        station_series = sorted(self._data["SERNO_STN"].unique())
+        for series, station in self._stations.items():
+            print(f"kör qc för serie: {series}")
+            if station.indices.equals(self._data[self._data["SERNO_STN"] == series].index):
+                print("Index are identical")
+            else:
+                print("Index are not identical")
+            if self._data.loc[station.indices].index.equals(station.indices):
+                print("Index are identical")
+            else:
+                print("Index are not identical")
+            fys_kem_qc = FysKemQc(self._data.loc[station.indices])
+            fys_kem_qc.run_automatic_qc()
+            
+            # Uppdatera orginalet (self._data) med de nya värdena
+            for index, new_value in fys_kem_qc.updates.items():
+                self._data.loc[index, 'quality_flag_long'] = new_value
+
+        print(self._data['quality_flag_long'].unique())
         self._parse_data(self._data)
+        print("KLART!")
+            
 
     def set_station(self, station_series: str):
         self._station_navigator.set_station(station_series)
