@@ -2,6 +2,8 @@ import pandas as pd
 from bokeh.models import Column, Row, TabPanel, Tabs
 from bokeh.plotting import curdoc
 from fyskemqc.fyskemqc import FysKemQc
+from fyskemqc.qc_flags import QcFlags
+from fyskemqc.qc_flag import QcFlag
 
 from qc_tool.file_handler import FileHandler
 from qc_tool.flag_info import FlagInfo
@@ -75,29 +77,16 @@ class QcTool:
 
     def load_file_callback(self, data):
         self._parse_data(data)
+        # lägg till metadata test här
 
     def automatic_qc_callback(self):
         """
         Kör automatisk qc på en station i taget.
         self._stations har skapats första gången _parse_data har körts
         """
-        # lägg till variable quality_flag_long i data
-        if "quality_flag_long" not in self._data:
-            self._data["quality_flag_long"] = ""
 
         print("Nu börjas det")
-        print(f"len self_data i main: {len(self._data)}")
-        station_series = sorted(self._data["SERNO_STN"].unique())
         for series, station in self._stations.items():
-            print(f"kör qc för serie: {series}")
-            if station.indices.equals(self._data[self._data["SERNO_STN"] == series].index):
-                print("Index are identical")
-            else:
-                print("Index are not identical")
-            if self._data.loc[station.indices].index.equals(station.indices):
-                print("Index are identical")
-            else:
-                print("Index are not identical")
             fys_kem_qc = FysKemQc(self._data.loc[station.indices])
             fys_kem_qc.run_automatic_qc()
             
@@ -105,7 +94,7 @@ class QcTool:
             for index, new_value in fys_kem_qc.updates.items():
                 self._data.loc[index, 'quality_flag_long'] = new_value
 
-        print(self._data['quality_flag_long'].unique())
+        print(f"unika quality_flag_long: {self._data['quality_flag_long'].unique()}")
         self._parse_data(self._data)
         print("KLART!")
             
@@ -124,6 +113,17 @@ class QcTool:
     def _parse_data(self, data: pd.DataFrame):
         data["SERNO"] = data["SERNO"].map("{:03}".format)
         data["SERNO_STN"] = data["SERNO"] + " - " + data["STATN"]
+
+        # Lägg til quality_flag_long som innehåller incoming_automatic_manual.
+        if "quality_flag_long" not in data:
+            try:
+                data["quality_flag_long"] = data["quality_flag"].map(
+                    lambda x: str(QcFlags(QcFlag.parse(x), None, None))
+                )
+            except Exception:
+                print('tried to set quality_flag_long')
+                raise
+
         self._data = data
 
         station_series = sorted(data["SERNO_STN"].unique())
