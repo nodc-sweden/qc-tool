@@ -5,6 +5,8 @@ from fyskemqc.fyskemqc import FysKemQc
 from fyskemqc.qc_flags import QcFlags
 from fyskemqc.qc_flag import QcFlag
 
+from metadataqc.metadataqc import MetaDataQc
+
 from qc_tool.file_handler import FileHandler
 from qc_tool.flag_info import FlagInfo
 from qc_tool.map import Map
@@ -77,6 +79,7 @@ class QcTool:
 
     def load_file_callback(self, data):
         self._parse_data(data)
+        self._metadata_check()
         # lägg till metadata test här
 
     def automatic_qc_callback(self):
@@ -89,7 +92,6 @@ class QcTool:
         for series, station in self._stations.items():
             fys_kem_qc = FysKemQc(self._data.loc[station.indices])
             fys_kem_qc.run_automatic_qc()
-            
             # Uppdatera orginalet (self._data) med de nya värdena
             for index, new_value in fys_kem_qc.updates.items():
                 self._data.loc[index, 'quality_flag_long'] = new_value
@@ -97,7 +99,7 @@ class QcTool:
         print(f"unika quality_flag_long: {self._data['quality_flag_long'].unique()}")
         self._parse_data(self._data)
         print("KLART!")
-            
+
 
     def set_station(self, station_series: str):
         self._station_navigator.set_station(station_series)
@@ -136,6 +138,15 @@ class QcTool:
         self._station_navigator.load_stations(self._stations)
         self._map.load_stations(self._stations)
         self.set_station(station_series[0])
+
+    def _metadata_check(self):
+        print("kollar metadata")
+        print("de här serierna finns:")
+        for serie, station in self._stations.items():
+            print(serie)
+            meta_data_qc = MetaDataQc(station.common)
+            meta_data_qc.run_automatic_qc()
+            print(meta_data_qc.report)
 
 
 QcTool()
