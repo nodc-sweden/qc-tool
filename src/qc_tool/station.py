@@ -17,7 +17,7 @@ class Station:
         "STIME",
         "SERNO",
         "WADEP",
-        "WINDR",
+        "WINDIR",
         "WINSP",
     }
 
@@ -25,11 +25,29 @@ class Station:
         self._series = series
         self._data = data
 
-        self._common = {
-            column: self._data[column].unique()[0]
-            for column in self.COMMON_COLUMNS
-            if column in self._data
-        }
+        # self._common = {
+        #     column: self._data[column].unique()[0]
+        #     for column in self.COMMON_COLUMNS
+        #     if column in self._data
+        # }
+
+        self._common = {}
+        for column in self.COMMON_COLUMNS:
+            if column in self._data:
+                if len(self._data[column].unique()) > 1:
+                    print(
+                        f"flera olika värden för {self._series} i metadatakolumn {column}"
+                    )
+                    print(
+                        f"De värden som hittats är: {self._data[column].unique()}"
+                        )
+                    # Konvertera värdena till strängar och sedan till en lista
+                    unique_values_str = list(map(str, self._data[column].unique()))
+                    # Slå ihop alla värden till en enda sträng, separerade med kommatecken
+                    self._common[column] = ", ".join(unique_values_str)
+                else:
+                    # TODO: ta bort [0] och lägg in alla värden. Hantera i station_info till tabellen
+                    self._common[column] = self._data[column].unique()[0]
 
         self._parameters = sorted(data["parameter"].unique())
 

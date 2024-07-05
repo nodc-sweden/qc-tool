@@ -12,7 +12,7 @@ class StationInfo(Layoutable):
         ("WADEP", "Water depth"),
         ("AIRTEMP", "Air temperature"),
         ("AIRPRES", "Air pressure"),
-        ("WINDR", "Wind direction"),
+        ("WINDIR", "Wind direction"),
         ("WINSP", "Wind speed"),
         ("COMNT_VISIT", "Comment"),
     )
