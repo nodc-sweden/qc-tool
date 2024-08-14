@@ -5,7 +5,7 @@
 groups = ["default", "dev"]
 strategy = ["cross_platform", "inherit_metadata"]
 lock_version = "4.4.1"
-content_hash = "sha256:38624c3e711c2840130012497d35c09acd25b7f72d910108cd8d902ad5a08f05"
+content_hash = "sha256:6aa0c05d051af12c7c59b2a28f08496567582a80f6d8312eb4cfec7bb0941fed"
 
 [[package]]
 name = "bokeh"
@@ -174,11 +174,11 @@ files = [
 
 [[package]]
 name = "fyskemqc"
-version = "2024.2.2"
+version = "2024.4.1"
 requires_python = ">=3.9"
 git = "https://github.com/nodc-sweden/fyskemqc"
-ref = "v2024.2.2"
-revision = "d35e49b18459a5ccd2452af44c81ab472000fc33"
+ref = "v2024.4.1"
+revision = "8a5e503111d7ec10d0cb4c10621d1d2d024a5acb"
 summary = "Automatisk kvalitetskontroll av lågupplöst data"
 groups = ["default"]
 dependencies = [

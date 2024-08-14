@@ -17,7 +17,7 @@ class Station:
         "STIME",
         "SERNO",
         "WADEP",
-        "WINDR",
+        "WINDIR",
         "WINSP",
     }
 
