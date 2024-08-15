@@ -15,6 +15,10 @@ from bokeh.plotting import figure
 from qc_tool.protocols import Layoutable
 from qc_tool.station import Station
 
+from fyskemqc.qc_flag import QC_FLAG_CSS_COLORS, QcFlag
+from fyskemqc.qc_flags import QcFlags
+
+
 PARAMETER_ABBREVIATIONS = {
     "ALKY": "Alkalinity",
     "AMON": "Ammonium",
@@ -61,7 +65,13 @@ class ScatterSlot(Layoutable):
         self._x_parameter = x_parameter
         self._y_parameter = y_parameter
         self._station = None
-        self._source = ColumnDataSource(data={"x": [], "y": []})
+        self._source = ColumnDataSource(
+            data={
+                "x": [],
+                "y": [],
+                "color": [],
+            }
+        )
 
         self._initialize_map()
 
@@ -82,7 +92,7 @@ class ScatterSlot(Layoutable):
         }
         self._plot_values_config = {
             "size": 7,
-            "color": "navy",
+            #"color": "navy",
             "alpha": 0.8,
             "name": "values",
         }
@@ -93,7 +103,7 @@ class ScatterSlot(Layoutable):
         # Add values and lines
         # _parameter_values är punkterna i plotten
         self._parameter_values = self._figure.scatter(
-            "x", "y", source=self._source, **self._plot_values_config
+            "x", "y", source=self._source, color="color", **self._plot_values_config
         )
         hover.renderers = [self._parameter_values]
 
@@ -142,9 +152,18 @@ class ScatterSlot(Layoutable):
 
     def _load_parameters(self):
         if {self._x_parameter, self._y_parameter} <= set(self._station.parameters):
+
             x_data = self._station.data[
                 self._station.data["parameter"] == self._x_parameter
             ].sort_values("DEPH")
+            if "quality_flag_long" not in x_data.columns:
+                try:
+                    x_data["quality_flag_long"] = x_data["quality_flag"].map(
+                        lambda x: str(QcFlags(QcFlag.parse(x), None, None))
+                    )
+                except Exception:
+                    print(self._parameter)
+                    raise
 
             y_data = self._station.data[
                 self._station.data["parameter"] == self._y_parameter
@@ -152,13 +171,23 @@ class ScatterSlot(Layoutable):
 
             merged_data = pd.merge(x_data, y_data, on="DEPH", suffixes=("_x", "_y"))
 
+            merged_data["quality_flag_x"] = [
+                flags.total
+                for flags in map(QcFlags.from_string, merged_data["quality_flag_long_x"])
+            ]
+
+            qc_flags = list(map(QcFlags.from_string, merged_data["quality_flag_long_x"]))
+
+            colors = merged_data["quality_flag_x"].map(lambda flag: QC_FLAG_CSS_COLORS[flag])
+            print(colors)
             self._source.data = {
                 "x": merged_data["value_x"],
                 "y": merged_data["value_y"],
+                "color": colors
             }
             self._no_data_label.visible = False
         else:
-            self._source.data = {"x": [], "y": []}
+            self._source.data = {"x": [], "y": [], "color": []}
             self._no_data_label.visible = True
 
     def update_station(self, station: Station):
