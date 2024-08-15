@@ -48,7 +48,7 @@ class QcTool:
             ScatterSlot(x_parameter="DOXY_BTL", y_parameter="DOXY_CTD"),
             ScatterSlot(x_parameter="ALKY", y_parameter="SALT_CTD"),
             ScatterSlot(x_parameter="PHOS", y_parameter="NTRZ"),
-            ScatterSlot(x_parameter="H2S", y_parameter="NTRZ"),
+            ScatterSlot(x_parameter="NTRZ", y_parameter="H2S"),
         ]
 
         self._file_handler = FileHandler(

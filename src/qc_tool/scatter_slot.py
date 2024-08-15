@@ -7,8 +7,10 @@ from bokeh.models import (
     Dropdown,
     HoverTool,
     Label,
+    Div,
     Span,
     WheelZoomTool,
+    Row,
 )
 from bokeh.plotting import figure
 
@@ -88,11 +90,16 @@ class ScatterSlot(Layoutable):
             "width": self._width,
             "toolbar_location": "below",
             "tools": ["reset", "pan", wheel_zoom, hover, crosshair],
-            "tooltips": [(self._x_parameter, "$x"), (self._y_parameter, "$y")],
+            "tooltips": [
+                (self._x_parameter, "@x"),
+                (self._y_parameter, "@y"),
+                ("Depth", "@depth"),
+                (f"QC {self._x_parameter}", "@qcx"),
+                (f"QC {self._y_parameter}", "@qcy")],
         }
+
         self._plot_values_config = {
             "size": 7,
-            #"color": "navy",
             "alpha": 0.8,
             "name": "values",
         }
@@ -175,19 +182,34 @@ class ScatterSlot(Layoutable):
                 flags.total
                 for flags in map(QcFlags.from_string, merged_data["quality_flag_long_x"])
             ]
+            merged_data["quality_flag_y"] = [
+                flags.total
+                for flags in map(QcFlags.from_string, merged_data["quality_flag_long_y"])
+            ]
 
-            qc_flags = list(map(QcFlags.from_string, merged_data["quality_flag_long_x"]))
+            qc_flagsx = list(map(QcFlags.from_string, merged_data["quality_flag_long_x"]))
+            qc_flagsy = list(map(QcFlags.from_string, merged_data["quality_flag_long_y"]))
+
 
             colors = merged_data["quality_flag_x"].map(lambda flag: QC_FLAG_CSS_COLORS[flag])
-            print(colors)
+            print(merged_data['DEPH'])
             self._source.data = {
                 "x": merged_data["value_x"],
                 "y": merged_data["value_y"],
-                "color": colors
+                "color": colors,
+                "depth": merged_data["DEPH"],
+                "qcx": [f"{flags.total} ({flags.total.value})" for flags in qc_flagsx],
+                "qcy": [f"{flags.total} ({flags.total.value})" for flags in qc_flagsy],
             }
             self._no_data_label.visible = False
         else:
-            self._source.data = {"x": [], "y": [], "color": []}
+            self._source.data = {
+                "x": [],
+                "y": [],
+                "color": [],
+                "depth": [],
+                "qc": [],
+            }
             self._no_data_label.visible = True
 
     def update_station(self, station: Station):
@@ -205,5 +227,7 @@ class ScatterSlot(Layoutable):
     @property
     def layout(self):
         return column(
-            self._x_parameter_dropdown, self._y_parameter_dropdown, self._figure
+            Row(children=[Div(text="x: "), self._x_parameter_dropdown]),
+            Row(children=[Div(text="y: "), self._y_parameter_dropdown]),
+            self._figure
         )
