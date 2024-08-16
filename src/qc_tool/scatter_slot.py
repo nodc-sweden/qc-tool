@@ -67,18 +67,19 @@ class ScatterSlot(Layoutable):
 
     def _initialize_map(self):
         wheel_zoom = WheelZoomTool()
-        hover = HoverTool()
+        self._hover = HoverTool()
+
         self._crosshair_width = Span(dimension="width", line_dash="dashed", line_width=1)
         self._crosshair_height = Span(
             dimension="height", line_dash="dashed", line_width=1
         )
         crosshair = CrosshairTool(overlay=[self._crosshair_width, self._crosshair_height])
+
         self._figure_config = {
             "height": self._height,
             "width": self._width,
             "toolbar_location": "below",
-            "tools": ["reset", "pan", wheel_zoom, hover, crosshair],
-            "tooltips": [(self._x_parameter, "$x"), (self._y_parameter, "$y")],
+            "tools": ["reset", "pan", wheel_zoom, self._hover, crosshair],
         }
         self._plot_values_config = {
             "size": 7,
@@ -95,7 +96,7 @@ class ScatterSlot(Layoutable):
         self._parameter_values = self._figure.scatter(
             "x", "y", source=self._source, **self._plot_values_config
         )
-        hover.renderers = [self._parameter_values]
+        self._hover.renderers = [self._parameter_values]
 
         # Add label to show when parameter is missing
         self._no_data_label = Label(
@@ -156,6 +157,7 @@ class ScatterSlot(Layoutable):
                 "x": merged_data["value_x"],
                 "y": merged_data["value_y"],
             }
+            self._hover.tooltips = [(self._x_parameter, "@x"), (self._y_parameter, "@y")]
             self._no_data_label.visible = False
         else:
             self._source.data = {"x": [], "y": []}
