@@ -2,15 +2,19 @@ import pandas as pd
 from bokeh.events import MenuItemClick
 from bokeh.layouts import column
 from bokeh.models import (
+    Button,
     ColumnDataSource,
     CrosshairTool,
     Dropdown,
     HoverTool,
     Label,
+    Row,
     Span,
     WheelZoomTool,
 )
 from bokeh.plotting import figure
+from fyskemqc.qc_flag import QC_FLAG_CSS_COLORS
+from fyskemqc.qc_flags import QcFlags
 
 from qc_tool.protocols import Layoutable
 from qc_tool.station import Station
@@ -56,35 +60,36 @@ class ScatterSlot(Layoutable):
         x_parameter: str = "",
         y_parameter: str = "",
     ):
-        self._width = 500
-        self._height = 500
+        self._width = 475
+        self._height = 475
         self._x_parameter = x_parameter
         self._y_parameter = y_parameter
         self._station = None
-        self._source = ColumnDataSource(data={"x": [], "y": []})
+        self._source = ColumnDataSource(data={"x": [], "y": [], "colors": []})
 
-        self._initialize_map()
+        self._initialize_plot()
 
-    def _initialize_map(self):
+    def _initialize_plot(self):
         wheel_zoom = WheelZoomTool()
-        hover = HoverTool()
+        self._hover = HoverTool()
+
         self._crosshair_width = Span(dimension="width", line_dash="dashed", line_width=1)
         self._crosshair_height = Span(
             dimension="height", line_dash="dashed", line_width=1
         )
         crosshair = CrosshairTool(overlay=[self._crosshair_width, self._crosshair_height])
+
         self._figure_config = {
             "height": self._height,
             "width": self._width,
             "toolbar_location": "below",
-            "tools": ["reset", "pan", wheel_zoom, hover, crosshair],
-            "tooltips": [(self._x_parameter, "$x"), (self._y_parameter, "$y")],
+            "tools": ["reset", "pan", wheel_zoom, self._hover, crosshair],
         }
         self._plot_values_config = {
             "size": 7,
-            "color": "navy",
             "alpha": 0.8,
             "name": "values",
+            "color": "colors",
         }
 
         self._figure = figure(**self._figure_config)
@@ -95,7 +100,7 @@ class ScatterSlot(Layoutable):
         self._parameter_values = self._figure.scatter(
             "x", "y", source=self._source, **self._plot_values_config
         )
-        hover.renderers = [self._parameter_values]
+        self._hover.renderers = [self._parameter_values]
 
         # Add label to show when parameter is missing
         self._no_data_label = Label(
@@ -116,7 +121,7 @@ class ScatterSlot(Layoutable):
             button_type="default",
             menu=[],
             name="x_parameter",
-            width=200,
+            width=190,
         )
         self._x_parameter_dropdown.on_click(self._x_parameter_selected)
 
@@ -126,9 +131,12 @@ class ScatterSlot(Layoutable):
             button_type="default",
             menu=[],
             name="y_parameter",
-            width=200,
+            width=190,
         )
         self._y_parameter_dropdown.on_click(self._y_parameter_selected)
+
+        self._swap_axis_button = Button(label="X ↔ Y", width=65)
+        self._swap_axis_button.on_click(self._swap_axis_callback)
 
     def _x_parameter_selected(self, event: MenuItemClick):
         self._x_parameter = event.item
@@ -137,6 +145,12 @@ class ScatterSlot(Layoutable):
 
     def _y_parameter_selected(self, event: MenuItemClick):
         self._y_parameter = event.item
+        self._y_parameter_dropdown.label = expand_abbreviation(self._y_parameter)
+        self._load_parameters()
+
+    def _swap_axis_callback(self, event):
+        self._x_parameter, self._y_parameter = self._y_parameter, self._x_parameter
+        self._x_parameter_dropdown.label = expand_abbreviation(self._x_parameter)
         self._y_parameter_dropdown.label = expand_abbreviation(self._y_parameter)
         self._load_parameters()
 
@@ -152,13 +166,38 @@ class ScatterSlot(Layoutable):
 
             merged_data = pd.merge(x_data, y_data, on="DEPH", suffixes=("_x", "_y"))
 
+            merged_data["quality_flag_x"] = [
+                flags.total
+                for flags in map(QcFlags.from_string, merged_data["quality_flag_long_x"])
+            ]
+            merged_data["quality_flag_y"] = [
+                flags.total
+                for flags in map(QcFlags.from_string, merged_data["quality_flag_long_y"])
+            ]
+            colors = merged_data["quality_flag_x"].map(
+                lambda flag: QC_FLAG_CSS_COLORS[flag]
+            )
+            qc_flags_x = map(QcFlags.from_string, merged_data["quality_flag_long_x"])
+            qc_flags_y = map(QcFlags.from_string, merged_data["quality_flag_long_y"])
             self._source.data = {
                 "x": merged_data["value_x"],
                 "y": merged_data["value_y"],
+                "colors": colors,
+                "deph": merged_data["DEPH"],
+                "qcx": [f"{flags.total} ({flags.total.value})" for flags in qc_flags_x],
+                "qcy": [f"{flags.total} ({flags.total.value})" for flags in qc_flags_y],
             }
+
+            self._hover.tooltips = [
+                (self._x_parameter, "@x"),
+                (self._y_parameter, "@y"),
+                ("Depth", "@deph"),
+                (f"QC {self._x_parameter}", "@qcx"),
+                (f"QC {self._y_parameter}", "@qcy"),
+            ]
             self._no_data_label.visible = False
         else:
-            self._source.data = {"x": [], "y": []}
+            self._source.data = {"x": [], "y": [], "colors": []}
             self._no_data_label.visible = True
 
     def update_station(self, station: Station):
@@ -176,5 +215,12 @@ class ScatterSlot(Layoutable):
     @property
     def layout(self):
         return column(
-            self._x_parameter_dropdown, self._y_parameter_dropdown, self._figure
+            Row(
+                children=[
+                    self._x_parameter_dropdown,
+                    self._swap_axis_button,
+                    self._y_parameter_dropdown,
+                ]
+            ),
+            self._figure,
         )

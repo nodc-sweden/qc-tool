@@ -27,19 +27,31 @@ class QcTool:
         self._map = Map(self.set_station)
 
         # Parameters
-        first_parameter = ProfileSlot(parameter="DOXY_BTL")
-        first_parameter._figure.yaxis.axis_label = "Depth [m]"
-        self._profile_parameters = [
-            first_parameter,
-            ProfileSlot(linked_parameter=first_parameter, parameter="PHOS"),
-            ProfileSlot(linked_parameter=first_parameter, parameter="NTRZ"),
-            ProfileSlot(linked_parameter=first_parameter, parameter="AMON"),
-            ProfileSlot(linked_parameter=first_parameter, parameter="SALT_CTD"),
+        first_chemical_parameter = ProfileSlot(parameter="PHOS")
+        first_chemical_parameter._figure.yaxis.axis_label = "Depth [m]"
+        self._chemical_profile_parameters = [
+            first_chemical_parameter,
+            ProfileSlot(linked_parameter=first_chemical_parameter, parameter="NTRI"),
+            ProfileSlot(linked_parameter=first_chemical_parameter, parameter="NTRA"),
+            ProfileSlot(linked_parameter=first_chemical_parameter, parameter="AMON"),
+            ProfileSlot(linked_parameter=first_chemical_parameter, parameter="SIO3-SI"),
         ]
+
+        first_physical_parameter = ProfileSlot(parameter="SALT_CTD")
+        first_physical_parameter._figure.yaxis.axis_label = "Depth [m]"
+        self._physical_profile_parameters = [
+            first_physical_parameter,
+            ProfileSlot(linked_parameter=first_physical_parameter, parameter="TEMP_CTD"),
+            ProfileSlot(linked_parameter=first_physical_parameter, parameter="DOXY_CTD"),
+            ProfileSlot(linked_parameter=first_physical_parameter, parameter="DOXY_BTL"),
+            ProfileSlot(linked_parameter=first_physical_parameter, parameter="H2S"),
+        ]
+
         self._scatter_parameters = [
             ScatterSlot(x_parameter="DOXY_BTL", y_parameter="DOXY_CTD"),
             ScatterSlot(x_parameter="ALKY", y_parameter="SALT_CTD"),
             ScatterSlot(x_parameter="PHOS", y_parameter="NTRZ"),
+            ScatterSlot(x_parameter="NTRZ", y_parameter="H2S"),
         ]
 
         self._file_handler = FileHandler(
@@ -56,19 +68,26 @@ class QcTool:
         extra_info_tabs = Tabs(tabs=[files_tab, flags_tab])
         top_row = Row(self._map.layout, station_info_column, extra_info_tabs)
 
-        # Bottom row
-        profile_tab = TabPanel(
-            child=Row(
-                children=[parameter.layout for parameter in self._profile_parameters]
-            ),
-            title="profiles",
+        # Tab for profile plots
+        chemical_profile_row = Row(
+            children=[parameter.layout for parameter in self._chemical_profile_parameters]
         )
+
+        physical_profile_row = Row(
+            children=[parameter.layout for parameter in self._physical_profile_parameters]
+        )
+        profile_tab = TabPanel(
+            child=Column(chemical_profile_row, physical_profile_row), title="Profiles"
+        )
+
+        # Tab for scatter plots
         scatter_tab = TabPanel(
             child=Row(
                 children=[parameter.layout for parameter in self._scatter_parameters]
             ),
-            title="scatter",
+            title="Scatter",
         )
+
         bottom_row = Row(Tabs(tabs=[profile_tab, scatter_tab]))
 
         # Full layout
@@ -93,7 +112,11 @@ class QcTool:
         self._selected_station = self._stations[station_series]
         self._station_info.set_station(self._selected_station)
         self._map.set_station(self._selected_station.series)
-        for parameter in self._profile_parameters:
+
+        for parameter in self._chemical_profile_parameters:
+            parameter.update_station(self._selected_station)
+
+        for parameter in self._physical_profile_parameters:
             parameter.update_station(self._selected_station)
 
         for parameter in self._scatter_parameters:
