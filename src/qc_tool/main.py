@@ -12,6 +12,7 @@ from ocean_data_qc.fyskemqc import FysKemQc
 from qc_tool.data_transformation import prepare_data
 from qc_tool.file_handler import FileHandler
 from qc_tool.flag_info import FlagInfo
+from qc_tool.manual_qc_handler import ManualQcHandler
 from qc_tool.map import Map
 from qc_tool.profile_slot import ProfileSlot
 from qc_tool.scatter_slot import ScatterSlot
@@ -69,6 +70,7 @@ class QcTool:
             self.load_file_callback, self.automatic_qc_callback
         )
         self._flag_info = FlagInfo()
+        self._manual_qc_handler = ManualQcHandler()
 
         # Top row
         station_info_column = Column(
@@ -76,7 +78,9 @@ class QcTool:
         )
         files_tab = TabPanel(title="Files", child=self._file_handler.layout)
         flags_tab = TabPanel(title="QC Flags", child=self._flag_info.layout)
-        extra_info_tabs = Tabs(tabs=[files_tab, flags_tab])
+        manual_qc_tab = TabPanel(title="Manual QC", child=self._manual_qc_handler.layout)
+
+        extra_info_tabs = Tabs(tabs=[files_tab, flags_tab, manual_qc_tab])
         top_row = Row(self._map.layout, station_info_column, extra_info_tabs)
 
         # Tab for profile plots
