@@ -7,11 +7,13 @@ import pandas as pd
 from bokeh.models import Column, Row, TabPanel, Tabs
 from bokeh.plotting import curdoc
 from nodc_statistics import regions
+from ocean_data_qc.fyskem.parameter import Parameter
 from ocean_data_qc.fyskemqc import FysKemQc
 
 from qc_tool.data_transformation import prepare_data
 from qc_tool.file_handler import FileHandler
 from qc_tool.flag_info import FlagInfo
+from qc_tool.manual_qc_handler import ManualQcHandler
 from qc_tool.map import Map
 from qc_tool.profile_slot import ProfileSlot
 from qc_tool.scatter_slot import ScatterSlot
@@ -37,25 +39,69 @@ class QcTool:
         self._map = Map(self.set_station)
         self._read_geo_info_file()
 
+        self._file_handler = FileHandler(
+            self.load_file_callback, self.automatic_qc_callback
+        )
+        self._flag_info = FlagInfo()
+        self._manual_qc_handler = ManualQcHandler(self.manual_cq_callback)
+
         # Parameters
-        first_chemical_parameter = ProfileSlot(parameter="PHOS")
+        first_chemical_parameter = ProfileSlot(
+            parameter="PHOS",
+            value_selected_callback=self.select_values_callback,
+        )
         first_chemical_parameter._figure.yaxis.axis_label = "Depth [m]"
         self._chemical_profile_parameters = [
             first_chemical_parameter,
-            ProfileSlot(linked_parameter=first_chemical_parameter, parameter="NTRI"),
-            ProfileSlot(linked_parameter=first_chemical_parameter, parameter="NTRA"),
-            ProfileSlot(linked_parameter=first_chemical_parameter, parameter="AMON"),
-            ProfileSlot(linked_parameter=first_chemical_parameter, parameter="SIO3-SI"),
+            ProfileSlot(
+                linked_parameter=first_chemical_parameter,
+                parameter="NTRI",
+                value_selected_callback=self.select_values_callback,
+            ),
+            ProfileSlot(
+                linked_parameter=first_chemical_parameter,
+                parameter="NTRA",
+                value_selected_callback=self.select_values_callback,
+            ),
+            ProfileSlot(
+                linked_parameter=first_chemical_parameter,
+                parameter="AMON",
+                value_selected_callback=self.select_values_callback,
+            ),
+            ProfileSlot(
+                linked_parameter=first_chemical_parameter,
+                parameter="SIO3-SI",
+                value_selected_callback=self.select_values_callback,
+            ),
         ]
 
-        first_physical_parameter = ProfileSlot(parameter="SALT_CTD")
+        first_physical_parameter = ProfileSlot(
+            parameter="SALT_CTD",
+            value_selected_callback=self.select_values_callback,
+        )
         first_physical_parameter._figure.yaxis.axis_label = "Depth [m]"
         self._physical_profile_parameters = [
             first_physical_parameter,
-            ProfileSlot(linked_parameter=first_physical_parameter, parameter="TEMP_CTD"),
-            ProfileSlot(linked_parameter=first_physical_parameter, parameter="DOXY_CTD"),
-            ProfileSlot(linked_parameter=first_physical_parameter, parameter="DOXY_BTL"),
-            ProfileSlot(linked_parameter=first_physical_parameter, parameter="H2S"),
+            ProfileSlot(
+                linked_parameter=first_physical_parameter,
+                parameter="TEMP_CTD",
+                value_selected_callback=self.select_values_callback,
+            ),
+            ProfileSlot(
+                linked_parameter=first_physical_parameter,
+                parameter="DOXY_CTD",
+                value_selected_callback=self.select_values_callback,
+            ),
+            ProfileSlot(
+                linked_parameter=first_physical_parameter,
+                parameter="DOXY_BTL",
+                value_selected_callback=self.select_values_callback,
+            ),
+            ProfileSlot(
+                linked_parameter=first_physical_parameter,
+                parameter="H2S",
+                value_selected_callback=self.select_values_callback,
+            ),
         ]
 
         self._scatter_parameters = [
@@ -65,19 +111,16 @@ class QcTool:
             ScatterSlot(x_parameter="NTRZ", y_parameter="H2S"),
         ]
 
-        self._file_handler = FileHandler(
-            self.load_file_callback, self.automatic_qc_callback
-        )
-        self._flag_info = FlagInfo()
-
         # Top row
         station_info_column = Column(
             self._station_navigator.layout, self._station_info.layout
         )
         files_tab = TabPanel(title="Files", child=self._file_handler.layout)
         flags_tab = TabPanel(title="QC Flags", child=self._flag_info.layout)
-        extra_info_tabs = Tabs(tabs=[files_tab, flags_tab])
-        top_row = Row(self._map.layout, station_info_column, extra_info_tabs)
+        manual_qc_tab = TabPanel(title="Manual QC", child=self._manual_qc_handler.layout)
+
+        self._extra_info_tabs = Tabs(tabs=[files_tab, flags_tab, manual_qc_tab])
+        top_row = Row(self._map.layout, station_info_column, self._extra_info_tabs)
 
         # Tab for profile plots
         chemical_profile_row = Row(
@@ -113,6 +156,7 @@ class QcTool:
         self._set_data(data)
 
     def automatic_qc_callback(self):
+        """Called when automatic qc has been requested."""
         print("Automatic QC started...")
         t0 = time.perf_counter()
         fys_kem_qc = FysKemQc(self._data)
@@ -121,11 +165,26 @@ class QcTool:
         print(f"Automatic QC finished ({t1-t0:.3f} s.)")
         self._set_data(self._data, self._selected_station.series)
 
+    def manual_cq_callback(self, values: list[Parameter]):
+        """ "Called when manual qc has been applied."""
+        # Update quality flag in data
+        for value in values:
+            self._data.loc[
+                (self._data["SERNO"] == value._data["SERNO"])
+                & (self._data["parameter"] == value._data["parameter"])
+                & (self._data["DEPH"] == value._data["DEPH"]),
+                "quality_flag_long",
+            ] = str(value.qc)
+
+        # Reload data
+        self._set_data(self._data, self._selected_station.series)
+
     def set_station(self, station_series: str):
         self._station_navigator.set_station(station_series)
         self._selected_station = self._stations[station_series]
         self._station_info.set_station(self._selected_station)
         self._map.set_station(self._selected_station.series)
+        self._manual_qc_handler.select_values()
 
         for parameter in self._chemical_profile_parameters:
             parameter.update_station(self._selected_station)
@@ -135,6 +194,17 @@ class QcTool:
 
         for parameter in self._scatter_parameters:
             parameter.update_station(self._selected_station)
+
+    def select_values_callback(self, values, sender):
+        for profile_slot in (
+            self._chemical_profile_parameters + self._physical_profile_parameters
+        ):
+            self._set_extra_info_tab(2)
+
+            if profile_slot is sender:
+                continue
+            profile_slot.clear_selection()
+        self._manual_qc_handler.select_values(values)
 
     def _match_sea_basins(self, data):
         if self._geo_info is None:
@@ -209,6 +279,9 @@ class QcTool:
 
         t1 = time.perf_counter()
         print(f"Extracting basins from geopackage file finished ({t1 - t0:.3f} s.)")
+
+    def _set_extra_info_tab(self, index: int):
+        self._extra_info_tabs.active = index
 
 
 def dms_to_dd(dms):

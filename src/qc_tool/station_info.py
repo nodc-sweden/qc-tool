@@ -43,7 +43,7 @@ class StationInfo(Layoutable):
         )
 
         self._div.text = f"""
-        <table>
+        <table class="full_column vertical">
             {''.join(table_rows)}
         </table>
         """

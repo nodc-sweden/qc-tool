@@ -1,7 +1,10 @@
 table {
     border-collapse: collapse;
-    width: 500px;
  }
+
+.full_column {
+    width: 500px;
+}
 
 th, td {
     padding: 0.25rem 0.5rem;
@@ -11,6 +14,9 @@ th, td {
 th {
     background-color: #F1F1F1;
     text-align: left;
+}
+
+.vertical th {
     width: 10em;
 }
 
