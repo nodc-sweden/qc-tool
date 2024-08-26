@@ -1,7 +1,7 @@
 import jinja2
 from bokeh.models import Div
-from fyskemqc.qc_flag import QC_FLAG_CSS_COLORS, QcFlag
-from fyskemqc.qc_flag_tuple import QcField
+from ocean_data_qc.fyskem.qc_flag import QC_FLAG_CSS_COLORS, QcFlag
+from ocean_data_qc.fyskem.qc_flag_tuple import QcField
 
 from qc_tool.protocols import Layoutable
 

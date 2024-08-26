@@ -3,8 +3,8 @@ import time
 import pandas as pd
 from bokeh.models import Column, Row, TabPanel, Tabs
 from bokeh.plotting import curdoc
-from fyskemqc.fyskemqc import FysKemQc
-from fyskemqc.qc_flag_tuple import QcField
+from ocean_data_qc.fyskem.qc_flag_tuple import QcField
+from ocean_data_qc.fyskemqc import FysKemQc
 
 from qc_tool.file_handler import FileHandler
 from qc_tool.flag_info import FlagInfo
