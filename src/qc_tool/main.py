@@ -3,9 +3,9 @@ import time
 import pandas as pd
 from bokeh.models import Column, Row, TabPanel, Tabs
 from bokeh.plotting import curdoc
-from ocean_data_qc.fyskem.qc_flag_tuple import QcField
 from ocean_data_qc.fyskemqc import FysKemQc
 
+from qc_tool.data_transformation import prepare_data
 from qc_tool.file_handler import FileHandler
 from qc_tool.flag_info import FlagInfo
 from qc_tool.map import Map
@@ -96,7 +96,7 @@ class QcTool:
         curdoc().add_root(self.layout)
 
     def load_file_callback(self, data):
-        self._parse_data(data)
+        self._set_data(data)
 
     def automatic_qc_callback(self):
         print("Automatic QC started...")
@@ -105,7 +105,7 @@ class QcTool:
         fys_kem_qc.run_automatic_qc()
         t1 = time.perf_counter()
         print(f"Automatic QC finished ({t1-t0:.3f} .s)")
-        self._parse_data(self._data, self._selected_station.series)
+        self._set_data(self._data, self._selected_station.series)
 
     def set_station(self, station_series: str):
         self._station_navigator.set_station(station_series)
@@ -122,16 +122,8 @@ class QcTool:
         for parameter in self._scatter_parameters:
             parameter.update_station(self._selected_station)
 
-    def _parse_data(self, data: pd.DataFrame, station: str = None):
-        # Create station name with zero padded serial number
-        data["SERNO"] = data["SERNO"].map("{:03}".format)
-        data["SERNO_STN"] = data["SERNO"] + " - " + data["STATN"]
-
-        # Create the long qc string using "quality_flag" as incoming qc
-        if "quality_flag_long" not in data.columns and "quality_flag" in data.columns:
-            data["quality_flag_long"] = data["quality_flag"] + f"_{'0' * len(QcField)}_0"
-
-        self._data = data
+    def _set_data(self, data: pd.DataFrame, station: str = None):
+        self._data = prepare_data(data)
 
         # Extract list of all station visits
         station_series = sorted(data["SERNO_STN"].unique())
