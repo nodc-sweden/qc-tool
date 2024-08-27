@@ -19,8 +19,8 @@ from bokeh.models import (
     WheelZoomTool,
 )
 from bokeh.plotting import figure
-from fyskemqc.qc_flag import QC_FLAG_CSS_COLORS, QcFlag
-from fyskemqc.qc_flags import QcFlags
+from ocean_data_qc.fyskem.qc_flag import QC_FLAG_CSS_COLORS, QcFlag
+from ocean_data_qc.fyskem.qc_flags import QcFlags
 
 from qc_tool.protocols import Layoutable
 from qc_tool.station import Station
