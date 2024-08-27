@@ -1,5 +1,6 @@
 from typing import Self
 
+import pandas as pd
 from bokeh.colors import RGB
 from bokeh.core.enums import Align
 from bokeh.core.property.primitive import Bool
@@ -19,10 +20,9 @@ from bokeh.models import (
     WheelZoomTool,
 )
 from bokeh.plotting import figure
+from nodc_statistics import statistic
 from ocean_data_qc.fyskem.qc_flag import QC_FLAG_CSS_COLORS, QcFlag
 from ocean_data_qc.fyskem.qc_flags import QcFlags
-import pandas as pd
-from nodc_statistics import statistic
 
 from qc_tool.protocols import Layoutable
 from qc_tool.station import Station
@@ -299,10 +299,9 @@ class ProfileSlot(Layoutable):
         colors = parameter_data["quality_flag"].map(lambda flag: QC_FLAG_CSS_COLORS[flag])
 
         parameter_statistics = (
-            statistic.get_profile_statistics_for_parameter_and_position(
+            statistic.get_profile_statistics_for_parameter_and_sea_basin(
                 self._parameter,
-                self._station.longitude,
-                self._station.latitude,
+                self._station.sea_basin,
                 self._station.datetime,
             )
         )
@@ -328,7 +327,7 @@ class ProfileSlot(Layoutable):
         stats_df = pd.DataFrame(parameter_statistics)
 
         # Filter rows where 'depth' is less than or equal to self._station.water_depth
-        filtered_stats = stats_df[stats_df["depth"] <= self._station.water_depth*1.1]
+        filtered_stats = stats_df[stats_df["depth"] <= self._station.water_depth * 1.1]
 
         # Update the Bokeh data source with the filtered statistics
         self._statistics_source.data = {

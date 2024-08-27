@@ -1,8 +1,12 @@
+import os
 import time
+from pathlib import Path
 
+import geopandas as gpd
 import pandas as pd
 from bokeh.models import Column, Row, TabPanel, Tabs
 from bokeh.plotting import curdoc
+from nodc_statistics import regions
 from ocean_data_qc.fyskemqc import FysKemQc
 
 from qc_tool.data_transformation import prepare_data
@@ -14,6 +18,12 @@ from qc_tool.scatter_slot import ScatterSlot
 from qc_tool.static.station_navigator import StationNavigator
 from qc_tool.station import Station
 from qc_tool.station_info import StationInfo
+
+GEOLAYERS_AREATAG = {
+    "typomrkust": "TYPOMRKUST",
+    "Skagerrak_without_coast": "NAMN",
+    "helcom_subbasins_with_coastal_and_offshore_division_2022_level3": "level_34",
+}
 
 
 class QcTool:
@@ -96,6 +106,8 @@ class QcTool:
         curdoc().add_root(self.layout)
 
     def load_file_callback(self, data):
+        self._read_geo_info_file()
+        data = self._match_sea_area(data)
         self._set_data(data)
 
     def automatic_qc_callback(self):
@@ -122,6 +134,32 @@ class QcTool:
         for parameter in self._scatter_parameters:
             parameter.update_station(self._selected_station)
 
+    def longitude(self, longi_dms):
+        degrees, remainder = divmod(longi_dms, 100)
+        return degrees + remainder / 60
+
+    def latitude(self, latit_dms):
+        degrees, remainder = divmod(latit_dms, 100)
+        return degrees + remainder / 60
+
+    def _match_sea_area(self, data):
+        # Assuming df is your DataFrame and regions.sea_basin_for_position is the function
+        # to apply
+
+        # Step 1: Extract unique combinations of LONGI and LATIT
+        unique_positions = data[["LONGI", "LATIT"]].drop_duplicates()
+        # Step 2: Apply the function to each unique combination
+        unique_positions["sea_basin"] = unique_positions.apply(
+            lambda row: regions.sea_basin_for_position(
+                self.longitude(row["LONGI"]), self.latitude(row["LATIT"]), self._geo_info
+            ),
+            axis=1,
+        )
+        # Step 3: Map the results back to the original DataFrame
+        data = data.merge(unique_positions, on=["LONGI", "LATIT"], how="left")
+
+        return data
+
     def _set_data(self, data: pd.DataFrame, station: str = None):
         self._data = prepare_data(data)
 
@@ -130,13 +168,43 @@ class QcTool:
 
         # Initialize all stations
         self._stations = {
-            series: Station(series, self._data[self._data["SERNO_STN"] == series])
+            series: Station(
+                series, self._data[self._data["SERNO_STN"] == series], self._geo_info
+            )
             for series in station_series
         }
-
         self._station_navigator.load_stations(self._stations)
         self._map.load_stations(self._stations)
         self.set_station(station or station_series[0])
+
+    def _read_geo_info_file(self):
+        if "QCTOOL_GEOPACKAGE" not in os.environ:
+            print("Environment variable 'QCTOOL_GEOPACKAGE' is missing.")
+            user_geopackage_path = Path.home() / "SVAR2022_HELCOM_OSPAR.gpkg"
+            if not user_geopackage_path.exists():
+                print(
+                    f"The file SVAR2022_HELCOM_OSPAR.gpkg is missing from {Path.home()}\n"
+                    f"copy the file from havgem to {Path.home()}"
+                )
+            else:
+                self.geopackage_path = user_geopackage_path
+        else:
+            self.geopackage_path = Path(os.environ["QCTOOL_GEOPACKAGE"])
+
+        # Läs in specifika lager från filen
+        layers = []
+        for layer, area_tag in GEOLAYERS_AREATAG.items():
+            print(area_tag)
+            # Läs in varje lager och döp om vald kolumn till "area_tag"
+            t0 = time.perf_counter()
+            gdf = gpd.read_file(self.geopackage_path, layer=layer)
+            t1 = time.perf_counter()
+            print(f"First read file took ({t1-t0:.3f} .s)\nshould be no more read")
+            gdf = gdf.rename(columns={area_tag: "area_tag"})
+            layers.append(gdf)
+
+        # Kombinera lagren till en enda GeoDataFrame
+        self._geo_info = pd.concat(layers, ignore_index=True)
 
 
 QcTool()
