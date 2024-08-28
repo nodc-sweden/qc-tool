@@ -32,7 +32,11 @@ class Station:
         }
 
         self._parameters = sorted(data["parameter"].unique())
-        self._sea_basin = data["sea_basin"].unique()[0]
+
+        if "sea_basin" in self._data.columns:
+            self._sea_basin = data["sea_basin"].unique()[0]
+        else:
+            self._sea_basin = None
 
     @property
     def parameters(self) -> list[str]:

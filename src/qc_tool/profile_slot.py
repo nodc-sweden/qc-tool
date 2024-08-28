@@ -298,13 +298,17 @@ class ProfileSlot(Layoutable):
 
         colors = parameter_data["quality_flag"].map(lambda flag: QC_FLAG_CSS_COLORS[flag])
 
-        parameter_statistics = (
-            statistic.get_profile_statistics_for_parameter_and_sea_basin(
-                self._parameter,
-                self._station.sea_basin,
-                self._station.datetime,
+        if self._station.sea_basin is None:
+            parameter_statistics = None
+        else:
+            parameter_statistics = (
+                statistic.get_profile_statistics_for_parameter_and_sea_basin(
+                    self._parameter,
+                    self._station.sea_basin,
+                    self._station.datetime,
+                )
             )
-        )
+        self._update_statistics(parameter_statistics=parameter_statistics)
 
         self._source.data = {
             "x": parameter_data["value"],
@@ -318,11 +322,13 @@ class ProfileSlot(Layoutable):
             "qc_manual": [f"{flags.manual} ({flags.manual.value})" for flags in qc_flags],
         }
 
-        self._update_statistics(parameter_statistics=parameter_statistics)
-
         self._parameter_dropdown.label = expand_abbreviation(self._parameter)
 
     def _update_statistics(self, parameter_statistics):
+        if parameter_statistics is None:
+            self._statistics_source.data = {}
+            return
+
         # Convert the statistical data to a DataFrame for easier filtering
         stats_df = pd.DataFrame(parameter_statistics)
 
