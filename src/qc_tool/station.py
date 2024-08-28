@@ -21,7 +21,7 @@ class Station:
         "WINSP",
     }
 
-    def __init__(self, series: str, data):
+    def __init__(self, series: str, data, geo_info):
         self._series = series
         self._data = data
 
@@ -33,9 +33,18 @@ class Station:
 
         self._parameters = sorted(data["parameter"].unique())
 
+        if "sea_basin" in self._data.columns:
+            self._sea_basin = data["sea_basin"].unique()[0]
+        else:
+            self._sea_basin = None
+
     @property
     def parameters(self) -> list[str]:
         return self._parameters
+
+    @property
+    def sea_basin(self):
+        return self._sea_basin
 
     @property
     def data(self):
