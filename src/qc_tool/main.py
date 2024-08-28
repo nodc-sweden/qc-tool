@@ -35,6 +35,7 @@ class QcTool:
         self._station_navigator = StationNavigator(self.set_station)
         self._station_info = StationInfo()
         self._map = Map(self.set_station)
+        self._read_geo_info_file()
 
         # Parameters
         first_chemical_parameter = ProfileSlot(parameter="PHOS")
@@ -106,8 +107,9 @@ class QcTool:
         curdoc().add_root(self.layout)
 
     def load_file_callback(self, data):
-        self._read_geo_info_file()
+        """Called when a cruise has been loaded from disk."""
         data = self._match_sea_basins(data)
+        data = prepare_data(data)
         self._set_data(data)
 
     def automatic_qc_callback(self):
@@ -159,7 +161,7 @@ class QcTool:
         return data
 
     def _set_data(self, data: pd.DataFrame, station: str = None):
-        self._data = prepare_data(data)
+        self._data = data
 
         # Extract list of all station visits
         station_series = sorted(data["SERNO_STN"].unique())
@@ -176,8 +178,9 @@ class QcTool:
         self.set_station(station or station_series[0])
 
     def _read_geo_info_file(self):
+        """Read geographic definitions of all sea basins."""
         geopackage_path = (
-            os.environ.get("QCTOOL_GEOPACKAGE")
+            Path(os.environ.get("QCTOOL_GEOPACKAGE"))
             or Path.home() / "SVAR2022_HELCOM_OSPAR.gpkg"
         )
         if not geopackage_path.exists():
@@ -192,7 +195,7 @@ class QcTool:
 
         # Read specific layers from the file
         t0 = time.perf_counter()
-        print("Extracting areas from geopackage file...")
+        print("Extracting basins from geopackage file...")
 
         layers = []
         for layer, area_tag in GEOLAYERS_AREATAG.items():
@@ -205,7 +208,7 @@ class QcTool:
         self._geo_info = pd.concat(layers, ignore_index=True)
 
         t1 = time.perf_counter()
-        print(f"Extracting areas from geopackage file finished ({t1 - t0:.3f} s.)")
+        print(f"Extracting basins from geopackage file finished ({t1 - t0:.3f} s.)")
 
 
 def dms_to_dd(dms):
