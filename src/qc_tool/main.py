@@ -179,8 +179,8 @@ class QcTool:
 
     def _read_geo_info_file(self):
         """Read geographic definitions of all sea basins."""
-        geopackage_path = (
-            Path(os.environ.get("QCTOOL_GEOPACKAGE"))
+        geopackage_path = Path(
+            os.environ.get("QCTOOL_GEOPACKAGE")
             or Path.home() / "SVAR2022_HELCOM_OSPAR.gpkg"
         )
         if not geopackage_path.exists():
