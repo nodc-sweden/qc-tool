@@ -1,5 +1,5 @@
 from bokeh.models import Button, Dropdown, Row
-from qc_tool.protocols import Layoutable
+from qc_tool.layoutable import Layoutable
 
 
 class StationNavigator(Layoutable):

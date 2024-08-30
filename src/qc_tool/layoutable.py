@@ -1,8 +1,9 @@
-from typing import Protocol
+import abc
 
 from bokeh.models import UIElement
 
 
-class Layoutable(Protocol):
+class Layoutable(abc.ABC):
+    @abc.abstractmethod
     def layout(self) -> UIElement:
         pass

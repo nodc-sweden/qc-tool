@@ -7,7 +7,7 @@ import sharkadm
 import sharkadm.data
 from bokeh.models import Button, Column, Div, FileInput
 
-from qc_tool.protocols import Layoutable
+from qc_tool.layoutable import Layoutable
 
 
 class FileHandler(Layoutable):

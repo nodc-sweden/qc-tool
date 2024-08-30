@@ -16,7 +16,7 @@ from bokeh.plotting import figure
 from ocean_data_qc.fyskem.qc_flag import QC_FLAG_CSS_COLORS
 from ocean_data_qc.fyskem.qc_flags import QcFlags
 
-from qc_tool.protocols import Layoutable
+from qc_tool.layoutable import Layoutable
 from qc_tool.station import Station
 
 PARAMETER_ABBREVIATIONS = {
