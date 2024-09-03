@@ -1,7 +1,8 @@
 import datetime
 
-from ocean_data_qc.metadataqc import MetadataQc
 from ocean_data_qc.metadata.visit import Visit
+from ocean_data_qc.metadataqc import MetadataQc
+
 
 class Station:
     COMMON_COLUMNS = {

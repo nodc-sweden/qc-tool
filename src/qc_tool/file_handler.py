@@ -16,7 +16,6 @@ class FileHandler(Layoutable):
         external_load_file_callback,
         external_save_file_callback,
         external_automatic_qc_callback,
-        external_metadata_qc_callback,
     ):
         self._file_name = None
 
@@ -41,10 +40,6 @@ class FileHandler(Layoutable):
         self._qc_button = Button(label="Automatic QC...")
         self._qc_button.on_click(self._automatic_qc_callback)
         self._qc_button.disabled = True
-
-        self._metadata_qc_button = Button(label="Metadata QC...")
-        self._metadata_qc_button.on_click(self._external_metadata_qc_callback)
-        self._metadata_qc_button.disabled = True
 
         self._file_loaded()
 
@@ -80,12 +75,9 @@ class FileHandler(Layoutable):
         if self._file_name:
             file_info = f"<p>{self._file_name.name}</p>"
             self._qc_button.disabled = False
-            self._metadata_qc_button.disabled = False
         else:
             file_info = "<p>No file loaded</p>"
             self._qc_button.disabled = True
-            self._metadata_qc_button.disabled = True
-        self._div.text = file_info
         self._loaded_file_label.text = file_info
 
     def _save_file_as_callback(self, event):
@@ -111,5 +103,4 @@ class FileHandler(Layoutable):
             self._save_as_button,
             self._qc_header,
             self._qc_button,
-            self._metadata_qc_button,
         )
