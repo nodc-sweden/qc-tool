@@ -1,5 +1,7 @@
 import datetime
 
+from ocean_data_qc.metadataqc import MetadataQc
+from ocean_data_qc.metadata.visit import Visit
 
 class Station:
     COMMON_COLUMNS = {
@@ -37,6 +39,12 @@ class Station:
             self._sea_basin = data["sea_basin"].unique()[0]
         else:
             self._sea_basin = None
+
+        self._visit = Visit(self.data)
+
+    def run_metadata_qc(self):
+        metadata_qc = MetadataQc(self._visit)
+        metadata_qc.run_qc()
 
     @property
     def parameters(self) -> list[str]:

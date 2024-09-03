@@ -1,7 +1,20 @@
+import jinja2
 from bokeh.models import DataTable, Div, ImportedStyleSheet
 
 from qc_tool.layoutable import Layoutable
 from qc_tool.station import Station
+
+_metadata_template = jinja2.Template("""
+        <table>
+            {% for key,title in station_data_fields %}
+            <tr>
+            <th>{{ title }}</th>
+            <td {% if station is not none and station._visit.qc.WADEP is defined %} class="test" {% endif %}>
+            {{ common_data.get(key, "") }}</td>
+            </tr>
+            {% endfor %}
+        </table>        
+""")
 
 
 class StationInfo(Layoutable):
@@ -31,22 +44,15 @@ class StationInfo(Layoutable):
     def set_station(self, station: Station):
         self._station = station
         self._update()
+        print(station._visit.qc)
 
     def _update(self):
         common_data = self._station.common if self._station else {}
-        table_rows = (
-            f"""<tr>
-            <th>{title}</>
-            <td>{common_data.get(key, "")}</td>
-            </tr>"""
-            for key, title in self.STATION_DATA_FIELDS
+        self._div.text = _metadata_template.render(
+            station=self._station,
+            station_data_fields=self.STATION_DATA_FIELDS,
+            common_data=common_data,
         )
-
-        self._div.text = f"""
-        <table class="full_column vertical">
-            {''.join(table_rows)}
-        </table>
-        """
 
     @property
     def layout(self):

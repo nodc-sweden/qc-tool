@@ -9,6 +9,8 @@ from bokeh.plotting import curdoc
 from nodc_statistics import regions
 from ocean_data_qc.fyskem.parameter import Parameter
 from ocean_data_qc.fyskemqc import FysKemQc
+from ocean_data_qc.metadataqc import MetadataQc
+from ocean_data_qc.metadata.visit import Visit
 
 from qc_tool.data_transformation import prepare_data
 from qc_tool.file_handler import FileHandler
@@ -111,6 +113,11 @@ class QcTool:
             ScatterSlot(x_parameter="NTRZ", y_parameter="H2S"),
         ]
 
+        self._file_handler = FileHandler(
+            self.load_file_callback, self.automatic_qc_callback, self.metadata_qc_callback
+        )
+        self._flag_info = FlagInfo()
+
         # Top row
         station_info_column = Column(
             self._station_navigator.layout, self._station_info.layout
@@ -167,6 +174,15 @@ class QcTool:
         t1 = time.perf_counter()
         print(f"Automatic QC finished ({t1-t0:.3f} s.)")
         self._set_data(self._data, self._selected_station.series)
+
+
+    def metadata_qc_callback(self):
+        print("Metadata QC started...")
+        t0 = time.perf_counter()
+        for station in self._stations.values():
+            station.run_metadata_qc()
+        t1 = time.perf_counter()
+        print(f"Metadata QC finished ({t1-t0:.3f} s.)")
 
     def manual_cq_callback(self, values: list[Parameter]):
         """ "Called when manual qc has been applied."""
