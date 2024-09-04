@@ -40,7 +40,7 @@ class QcTool:
         self._read_geo_info_file()
 
         self._file_handler = FileHandler(
-            self.load_file_callback, self.automatic_qc_callback
+            self.load_file_callback, self.save_file_callback, self.automatic_qc_callback
         )
         self._flag_info = FlagInfo()
         self._manual_qc_handler = ManualQcHandler(self.manual_cq_callback)
@@ -155,6 +155,9 @@ class QcTool:
         data = prepare_data(data)
         self._set_data(data)
 
+    def save_file_callback(self, filename: Path):
+        self._data.to_csv(filename, sep="\t")
+
     def automatic_qc_callback(self):
         """Called when automatic qc has been requested."""
         print("Automatic QC started...")
@@ -227,7 +230,6 @@ class QcTool:
         data = data.merge(unique_positions, on=["LONGI", "LATIT"], how="left")
         t1 = time.perf_counter()
         print(f"Matching sea basins finished ({t1-t0:.3f} s.)")
-
         return data
 
     def _set_data(self, data: pd.DataFrame, station: str = None):
