@@ -1,6 +1,6 @@
 from bokeh.models import DataTable, Div, ImportedStyleSheet
 
-from qc_tool.protocols import Layoutable
+from qc_tool.layoutable import Layoutable
 from qc_tool.station import Station
 
 
@@ -43,7 +43,7 @@ class StationInfo(Layoutable):
         )
 
         self._div.text = f"""
-        <table>
+        <table class="full_column vertical">
             {''.join(table_rows)}
         </table>
         """

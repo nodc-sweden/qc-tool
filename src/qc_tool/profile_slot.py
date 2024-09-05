@@ -21,10 +21,11 @@ from bokeh.models import (
 )
 from bokeh.plotting import figure
 from nodc_statistics import statistic
+from ocean_data_qc.fyskem.parameter import Parameter
 from ocean_data_qc.fyskem.qc_flag import QC_FLAG_CSS_COLORS, QcFlag
 from ocean_data_qc.fyskem.qc_flags import QcFlags
 
-from qc_tool.protocols import Layoutable
+from qc_tool.layoutable import Layoutable
 from qc_tool.station import Station
 
 PARAMETER_ABBREVIATIONS = {
@@ -67,11 +68,15 @@ class ProfileSlot(Layoutable):
         self,
         parameter: str = None,
         linked_parameter: Self = None,
+        value_selected_callback=None,
     ):
+        self._value_selected_callback = value_selected_callback or (lambda *args: None)
+        self._clear_called = False
         self._width = 300
         self._height = 400
         self._parameter = parameter
         self._station: Station = None
+        self._parameter_data = None
         self._source = ColumnDataSource(
             data={
                 "x": [],
@@ -209,6 +214,11 @@ class ProfileSlot(Layoutable):
         self._parameter_values = self._figure.scatter(
             "x", "y", source=self._source, color="color", **self._plot_values_config
         )
+
+        self._parameter_values.data_source.selected.on_change(
+            "indices", self._value_selected
+        )
+
         hover.renderers = [self._parameter_values]
 
         if linked_parameter:
@@ -240,6 +250,7 @@ class ProfileSlot(Layoutable):
         self._parameter_dropdown.on_click(self._parameter_selected)
 
     def update_station(self, station: Station):
+        self.clear_selection()
         self._station = station
         self._parameter_dropdown.menu = [
             (expand_abbreviation(parameter), parameter)
@@ -271,32 +282,49 @@ class ProfileSlot(Layoutable):
         self._ocean_floor.top = self._station.water_depth
         self._sync_parameter_options()
 
+    def clear_selection(self):
+        self._clear_called = True
+        self._source.selected.indices = []
+        self._clear_called = False
+
     def _parameter_selected(self, event: MenuItemClick):
         self._parameter = event.item
         self._load_parameter()
 
+    def _value_selected(self, attr, old, new):
+        selected_values = [Parameter(self._parameter_data.iloc[n]) for n in new]
+        self._statistics_source.selected.indices = []
+        if not self._clear_called:
+            self._value_selected_callback(selected_values, self)
+
     def _load_parameter(self):
-        parameter_data = self._station.data[
+        self._parameter_data = self._station.data[
             self._station.data["parameter"] == self._parameter
         ].sort_values("DEPH")
 
-        if "quality_flag_long" not in parameter_data.columns:
+        if "quality_flag_long" not in self._parameter_data.columns:
             try:
-                parameter_data["quality_flag_long"] = parameter_data["quality_flag"].map(
-                    lambda x: str(QcFlags(QcFlag.parse(x), None, None))
-                )
+                self._parameter_data["quality_flag_long"] = self._parameter_data[
+                    "quality_flag"
+                ].map(lambda x: str(QcFlags(QcFlag.parse(x), None, None)))
             except Exception:
                 print(self._parameter)
                 raise
 
-        parameter_data["quality_flag"] = [
+        self._parameter_data["quality_flag"] = [
             flags.total
-            for flags in map(QcFlags.from_string, parameter_data["quality_flag_long"])
+            for flags in map(
+                QcFlags.from_string, self._parameter_data["quality_flag_long"]
+            )
         ]
 
-        qc_flags = list(map(QcFlags.from_string, parameter_data["quality_flag_long"]))
+        qc_flags = list(
+            map(QcFlags.from_string, self._parameter_data["quality_flag_long"])
+        )
 
-        colors = parameter_data["quality_flag"].map(lambda flag: QC_FLAG_CSS_COLORS[flag])
+        colors = self._parameter_data["quality_flag"].map(
+            lambda flag: QC_FLAG_CSS_COLORS[flag]
+        )
 
         if self._station.sea_basin is None:
             parameter_statistics = None
@@ -311,8 +339,8 @@ class ProfileSlot(Layoutable):
         self._update_statistics(parameter_statistics=parameter_statistics)
 
         self._source.data = {
-            "x": parameter_data["value"],
-            "y": parameter_data["DEPH"],
+            "x": self._parameter_data["value"],
+            "y": self._parameter_data["DEPH"],
             "color": colors,
             "qc": [f"{flags.total} ({flags.total.value})" for flags in qc_flags],
             "qc_incoming": [

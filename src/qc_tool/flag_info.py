@@ -3,7 +3,7 @@ from bokeh.models import Div
 from ocean_data_qc.fyskem.qc_flag import QC_FLAG_CSS_COLORS, QcFlag
 from ocean_data_qc.fyskem.qc_flag_tuple import QcField
 
-from qc_tool.protocols import Layoutable
+from qc_tool.layoutable import Layoutable
 
 _flag_info_template = jinja2.Template("""
 <div style="display: grid; grid-template-columns: 1fr 1fr">

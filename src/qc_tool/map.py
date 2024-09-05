@@ -10,7 +10,7 @@ from bokeh.models import (
 from bokeh.plotting import figure
 from pyproj import Transformer
 
-from qc_tool.protocols import Layoutable
+from qc_tool.layoutable import Layoutable
 
 
 class Map(Layoutable):
@@ -29,7 +29,7 @@ class Map(Layoutable):
             x_range=(700000, 2500000),
             y_range=(7000000, 8500000),
             width=500,
-            height=300,
+            height=400,
             tools=[PanTool(), tap, wheel_zoom, ResetTool()],
             match_aspect=True,
         )
