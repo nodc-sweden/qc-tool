@@ -6,6 +6,12 @@ table {
     width: 500px;
 }
 
+
+h3, h4 {
+    margin-top: 1em;
+    margin-bottom: 0.5em;
+}
+
 th, td {
     padding: 0.25rem 0.5rem;
     vertical-align: top;
@@ -23,3 +29,17 @@ th {
 tr {
     border: 1px #EAEAEA solid;
 }
+
+.no-qc-performed .metadata-value {
+    font-style: italic;
+}
+
+.bad-data .metadata-status {
+    background-image: url("/qc_tool/static/images/warning.svg");
+    background-position: center;
+    background-repeat: no-repeat;
+    background-origin: content-box;
+    background-size: cover;
+    width: 3em;
+}
+

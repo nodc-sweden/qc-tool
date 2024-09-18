@@ -15,6 +15,7 @@ from qc_tool.file_handler import FileHandler
 from qc_tool.flag_info import FlagInfo
 from qc_tool.manual_qc_handler import ManualQcHandler
 from qc_tool.map import Map
+from qc_tool.metadata_qc_handler import MetadataQcHandler
 from qc_tool.profile_slot import ProfileSlot
 from qc_tool.scatter_slot import ScatterSlot
 from qc_tool.static.station_navigator import StationNavigator
@@ -40,10 +41,13 @@ class QcTool:
         self._read_geo_info_file()
 
         self._file_handler = FileHandler(
-            self.load_file_callback, self.save_file_callback, self.automatic_qc_callback
+            self.load_file_callback,
+            self.save_file_callback,
+            self.automatic_qc_callback,
         )
         self._flag_info = FlagInfo()
         self._manual_qc_handler = ManualQcHandler(self.manual_cq_callback)
+        self._metadata_qc_handler = MetadataQcHandler()
 
         # Parameters
         first_chemical_parameter = ProfileSlot(
@@ -116,10 +120,15 @@ class QcTool:
             self._station_navigator.layout, self._station_info.layout
         )
         files_tab = TabPanel(title="Files", child=self._file_handler.layout)
+        meta_data_cq_tab = TabPanel(
+            title="Metadata QC", child=self._metadata_qc_handler.layout
+        )
         flags_tab = TabPanel(title="QC Flags", child=self._flag_info.layout)
         manual_qc_tab = TabPanel(title="Manual QC", child=self._manual_qc_handler.layout)
 
-        self._extra_info_tabs = Tabs(tabs=[files_tab, flags_tab, manual_qc_tab])
+        self._extra_info_tabs = Tabs(
+            tabs=[files_tab, meta_data_cq_tab, flags_tab, manual_qc_tab]
+        )
         top_row = Row(self._map.layout, station_info_column, self._extra_info_tabs)
 
         # Tab for profile plots
@@ -168,6 +177,16 @@ class QcTool:
         print(f"Automatic QC finished ({t1-t0:.3f} s.)")
         self._set_data(self._data, self._selected_station.series)
 
+    def metadata_qc_callback(self):
+        print("Metadata QC started...")
+        t0 = time.perf_counter()
+        for station in self._stations.values():
+            station.run_metadata_qc()
+        t1 = time.perf_counter()
+        print(f"Metadata QC finished ({t1-t0:.3f} s.)")
+        self._station_info.update()
+        self._metadata_qc_handler.update()
+
     def manual_cq_callback(self, values: list[Parameter]):
         """ "Called when manual qc has been applied."""
         # Update quality flag in data
@@ -188,6 +207,9 @@ class QcTool:
         self._station_info.set_station(self._selected_station)
         self._map.set_station(self._selected_station.series)
         self._manual_qc_handler.select_values()
+        self._metadata_qc_handler.set_station(self._selected_station)
+        if self._selected_station._visit.qc_log:
+            self._set_extra_info_tab(1)
 
         for parameter in self._chemical_profile_parameters:
             parameter.update_station(self._selected_station)
@@ -202,7 +224,7 @@ class QcTool:
         for profile_slot in (
             self._chemical_profile_parameters + self._physical_profile_parameters
         ):
-            self._set_extra_info_tab(2)
+            self._set_extra_info_tab(3)
 
             if profile_slot is sender:
                 continue
@@ -247,6 +269,7 @@ class QcTool:
         }
         self._station_navigator.load_stations(self._stations)
         self._map.load_stations(self._stations)
+        self.metadata_qc_callback()
         self.set_station(station or station_series[0])
 
     def _read_geo_info_file(self):

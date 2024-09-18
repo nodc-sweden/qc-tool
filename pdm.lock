@@ -5,7 +5,7 @@
 groups = ["default", "dev"]
 strategy = ["cross_platform", "inherit_metadata"]
 lock_version = "4.5.0"
-content_hash = "sha256:e0e062077e7ec305575a2ec054cf580d51b99069ab74e87897170d4615c180b8"
+content_hash = "sha256:b704bede6681126635eeb93d65eab91aa3a376cfcaa1635e63f762cd1cd33621"
 
 [[metadata.targets]]
 requires_python = ">=3.11"
@@ -316,11 +316,11 @@ dependencies = [
 
 [[package]]
 name = "nodc-statistics"
-version = "2024.3.0"
+version = "2024.3.1"
 requires_python = ">=3.9"
 git = "https://github.com/nodc-sweden/nodc-statistics"
-ref = "v2024.3.0"
-revision = "347adc3bb88cf816f74a47efb642231ea396f060"
+ref = "v2024.3.1"
+revision = "639d9ec3da6575ce372dd864c3e18644493a19b3"
 summary = "Statistics for NODC"
 groups = ["default"]
 dependencies = [
@@ -373,15 +373,16 @@ files = [
 
 [[package]]
 name = "ocean-data-qc"
-version = "2024.5.1"
+version = "2024.6.1"
 requires_python = ">=3.9"
 git = "https://github.com/nodc-sweden/ocean-data-qc"
-ref = "v2024.5.1"
-revision = "f81499333716845ca83a1be56a25edb98a08ce89"
+ref = "v2024.6.1"
+revision = "adf83ed398cea1cac1105aa75378b3431a90934c"
 summary = "Automatisk kvalitetskontroll av lågupplöst data"
 groups = ["default"]
 dependencies = [
     "pandas>=2.2.1",
+    "pyproj>=3.6.1",
 ]
 
 [[package]]
