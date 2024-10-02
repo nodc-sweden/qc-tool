@@ -36,45 +36,6 @@ def test_prepare_data_makes_series_number_zero_padded_string(given_serno, expect
 
 
 @pytest.mark.parametrize(
-    "given_serno, given_station",
-    (
-        (1, "SLÄGGÖ"),
-        (12, "ANHOLT E"),
-        (123, "BY31 LANDSORTSDJ"),
-        (1234, "BY4 CHRISTIANSÖ"),
-    ),
-)
-def test_prepare_data_creates_a_combined_serno_station_field(given_serno, given_station):
-    # Given data where data has a given serial number and station name
-    given_data = pd.DataFrame(
-        (
-            {"STATN": given_station, "SERNO": given_serno},
-            {"STATN": given_station, "SERNO": given_serno},
-            {"STATN": given_station, "SERNO": given_serno},
-        )
-    )
-
-    # Given there is no column named SERNO_STN
-    assert "SERNO_STN" not in given_data.columns
-
-    # When preparing data
-    transformed_data = data_transformation.prepare_data(given_data)
-
-    # Then the column SERNO_STN is added
-    assert "SERNO_STN" in transformed_data.columns
-
-    # And all rows have the same value
-    all_serno_stn = transformed_data["SERNO_STN"].unique()
-    assert len(all_serno_stn) == 1
-
-    # And the value is a combination of the two fields
-    serno_stn = all_serno_stn[0]
-    serno_part, station_part = serno_stn.split("-")
-    assert str(given_serno) in serno_part
-    assert given_station in station_part
-
-
-@pytest.mark.parametrize(
     "given_quality_flag",
     (
         "0",

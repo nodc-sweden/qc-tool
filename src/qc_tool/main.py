@@ -258,12 +258,12 @@ class QcTool:
         self._data = data
 
         # Extract list of all station visits
-        station_series = sorted(data["SERNO_STN"].unique())
+        station_series = sorted(data["visit_key"].unique())
 
         # Initialize all stations
         self._stations = {
             series: Station(
-                series, self._data[self._data["SERNO_STN"] == series], self._geo_info
+                series, self._data[self._data["visit_key"] == series], self._geo_info
             )
             for series in station_series
         }
