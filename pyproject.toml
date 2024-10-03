@@ -10,7 +10,7 @@ dependencies = [
     "bokeh==3.3.4",
     "pyproj>=3.6.1",
     "pandas>=2.2.1",
-    "sharkadm @ git+https://github.com/nodc-sweden/SHARKadm@54-export-till-mappad-dataframe",
+    "sharkadm @ git+https://github.com/nodc-sweden/SHARKadm@v0.4.0",
     "nodc-codes @ git+https://github.com/nodc-sweden/nodc-codes@v0.1.1",
     "ocean-data-qc @ git+https://github.com/nodc-sweden/ocean-data-qc@v2024.6.1",
     "Jinja2>=3.1.3",

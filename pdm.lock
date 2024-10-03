@@ -5,7 +5,7 @@
 groups = ["default", "dev"]
 strategy = ["cross_platform", "inherit_metadata"]
 lock_version = "4.5.0"
-content_hash = "sha256:b704bede6681126635eeb93d65eab91aa3a376cfcaa1635e63f762cd1cd33621"
+content_hash = "sha256:56353d56763edde58f10646220bb0242d73f044bed359e5688fd2a6a2df95ef9"
 
 [[metadata.targets]]
 requires_python = ">=3.11"
@@ -789,11 +789,11 @@ files = [
 
 [[package]]
 name = "sharkadm"
-version = "0.1.4"
+version = "0.4.0"
 requires_python = ">=3.11"
 git = "https://github.com/nodc-sweden/SHARKadm"
-ref = "54-export-till-mappad-dataframe"
-revision = "5707e45c261488fe8ccae4841b6c0542548cabb9"
+ref = "v0.4.0"
+revision = "18898a60f366850b920d895de49cf0ee87e1deb6"
 summary = "Handles workflows for Swedish NODC"
 groups = ["default"]
 dependencies = [
