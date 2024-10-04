@@ -2,7 +2,6 @@ import tkinter
 import tkinter.filedialog
 from pathlib import Path
 
-import pandas as pd
 import sharkadm
 import sharkadm.data
 from bokeh.models import Button, Column, Div, FileInput
@@ -64,7 +63,9 @@ class FileHandler(Layoutable):
         else:
             self._file_name = selected_path
             self._file_loaded()
-            data = pd.read_csv(selected_path, sep="\t")
+            data = sharkadm.dv_template_data.get_row_data_from_fyschem_dv_template(
+                selected_path
+            )
 
         self._external_load_file_callback(data)
 
