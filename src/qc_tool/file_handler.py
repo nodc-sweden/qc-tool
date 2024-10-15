@@ -14,12 +14,14 @@ class FileHandler(Layoutable):
         self,
         external_load_file_callback,
         external_save_file_callback,
+        external_save_diff_file_callback,
         external_automatic_qc_callback,
     ):
         self._file_name = None
 
         self._external_load_file_callback = external_load_file_callback
         self._external_save_file_callback = external_save_file_callback
+        self._external_save_diff_file_callback = external_save_diff_file_callback
         self._external_automatic_qc_callback = external_automatic_qc_callback
 
         self._load_header = Div(width=500, text="<h3>Load and save</h3>")
@@ -32,7 +34,14 @@ class FileHandler(Layoutable):
         self._file_button.on_click(self._load_file_callback)
 
         self._save_as_button = Button(label="Save as...")
-        self._save_as_button.on_click(self._save_file_as_callback)
+        self._save_as_button.on_click(
+            lambda: self._save_file_as_callback(self._external_save_file_callback)
+        )
+
+        self._save_diff_as_button = Button(label="Save diff as...")
+        self._save_diff_as_button.on_click(
+            lambda: self._save_file_as_callback(self._external_save_diff_file_callback)
+        )
 
         self._qc_header = Div(width=500, text="<h3>QC</h3>")
 
@@ -81,7 +90,7 @@ class FileHandler(Layoutable):
             self._qc_button.disabled = True
         self._loaded_file_label.text = file_info
 
-    def _save_file_as_callback(self, event):
+    def _save_file_as_callback(self, save_file_callback):
         try:
             root = tkinter.Tk()
             root.iconify()
@@ -93,7 +102,7 @@ class FileHandler(Layoutable):
         if not selected_path:
             return
         selected_path = Path(selected_path)
-        self._external_save_file_callback(selected_path)
+        save_file_callback(selected_path)
 
     @property
     def layout(self):
@@ -102,6 +111,7 @@ class FileHandler(Layoutable):
             self._file_button,
             self._loaded_file_label,
             self._save_as_button,
+            self._save_diff_as_button,
             self._qc_header,
             self._qc_button,
         )

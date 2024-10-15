@@ -10,7 +10,7 @@ from nodc_statistics import regions
 from ocean_data_qc.fyskem.parameter import Parameter
 from ocean_data_qc.fyskemqc import FysKemQc
 
-from qc_tool.data_transformation import prepare_data
+from qc_tool.data_transformation import diff_report, prepare_data
 from qc_tool.file_handler import FileHandler
 from qc_tool.flag_info import FlagInfo
 from qc_tool.manual_qc_handler import ManualQcHandler
@@ -43,10 +43,11 @@ class QcTool:
         self._file_handler = FileHandler(
             self.load_file_callback,
             self.save_file_callback,
+            self.save_diff_file_callback,
             self.automatic_qc_callback,
         )
         self._flag_info = FlagInfo()
-        self._manual_qc_handler = ManualQcHandler(self.manual_cq_callback)
+        self._manual_qc_handler = ManualQcHandler(self.manual_qc_callback)
         self._metadata_qc_handler = MetadataQcHandler()
 
         # Parameters
@@ -167,6 +168,9 @@ class QcTool:
     def save_file_callback(self, filename: Path):
         self._data.to_csv(filename, sep="\t")
 
+    def save_diff_file_callback(self, filename: Path):
+        diff_report(self._data).to_csv(filename, sep="\t")
+
     def automatic_qc_callback(self):
         """Called when automatic qc has been requested."""
         print("Automatic QC started...")
@@ -175,6 +179,9 @@ class QcTool:
         fys_kem_qc.run_automatic_qc()
         t1 = time.perf_counter()
         print(f"Automatic QC finished ({t1-t0:.3f} s.)")
+        self._data[["INCOMING_QC", "AUTO_QC", "MANUAL_QC", "TOTAL_QC"]] = self._data[
+            "quality_flag_long"
+        ].str.split("_", expand=True)
         self._set_data(self._data, self._selected_station.series)
 
     def metadata_qc_callback(self):
@@ -187,9 +194,10 @@ class QcTool:
         self._station_info.update()
         self._metadata_qc_handler.update()
 
-    def manual_cq_callback(self, values: list[Parameter]):
+    def manual_qc_callback(self, values: list[Parameter]):
         """ "Called when manual qc has been applied."""
         # Update quality flag in data
+        t0 = time.perf_counter()
         for value in values:
             self._data.loc[
                 (self._data["SERNO"] == value._data["SERNO"])
@@ -197,7 +205,12 @@ class QcTool:
                 & (self._data["DEPH"] == value._data["DEPH"]),
                 "quality_flag_long",
             ] = str(value.qc)
+        t1 = time.perf_counter()
+        print(f"Manual QC finished ({t1-t0:.3f} s.)")
 
+        self._data[["INCOMING_QC", "AUTO_QC", "MANUAL_QC", "TOTAL_QC"]] = self._data[
+            "quality_flag_long"
+        ].str.split("_", expand=True)
         # Reload data
         self._set_data(self._data, self._selected_station.series)
 
