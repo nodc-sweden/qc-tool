@@ -78,6 +78,10 @@ def test_prepare_data_adds_quality_flag_long_column_with_input_from_quality_flag
     all_quality_flag_long = transformed_data["quality_flag_long"].unique()
     assert len(all_quality_flag_long) == 1
 
-    # And the value ends with the value from 'quality_flag'
+    # And the value starts with the value from 'quality_flag'
     quality_flag_long = all_quality_flag_long[0]
     assert quality_flag_long.startswith(f"{given_quality_flag}_")
+
+    # And the value ends with the value from 'quality_flag'
+    quality_flag_long = all_quality_flag_long[-1]
+    assert quality_flag_long.endswith(f"_{given_quality_flag}")

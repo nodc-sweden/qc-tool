@@ -1,5 +1,5 @@
 import jinja2
-from bokeh.models import Div, ImportedStyleSheet, RadioButtonGroup, Row
+from bokeh.models import Column, Div, ImportedStyleSheet, RadioButtonGroup, Row
 from ocean_data_qc.fyskem.qc_flag import QC_FLAG_CSS_COLORS, QcFlag
 from ocean_data_qc.fyskem.qc_flag_tuple import QcField
 
@@ -38,6 +38,8 @@ _flag_info_template = jinja2.Template("""
 
 class ManualQcHandler(Layoutable):
     def __init__(self, values_changed_callback=None):
+        self._manual_qc_header = Div(width=500, text="<h3>Perfom manual QC</h3>")
+        self._manual_qc_info = Div(width=500, text="Select samples with the lasso tool")
         self._values = []
         self._values_changed_callback = values_changed_callback
         self._value_table = Div(
@@ -76,7 +78,11 @@ class ManualQcHandler(Layoutable):
 
     @property
     def layout(self):
-        return Row(self._value_table, self._qc_buttons)
+        return Column(
+            self._manual_qc_header,
+            self._manual_qc_info,
+            Row(self._value_table, self._qc_buttons),
+        )
 
     def _qc_flag_changed(self, attr, old, new):
         if not self._updating_qc_flag:

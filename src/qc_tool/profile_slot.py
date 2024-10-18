@@ -15,7 +15,7 @@ from bokeh.models import (
     Dropdown,
     HoverTool,
     Label,
-    PolySelectTool,
+    LassoSelectTool,
     Span,
     WheelZoomTool,
 )
@@ -115,7 +115,7 @@ class ProfileSlot(Layoutable):
     def _initialize_plot(self, linked_parameter):
         wheel_zoom = WheelZoomTool()
         hover = HoverTool()
-        select = PolySelectTool()
+        select = LassoSelectTool()
         if linked_parameter:
             self._crosshair_width = linked_parameter._crosshair_width
             self._crosshair_height = linked_parameter._crosshair_height
@@ -306,7 +306,7 @@ class ProfileSlot(Layoutable):
             try:
                 self._parameter_data["quality_flag_long"] = self._parameter_data[
                     "quality_flag"
-                ].map(lambda x: str(QcFlags(QcFlag.parse(x), None, None)))
+                ].map(lambda x: str(QcFlags(QcFlag.parse(x), None, None, None)))
             except Exception:
                 print(self._parameter)
                 raise
