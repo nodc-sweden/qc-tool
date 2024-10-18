@@ -10,7 +10,7 @@ from nodc_statistics import regions
 from ocean_data_qc.fyskem.parameter import Parameter
 from ocean_data_qc.fyskemqc import FysKemQc
 
-from qc_tool.data_transformation import diff_report, prepare_data
+from qc_tool.data_transformation import changes_report, prepare_data
 from qc_tool.file_handler import FileHandler
 from qc_tool.flag_info import FlagInfo
 from qc_tool.manual_qc_handler import ManualQcHandler
@@ -169,7 +169,7 @@ class QcTool:
         self._data.to_csv(filename, sep="\t")
 
     def save_diff_file_callback(self, filename: Path):
-        diff_report(self._data).to_csv(filename, sep="\t")
+        changes_report(self._data).to_csv(filename, sep="\t")
 
     def automatic_qc_callback(self):
         """Called when automatic qc has been requested."""

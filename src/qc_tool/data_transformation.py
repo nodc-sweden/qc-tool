@@ -14,7 +14,7 @@ def prepare_data(data: pd.DataFrame):
     return data
 
 
-def diff_report(data: pd.DataFrame):
+def changes_report(data: pd.DataFrame):
     # Create dataframe with rows only where qc_incoming and qc_total differ
     incoming = data["quality_flag_long"].str.split("_").str[0]
     total = data["quality_flag_long"].str.split("_").str[-1]
