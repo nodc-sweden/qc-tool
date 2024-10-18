@@ -5,7 +5,7 @@
 groups = ["default", "dev"]
 strategy = ["inherit_metadata"]
 lock_version = "4.4.1"
-content_hash = "sha256:d1eaa3ceb16bcf04b84968b3fb0e82a23308d4b0e59988aa12c700f10409b1f4"
+content_hash = "sha256:fd3e14ac368019334c9edbe29af806479c68ba3e75e43c51119e9dbaf6909be7"
 
 [[package]]
 name = "bokeh"
@@ -409,8 +409,8 @@ name = "ocean-data-qc"
 version = "2024.6.1"
 requires_python = ">=3.9"
 git = "https://github.com/nodc-sweden/ocean-data-qc"
-ref = "totalflag"
-revision = "25ebdcb9cc5d3a4050859f130d584e41c87c699e"
+ref = "main"
+revision = "ace61a842ff6cdc30985a232109778285813fa03"
 summary = "Automatisk kvalitetskontroll av lågupplöst data"
 groups = ["default"]
 dependencies = [
