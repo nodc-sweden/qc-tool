@@ -1,5 +1,5 @@
 import jinja2
-from bokeh.models import Div, ImportedStyleSheet, Row
+from bokeh.models import Column, Div, ImportedStyleSheet
 
 from qc_tool.layoutable import Layoutable
 from qc_tool.station import Station
@@ -24,6 +24,7 @@ _log_template = jinja2.Template("""
 class MetadataQcHandler(Layoutable):
     def __init__(self):
         self._station = None
+        self._manual_qc_header = Div(width=500, text="<h3>Results of metadata QC</h3>")
         self._log_table = Div(
             text=_log_template.render(values=[]),
             stylesheets=[ImportedStyleSheet(url="qc_tool/static/css/style.css")],
@@ -44,4 +45,4 @@ class MetadataQcHandler(Layoutable):
 
     @property
     def layout(self):
-        return Row(self._log_table)
+        return Column(self._manual_qc_header, self._log_table)
