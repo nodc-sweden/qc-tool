@@ -1,5 +1,6 @@
 import argparse
 import subprocess
+from pathlib import Path
 
 
 def main():
@@ -15,7 +16,8 @@ def setup_arguments():
 def start_server():
     try:
         print("Stop server with Ctrl-C")
-        subprocess.run(["bokeh", "serve", "--show", "src/qc_tool"])
+        server_root_directory = Path(__file__).parent.parent
+        subprocess.run(["bokeh", "serve", "--show", str(server_root_directory)])
     except KeyboardInterrupt:
         print("Stopping server")
 
