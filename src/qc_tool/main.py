@@ -1,4 +1,3 @@
-import os
 import time
 from pathlib import Path
 
@@ -23,9 +22,9 @@ from qc_tool.station import Station
 from qc_tool.station_info import StationInfo
 
 GEOLAYERS_AREATAG = {
-    "typomrkust": "TYPOMRKUST",
-    "Skagerrak_without_coast": "NAMN",
-    "helcom_subbasins_with_coastal_and_offshore_division_2022_level3": "level_34",
+    "SVAR2022_typomrkust_lagad": "TYPOMRKUST",
+    "ospar_subregions_20160418_3857_lagad": "area_tag",
+    "helcom_subbasins_with_coastal_and_offshore_division_2022_level3_lagad": "level_34",
 }
 
 
@@ -287,14 +286,12 @@ class QcTool:
 
     def _read_geo_info_file(self):
         """Read geographic definitions of all sea basins."""
-        geopackage_path = Path(
-            os.environ.get("QCTOOL_GEOPACKAGE")
-            or Path.home() / "SVAR2022_HELCOM_OSPAR.gpkg"
-        )
+        geopackage_path = Path.home() / "SVAR2022_HELCOM_OSPAR_vs2.gpkg"
+
         if not geopackage_path.exists():
             print(
                 f"In order to retrieve statistics for the station, the file "
-                f"'SVAR2022_HELCOM_OSPAR.gpkg' is needed.\n"
+                f"'SVAR2022_HELCOM_OSPAR_vs2.gpkg' is needed.\n"
                 f"Either place the file in your home directory ({Path.home()}) or "
                 f"specify a location with the environment variable 'QCTOOL_GEOPACKAGE'."
             )
@@ -303,7 +300,7 @@ class QcTool:
 
         # Read specific layers from the file
         t0 = time.perf_counter()
-        print("Extracting basins from geopackage file...")
+        print(f"Extracting basins from geopackage file {geopackage_path}...")
 
         layers = []
         for layer, area_tag in GEOLAYERS_AREATAG.items():
