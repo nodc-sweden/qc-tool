@@ -29,7 +29,8 @@ _class_from_status = {
 class StationInfo(Layoutable):
     STATION_DATA_FIELDS = (
         ("STATN", "Station name"),
-        ("CTRYID+SHIPC+CRUISE_NO+SERNO", "Country-Ship-Cruise-Series"),
+        ("SERNO", "Series"),
+        ("CTRYID+SHIPC+CRUISE_NO+SERNO", "Country-Ship-Cruise-Station"),
         ("SDATE+STIME", "Time"),
         ("WADEP", "Water depth"),
         ("AIRTEMP", "Air temperature"),

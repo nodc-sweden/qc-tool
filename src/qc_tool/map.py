@@ -54,7 +54,7 @@ class Map(Layoutable):
             size=9,
             fill_color="blue",
             nonselection_fill_color="blue",
-            selection_fill_color="red",
+            selection_fill_color="orange",
         )
 
         self._map_unselected_source.selected.on_change(
