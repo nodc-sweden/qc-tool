@@ -123,13 +123,14 @@ class QcTool:
         meta_data_cq_tab = TabPanel(
             title="Metadata QC", child=self._metadata_qc_handler.layout
         )
-        flags_tab = TabPanel(title="QC Flags", child=self._flag_info.layout)
         manual_qc_tab = TabPanel(title="Manual QC", child=self._manual_qc_handler.layout)
 
-        self._extra_info_tabs = Tabs(
-            tabs=[files_tab, meta_data_cq_tab, flags_tab, manual_qc_tab]
+        self._extra_info_tabs = Tabs(tabs=[files_tab, meta_data_cq_tab, manual_qc_tab])
+        self.flags_info = Column(self._flag_info.layout)
+
+        top_row = Row(
+            self._map.layout, station_info_column, self._extra_info_tabs, self.flags_info
         )
-        top_row = Row(self._map.layout, station_info_column, self._extra_info_tabs)
 
         # Tab for profile plots
         chemical_profile_row = Row(
