@@ -51,12 +51,17 @@ class QcTool:
 
         # Parameters
         first_chemical_parameter = ProfileSlot(
-            parameter="PHOS",
+            parameter="DOXY_BTL",
             value_selected_callback=self.select_values_callback,
         )
         first_chemical_parameter._figure.yaxis.axis_label = "Depth [m]"
         self._chemical_profile_parameters = [
             first_chemical_parameter,
+            ProfileSlot(
+                linked_parameter=first_chemical_parameter,
+                parameter="PHOS",
+                value_selected_callback=self.select_values_callback,
+            ),
             ProfileSlot(
                 linked_parameter=first_chemical_parameter,
                 parameter="NTRI",
@@ -106,6 +111,45 @@ class QcTool:
                 parameter="H2S",
                 value_selected_callback=self.select_values_callback,
             ),
+            ProfileSlot(
+                linked_parameter=first_physical_parameter,
+                parameter="CHLFL",
+                value_selected_callback=self.select_values_callback,
+            ),
+        ]
+
+        first_biological_parameter = ProfileSlot(
+            parameter="CPHL",
+            value_selected_callback=self.select_values_callback,
+        )
+        first_biological_parameter._figure.yaxis.axis_label = "Depth [m]"
+        self._biological_profile_parameters = [
+            first_biological_parameter,
+            ProfileSlot(
+                linked_parameter=first_biological_parameter,
+                parameter="PH_LAB",
+                value_selected_callback=self.select_values_callback,
+            ),
+            ProfileSlot(
+                linked_parameter=first_biological_parameter,
+                parameter="ALKY",
+                value_selected_callback=self.select_values_callback,
+            ),
+            ProfileSlot(
+                linked_parameter=first_biological_parameter,
+                parameter="HUMUS",
+                value_selected_callback=self.select_values_callback,
+            ),
+            ProfileSlot(
+                linked_parameter=first_biological_parameter,
+                parameter="CHLFL",
+                value_selected_callback=self.select_values_callback,
+            ),
+            ProfileSlot(
+                linked_parameter=first_biological_parameter,
+                parameter="SALT_CTD",
+                value_selected_callback=self.select_values_callback,
+            ),
         ]
 
         self._scatter_parameters = [
@@ -140,8 +184,18 @@ class QcTool:
         physical_profile_row = Row(
             children=[parameter.layout for parameter in self._physical_profile_parameters]
         )
+
+        biological_profile_row = Row(
+            children=[
+                parameter.layout for parameter in self._biological_profile_parameters
+            ]
+        )
+
         profile_tab = TabPanel(
-            child=Column(chemical_profile_row, physical_profile_row), title="Profiles"
+            child=Column(
+                chemical_profile_row, physical_profile_row, biological_profile_row
+            ),
+            title="Profiles",
         )
 
         # Tab for scatter plots
@@ -230,12 +284,17 @@ class QcTool:
         for parameter in self._physical_profile_parameters:
             parameter.update_station(self._selected_station)
 
+        for parameter in self._biological_profile_parameters:
+            parameter.update_station(self._selected_station)
+
         for parameter in self._scatter_parameters:
             parameter.update_station(self._selected_station)
 
     def select_values_callback(self, values, sender):
         for profile_slot in (
-            self._chemical_profile_parameters + self._physical_profile_parameters
+            self._chemical_profile_parameters
+            + self._physical_profile_parameters
+            + self._biological_profile_parameters
         ):
             self._set_extra_info_tab(3)
 
