@@ -30,7 +30,7 @@ class StationInfo(Layoutable):
     STATION_DATA_FIELDS = (
         ("STATN", "Station name"),
         ("SERNO", "Series"),
-        ("CTRYID+SHIPC+CRUISE_NO+SERNO", "Country-Ship-Cruise-Station"),
+        ("CTRYID+SHIPC+CRUISE_NO", "Country-Ship-Cruise"),
         ("SDATE+STIME", "Time"),
         ("WADEP", "Water depth"),
         ("AIRTEMP", "Air temperature"),

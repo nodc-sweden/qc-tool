@@ -24,8 +24,8 @@ class Station:
         "WINSP",
     }
 
-    def __init__(self, series: str, data, geo_info):
-        self._series = series
+    def __init__(self, visit_key: str, data, geo_info):
+        self._visit_key = visit_key
         self._data = data
 
         self._common = {
@@ -71,21 +71,28 @@ class Station:
         return datetime.datetime.combine(date, time)
 
     @property
-    def country_ship_cruise_series(self):
+    def country_ship_cruise_visit_key(self):
         return "-".join(
             [str(self._common.get(key)) for key in ("CTRYID", "SHIPC", "CRUISE_NO")]
-            + [self._series]
+            + [self._visit_key]
         )
 
     @property
-    def series(self):
-        return self._series
+    def country_ship_cruise(self):
+        return "-".join(
+            [str(self._common.get(key)) for key in ("CTRYID", "SHIPC", "CRUISE_NO")]
+        )
+
+    @property
+    def visit_key(self):
+        return self._visit_key
 
     @property
     def common(self):
         compound_values = {
             "SDATE+STIME": self.datetime,
-            "CTRYID+SHIPC+CRUISE_NO+SERNO": self.country_ship_cruise_series,
+            "CTRYID+SHIPC+CRUISE_NO+VISITKEY": self.country_ship_cruise_visit_key,
+            "CTRYID+SHIPC+CRUISE_NO": self.country_ship_cruise,
         }
         return self._common | compound_values
 

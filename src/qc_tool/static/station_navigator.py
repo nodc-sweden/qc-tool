@@ -25,32 +25,32 @@ class StationNavigator(Layoutable):
         )
 
     def _select_station_callback(self, event):
-        station_series = event.item
-        self._set_station_callback(station_series)
+        station_visit = event.item
+        self._set_station_callback(station_visit)
 
     def select_previous_station(self):
         station_index = (
             self._station_dropdown.menu.index(self._station_dropdown.label) - 1
         ) % len(self._stations)
-        station_series = self._station_dropdown.menu[station_index]
-        self._set_station_callback(station_series)
+        station_visit = self._station_dropdown.menu[station_index]
+        self._set_station_callback(station_visit)
 
     def select_next_station(self):
         station_index = (
             self._station_dropdown.menu.index(self._station_dropdown.label) + 1
         ) % len(self._stations)
-        station_series = self._station_dropdown.menu[station_index]
-        self._set_station_callback(station_series)
+        station_visit = self._station_dropdown.menu[station_index]
+        self._set_station_callback(station_visit)
 
     def load_stations(self, stations):
         self._stations = stations
         self._station_dropdown.menu = [
-            station.series for station in self._stations.values()
+            station.visit_key for station in self._stations.values()
         ]
 
     @property
     def layout(self):
         return self._layout
 
-    def set_station(self, station_series: str):
-        self._station_dropdown.label = station_series
+    def set_station(self, station_visit: str):
+        self._station_dropdown.label = station_visit

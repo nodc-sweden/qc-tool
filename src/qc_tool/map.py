@@ -67,7 +67,7 @@ class Map(Layoutable):
         self._stations = stations
 
         all_stations = [
-            (station.series, station.longitude, station.latitude)
+            (station.visit_key, station.longitude, station.latitude)
             for station in self._stations.values()
         ]
 
@@ -77,14 +77,14 @@ class Map(Layoutable):
         self._map_unselected_source.data = {
             "longitudes": longitudes,
             "latitudes": latitudes,
-            "series": station_names,
+            "visits": station_names,
         }
 
-    def set_station(self, station_series: Optional[str]):
-        self._selected_station = station_series
-        if station_series:
-            station_index = self._map_unselected_source.data["series"].index(
-                station_series
+    def set_station(self, station_visit: Optional[str]):
+        self._selected_station = station_visit
+        if station_visit:
+            station_index = self._map_unselected_source.data["visits"].index(
+                station_visit
             )
             self._map_unselected_source.selected.indices = [station_index]
         else:
@@ -97,9 +97,9 @@ class Map(Layoutable):
     def _station_selected_callback(self, attr, old, new):
         if new:
             selected_index = new[0]
-            station_series = self._map_unselected_source.data["series"][selected_index]
-            if station_series != self._selected_station:
-                self._set_station_callback(station_series)
+            station_visit = self._map_unselected_source.data["visits"][selected_index]
+            if station_visit != self._selected_station:
+                self._set_station_callback(station_visit)
 
     def _convert_projection(self, longitudes, latitudes):
         if not longitudes or not latitudes:
