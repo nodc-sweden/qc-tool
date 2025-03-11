@@ -8,9 +8,9 @@ authors = [
 ]
 dependencies = [
     "bokeh==3.3.4",
-    "pyproj>=3.6.1",
+    "pyproj==3.7.0",
     "pandas>=2.2.1",
-    "nodc-statistics @ git+https://github.com/nodc-sweden/nodc-statistics@v2024.3.1",
+    "nodc-statistics @ git+https://github.com/nodc-sweden/nodc-statistics@v2025.1.0",
     "sharkadm @ git+https://github.com/nodc-sweden/SHARKadm@v1.0.0",
     "nodc-codes @ git+https://github.com/nodc-sweden/nodc-codes@v0.3.0",
     "ocean-data-qc @ git+https://github.com/nodc-sweden/ocean-data-qc@v2024.6.2",

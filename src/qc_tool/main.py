@@ -1,4 +1,3 @@
-import os
 import time
 from pathlib import Path
 
@@ -23,9 +22,9 @@ from qc_tool.station import Station
 from qc_tool.station_info import StationInfo
 
 GEOLAYERS_AREATAG = {
-    "typomrkust": "TYPOMRKUST",
-    "Skagerrak_without_coast": "NAMN",
-    "helcom_subbasins_with_coastal_and_offshore_division_2022_level3": "level_34",
+    "SVAR2022_typomrkust_lagad": "TYPOMRKUST",
+    "ospar_subregions_20160418_3857_lagad": "area_tag",
+    "helcom_subbasins_with_coastal_and_offshore_division_2022_level3_lagad": "level_34",
 }
 
 
@@ -52,12 +51,17 @@ class QcTool:
 
         # Parameters
         first_chemical_parameter = ProfileSlot(
-            parameter="PHOS",
+            parameter="DOXY_BTL",
             value_selected_callback=self.select_values_callback,
         )
         first_chemical_parameter._figure.yaxis.axis_label = "Depth [m]"
         self._chemical_profile_parameters = [
             first_chemical_parameter,
+            ProfileSlot(
+                linked_parameter=first_chemical_parameter,
+                parameter="PHOS",
+                value_selected_callback=self.select_values_callback,
+            ),
             ProfileSlot(
                 linked_parameter=first_chemical_parameter,
                 parameter="NTRI",
@@ -107,6 +111,45 @@ class QcTool:
                 parameter="H2S",
                 value_selected_callback=self.select_values_callback,
             ),
+            ProfileSlot(
+                linked_parameter=first_physical_parameter,
+                parameter="CHLFL",
+                value_selected_callback=self.select_values_callback,
+            ),
+        ]
+
+        first_biological_parameter = ProfileSlot(
+            parameter="CPHL",
+            value_selected_callback=self.select_values_callback,
+        )
+        first_biological_parameter._figure.yaxis.axis_label = "Depth [m]"
+        self._biological_profile_parameters = [
+            first_biological_parameter,
+            ProfileSlot(
+                linked_parameter=first_biological_parameter,
+                parameter="PH_LAB",
+                value_selected_callback=self.select_values_callback,
+            ),
+            ProfileSlot(
+                linked_parameter=first_biological_parameter,
+                parameter="ALKY",
+                value_selected_callback=self.select_values_callback,
+            ),
+            ProfileSlot(
+                linked_parameter=first_biological_parameter,
+                parameter="HUMUS",
+                value_selected_callback=self.select_values_callback,
+            ),
+            ProfileSlot(
+                linked_parameter=first_biological_parameter,
+                parameter="CHLFL",
+                value_selected_callback=self.select_values_callback,
+            ),
+            ProfileSlot(
+                linked_parameter=first_biological_parameter,
+                parameter="SALT_CTD",
+                value_selected_callback=self.select_values_callback,
+            ),
         ]
 
         self._scatter_parameters = [
@@ -124,13 +167,14 @@ class QcTool:
         meta_data_cq_tab = TabPanel(
             title="Metadata QC", child=self._metadata_qc_handler.layout
         )
-        flags_tab = TabPanel(title="QC Flags", child=self._flag_info.layout)
         manual_qc_tab = TabPanel(title="Manual QC", child=self._manual_qc_handler.layout)
 
-        self._extra_info_tabs = Tabs(
-            tabs=[files_tab, meta_data_cq_tab, flags_tab, manual_qc_tab]
+        self._extra_info_tabs = Tabs(tabs=[files_tab, meta_data_cq_tab, manual_qc_tab])
+        self.flags_info = Column(self._flag_info.layout)
+
+        top_row = Row(
+            self._map.layout, station_info_column, self._extra_info_tabs, self.flags_info
         )
-        top_row = Row(self._map.layout, station_info_column, self._extra_info_tabs)
 
         # Tab for profile plots
         chemical_profile_row = Row(
@@ -140,8 +184,18 @@ class QcTool:
         physical_profile_row = Row(
             children=[parameter.layout for parameter in self._physical_profile_parameters]
         )
+
+        biological_profile_row = Row(
+            children=[
+                parameter.layout for parameter in self._biological_profile_parameters
+            ]
+        )
+
         profile_tab = TabPanel(
-            child=Column(chemical_profile_row, physical_profile_row), title="Profiles"
+            child=Column(
+                chemical_profile_row, physical_profile_row, biological_profile_row
+            ),
+            title="Profiles",
         )
 
         # Tab for scatter plots
@@ -230,12 +284,17 @@ class QcTool:
         for parameter in self._physical_profile_parameters:
             parameter.update_station(self._selected_station)
 
+        for parameter in self._biological_profile_parameters:
+            parameter.update_station(self._selected_station)
+
         for parameter in self._scatter_parameters:
             parameter.update_station(self._selected_station)
 
     def select_values_callback(self, values, sender):
         for profile_slot in (
-            self._chemical_profile_parameters + self._physical_profile_parameters
+            self._chemical_profile_parameters
+            + self._physical_profile_parameters
+            + self._biological_profile_parameters
         ):
             self._set_extra_info_tab(3)
 
@@ -287,14 +346,12 @@ class QcTool:
 
     def _read_geo_info_file(self):
         """Read geographic definitions of all sea basins."""
-        geopackage_path = Path(
-            os.environ.get("QCTOOL_GEOPACKAGE")
-            or Path.home() / "SVAR2022_HELCOM_OSPAR.gpkg"
-        )
+        geopackage_path = Path.home() / "SVAR2022_HELCOM_OSPAR_vs2.gpkg"
+
         if not geopackage_path.exists():
             print(
                 f"In order to retrieve statistics for the station, the file "
-                f"'SVAR2022_HELCOM_OSPAR.gpkg' is needed.\n"
+                f"'SVAR2022_HELCOM_OSPAR_vs2.gpkg' is needed.\n"
                 f"Either place the file in your home directory ({Path.home()}) or "
                 f"specify a location with the environment variable 'QCTOOL_GEOPACKAGE'."
             )
@@ -303,7 +360,7 @@ class QcTool:
 
         # Read specific layers from the file
         t0 = time.perf_counter()
-        print("Extracting basins from geopackage file...")
+        print(f"Extracting basins from geopackage file {geopackage_path}...")
 
         layers = []
         for layer, area_tag in GEOLAYERS_AREATAG.items():
