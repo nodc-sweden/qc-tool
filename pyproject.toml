@@ -1,6 +1,6 @@
 [project]
 name = "qc-tool"
-version = "2024.3.2"
+version = "2025.1.0"
 description = "Kvalitetskontroll av lågupplöst data"
 authors = [
     {name = "Jonatan Skogsfors", email = "jonatan.skogsfors@smhi.se"},
