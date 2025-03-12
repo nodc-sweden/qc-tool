@@ -236,7 +236,7 @@ class QcTool:
         self._data[["INCOMING_QC", "AUTO_QC", "MANUAL_QC", "TOTAL_QC"]] = self._data[
             "quality_flag_long"
         ].str.split("_", expand=True)
-        self._set_data(self._data, self._selected_station.series)
+        self._set_data(self._data, self._selected_station.visit_key)
 
     def metadata_qc_callback(self):
         print("Metadata QC started...")
@@ -266,13 +266,13 @@ class QcTool:
             "quality_flag_long"
         ].str.split("_", expand=True)
         # Reload data
-        self._set_data(self._data, self._selected_station.series)
+        self._set_data(self._data, self._selected_station.visit_key)
 
-    def set_station(self, station_series: str):
-        self._station_navigator.set_station(station_series)
-        self._selected_station = self._stations[station_series]
+    def set_station(self, station_visit: str):
+        self._station_navigator.set_station(station_visit)
+        self._selected_station = self._stations[station_visit]
         self._station_info.set_station(self._selected_station)
-        self._map.set_station(self._selected_station.series)
+        self._map.set_station(self._selected_station.visit_key)
         self._manual_qc_handler.select_values()
         self._metadata_qc_handler.set_station(self._selected_station)
         if self._selected_station._visit.qc_log:
@@ -330,19 +330,21 @@ class QcTool:
         self._data = data
 
         # Extract list of all station visits
-        station_series = sorted(data["visit_key"].unique())
+        station_visit = sorted(data["visit_key"].unique())
 
         # Initialize all stations
         self._stations = {
-            series: Station(
-                series, self._data[self._data["visit_key"] == series], self._geo_info
+            visit_key: Station(
+                visit_key,
+                self._data[self._data["visit_key"] == visit_key],
+                self._geo_info,
             )
-            for series in station_series
+            for visit_key in station_visit
         }
         self._station_navigator.load_stations(self._stations)
         self._map.load_stations(self._stations)
         self.metadata_qc_callback()
-        self.set_station(station or station_series[0])
+        self.set_station(station or station_visit[0])
 
     def _read_geo_info_file(self):
         """Read geographic definitions of all sea basins."""
