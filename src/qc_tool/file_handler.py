@@ -88,6 +88,7 @@ class FileHandler(Layoutable):
         controller.transform(transformers.AddSampleDate())
         controller.transform(transformers.AddSampleTime())
         controller.transform(transformers.AddDatetime())
+        controller.transform(transformers.AddMonth())
         controller.transform(transformers.AddVisitKey())
         controller.transform(transformers.AddAnalyseInfo())
         controller.transform(
