@@ -17,7 +17,9 @@ def start_server():
     try:
         print("Stop server with Ctrl-C")
         server_root_directory = Path(__file__).parent.parent
-        subprocess.run(["bokeh", "serve", "--show", str(server_root_directory)])
+        subprocess.run(
+            ["bokeh", "serve", "--port", "5007", "--show", str(server_root_directory)]
+        )
     except KeyboardInterrupt:
         print("Stopping server")
 
