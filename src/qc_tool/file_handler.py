@@ -76,8 +76,6 @@ class FileHandler(Layoutable):
 
     def _apply_transformers(self, controller):
         # this is already be handled in get_controller_with_data
-        # controller.set_data_holder(data_holder)
-        controller.transform(transformers.AddRowNumber())
         controller.transform(
             transformers.RemoveNonDataLines()
         )  # This was used only in get_row_data_from_lims_export
