@@ -33,6 +33,7 @@ _flag_info_template = jinja2.Template("""
                 <font color="{{ qc_colors[qc_value] }}">●</font> {{ qc_value }}
             </li>{% endfor %}
         </ol>
+        <p><span style="color:black;">○</span> Flag changed by automatic or manual qc</p>
     </div>
     <div>
         <p>Tests performed in automatic QC:</p>
