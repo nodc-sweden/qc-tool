@@ -83,6 +83,7 @@ class ProfileSlot(Layoutable):
                 "x": [],
                 "y": [],
                 "color": [],
+                "line_color": [],
                 "QC": [],
                 "qc_incoming": [],
                 "qc_automatic": [],
@@ -213,7 +214,12 @@ class ProfileSlot(Layoutable):
         )
 
         self._parameter_values = self._figure.scatter(
-            "x", "y", source=self._source, color="color", **self._plot_values_config
+            "x",
+            "y",
+            source=self._source,
+            color="color",
+            line_color="line_color",
+            **self._plot_values_config,
         )
 
         self._parameter_values.data_source.selected.on_change(
@@ -261,6 +267,7 @@ class ProfileSlot(Layoutable):
             "x": [],
             "y": [],
             "color": [],
+            "line_color": [],
             "qc": [],
             "qc_incoming": [],
             "qc_automatic": [],
@@ -326,6 +333,10 @@ class ProfileSlot(Layoutable):
         colors = self._parameter_data["quality_flag"].map(
             lambda flag: QC_FLAG_CSS_COLORS[flag]
         )
+        line_colors = [
+            "black" if flags.incoming.value != flags.total.value else "none"
+            for flags in qc_flags
+        ]
 
         if self._station.sea_basin is None:
             parameter_statistics = None
@@ -343,6 +354,7 @@ class ProfileSlot(Layoutable):
             "x": self._parameter_data["value"],
             "y": self._parameter_data["DEPH"],
             "color": colors,
+            "line_color": line_colors,
             "qc": [f"{flags.total} ({flags.total.value})" for flags in qc_flags],
             "qc_incoming": [
                 f"{flags.incoming} ({flags.incoming.value})" for flags in qc_flags

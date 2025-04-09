@@ -65,7 +65,9 @@ class ScatterSlot(Layoutable):
         self._x_parameter = x_parameter
         self._y_parameter = y_parameter
         self._station = None
-        self._source = ColumnDataSource(data={"x": [], "y": [], "colors": []})
+        self._source = ColumnDataSource(
+            data={"x": [], "y": [], "colors": [], "line_colors": []}
+        )
 
         self._initialize_plot()
 
@@ -90,6 +92,7 @@ class ScatterSlot(Layoutable):
             "alpha": 0.8,
             "name": "values",
             "color": "colors",
+            "line_color": "line_colors",
         }
 
         self._figure = figure(**self._figure_config)
@@ -177,12 +180,25 @@ class ScatterSlot(Layoutable):
             colors = merged_data["quality_flag_x"].map(
                 lambda flag: QC_FLAG_CSS_COLORS[flag]
             )
-            qc_flags_x = map(QcFlags.from_string, merged_data["quality_flag_long_x"])
-            qc_flags_y = map(QcFlags.from_string, merged_data["quality_flag_long_y"])
+            qc_flags_x = list(
+                map(QcFlags.from_string, merged_data["quality_flag_long_x"])
+            )
+            qc_flags_y = list(
+                map(QcFlags.from_string, merged_data["quality_flag_long_y"])
+            )
+            # Evaluate and store all .value values first
+            total_values = [flags.total.value for flags in qc_flags_x]
+            incoming_values = [flags.incoming.value for flags in qc_flags_x]
+            line_colors = [
+                "black" if inc != tot else "none"
+                for inc, tot in zip(incoming_values, total_values)
+            ]
+            print(f"{line_colors=}")
             self._source.data = {
                 "x": merged_data["value_x"],
                 "y": merged_data["value_y"],
                 "colors": colors,
+                "line_colors": line_colors,
                 "deph": merged_data["DEPH"],
                 "qcx": [f"{flags.total} ({flags.total.value})" for flags in qc_flags_x],
                 "qcy": [f"{flags.total} ({flags.total.value})" for flags in qc_flags_y],
@@ -197,7 +213,7 @@ class ScatterSlot(Layoutable):
             ]
             self._no_data_label.visible = False
         else:
-            self._source.data = {"x": [], "y": [], "colors": []}
+            self._source.data = {"x": [], "y": [], "colors": [], "line_colors": []}
             self._no_data_label.visible = True
 
     def update_station(self, station: Station):
