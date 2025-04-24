@@ -18,7 +18,7 @@ _log_template = jinja2.Template("""
 {% endfor %}
 {% endfor %}
 {% endif %}
-""")  # noqa: E501
+""")
 
 
 class MetadataQcHandler(Layoutable):

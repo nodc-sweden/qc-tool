@@ -10,7 +10,7 @@ def prepare_data(data: pd.DataFrame):
     if "quality_flag_long" not in data.columns and "quality_flag" in data.columns:
         data["quality_flag_long"] = (
             data["quality_flag"] + f"_{'0' * len(QcField)}_0_" + data["quality_flag"]
-        )  # noqa: E501
+        )
     return data
 
 

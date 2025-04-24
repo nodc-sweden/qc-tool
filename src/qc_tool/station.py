@@ -5,24 +5,26 @@ from ocean_data_qc.metadataqc import MetadataQc
 
 
 class Station:
-    COMMON_COLUMNS = {
-        "AIRPRES",
-        "AIRTEMP",
-        "COMNT_VISIT",
-        "CRUISE_NO",
-        "CTRYID",
-        "DEPH",
-        "LATIT",
-        "LONGI",
-        "SDATE",
-        "SHIPC",
-        "STATN",
-        "STIME",
-        "SERNO",
-        "WADEP",
-        "WINDIR",
-        "WINSP",
-    }
+    COMMON_COLUMNS = frozenset(
+        {
+            "AIRPRES",
+            "AIRTEMP",
+            "COMNT_VISIT",
+            "CRUISE_NO",
+            "CTRYID",
+            "DEPH",
+            "LATIT",
+            "LONGI",
+            "SDATE",
+            "SHIPC",
+            "STATN",
+            "STIME",
+            "SERNO",
+            "WADEP",
+            "WINDIR",
+            "WINSP",
+        }
+    )
 
     def __init__(self, visit_key: str, data, geo_info):
         self._visit_key = visit_key

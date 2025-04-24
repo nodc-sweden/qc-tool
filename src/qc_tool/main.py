@@ -232,7 +232,7 @@ class QcTool:
         fys_kem_qc = FysKemQc(self._data)
         fys_kem_qc.run_automatic_qc()
         t1 = time.perf_counter()
-        print(f"Automatic QC finished ({t1-t0:.3f} s.)")
+        print(f"Automatic QC finished ({t1 - t0:.3f} s.)")
         self._data[["INCOMING_QC", "AUTO_QC", "MANUAL_QC", "TOTAL_QC"]] = self._data[
             "quality_flag_long"
         ].str.split("_", expand=True)
@@ -244,7 +244,7 @@ class QcTool:
         for station in self._stations.values():
             station.run_metadata_qc()
         t1 = time.perf_counter()
-        print(f"Metadata QC finished ({t1-t0:.3f} s.)")
+        print(f"Metadata QC finished ({t1 - t0:.3f} s.)")
         self._station_info.update()
         self._metadata_qc_handler.update()
 
@@ -260,7 +260,7 @@ class QcTool:
                 "quality_flag_long",
             ] = str(value.qc)
         t1 = time.perf_counter()
-        print(f"Manual QC finished ({t1-t0:.3f} s.)")
+        print(f"Manual QC finished ({t1 - t0:.3f} s.)")
 
         self._data[["INCOMING_QC", "AUTO_QC", "MANUAL_QC", "TOTAL_QC"]] = self._data[
             "quality_flag_long"
@@ -323,10 +323,10 @@ class QcTool:
         # Step 3: Map the results back to the original DataFrame
         data = data.merge(unique_positions, on=["LONGI", "LATIT"], how="left")
         t1 = time.perf_counter()
-        print(f"Matching sea basins finished ({t1-t0:.3f} s.)")
+        print(f"Matching sea basins finished ({t1 - t0:.3f} s.)")
         return data
 
-    def _set_data(self, data: pd.DataFrame, station: str = None):
+    def _set_data(self, data: pd.DataFrame, station: str | None = None):
         self._data = data
 
         # Extract list of all station visits

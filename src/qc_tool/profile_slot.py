@@ -67,8 +67,8 @@ def expand_abbreviation(abbreviation: str) -> str:
 class ProfileSlot(Layoutable):
     def __init__(
         self,
-        parameter: str = None,
-        linked_parameter: Self = None,
+        parameter: str | None = None,
+        linked_parameter: Self | None = None,
         value_selected_callback=None,
     ):
         self._value_selected_callback = value_selected_callback or (lambda *args: None)
