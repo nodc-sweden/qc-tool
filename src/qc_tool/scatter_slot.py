@@ -193,7 +193,6 @@ class ScatterSlot(Layoutable):
                 "black" if inc != tot else "none"
                 for inc, tot in zip(incoming_values, total_values)
             ]
-            print(f"{line_colors=}")
             self._source.data = {
                 "x": merged_data["value_x"],
                 "y": merged_data["value_y"],
