@@ -194,9 +194,10 @@ class ProfileSlot(Layoutable):
             source=self._statistics_source,
             **self._plot_line_statistics_config,
         )
-        self._mean_values_dash = self._figure.dash(
+        self._mean_values_dash = self._figure.scatter(
             "mean",
             "depth",
+            marker="dash",
             source=self._statistics_source,
             **self._plot_dash_statistics_config,
         )

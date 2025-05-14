@@ -7,7 +7,7 @@ authors = [
     {name = "Lena Viktorsson", email = "lena.viktorsson@smhi.se"},
 ]
 dependencies = [
-    "bokeh==3.3.4",
+    "bokeh==3.7.3",
     "pyproj==3.7.0",
     "pandas>=2.2.1",
     "nodc-statistics @ git+https://github.com/nodc-sweden/nodc-statistics@v2025.1.0",
