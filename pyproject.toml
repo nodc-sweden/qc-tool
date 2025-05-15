@@ -31,9 +31,9 @@ allow-direct-references = true
 
 [dependency-groups]
 dev = [
-    "pytest>=8.1.1",
-    "ruff>=0.6.9",
-    "pre-commit>=3.7.0",
+    "pytest>=8.4.1",
+    "ruff>=0.12.0",
+    "pre-commit>=4.2.0",
 ]
 
 [tool.ruff]
@@ -51,8 +51,8 @@ line-ending = "auto"
 select = [
     "A",  # flake8-builtins
     "F",  # pyflakes
-    "E", # pycodestyle: error
+    "E",  # pycodestyle: error
     "W",  # pycodestyle: warning
-    "I001",  # isort: unsorted-imports
+    "I",  # isort
     "RUF"  # Ruff-specific rules
 ]
