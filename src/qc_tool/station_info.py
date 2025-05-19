@@ -38,6 +38,7 @@ class StationInfo(Layoutable):
         ("WINDIR", "Wind direction"),
         ("WINSP", "Wind speed"),
         ("COMNT_VISIT", "Comment"),
+        ("COMNT_INTERN", "Internal comment"),
         ("LATIT", "Latitude"),
         ("LONGI", "Longitude"),
     )
