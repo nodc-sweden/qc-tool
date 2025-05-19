@@ -40,7 +40,9 @@ class FileHandler(Layoutable):
 
         self._save_changes_as_button = Button(label="Save only changed rows as...")
         self._save_changes_as_button.on_click(
-            lambda: self._save_file_as_callback(self._external_save_changes_file_callback)
+            lambda: self._save_file_as_callback(
+                self._external_save_changes_file_callback, file_type="xlsx"
+            )
         )
 
         self._qc_header = Div(width=500, text="<h3>QC</h3>")
@@ -110,11 +112,23 @@ class FileHandler(Layoutable):
             self._qc_button.disabled = True
         self._loaded_file_label.text = file_info
 
-    def _save_file_as_callback(self, save_file_callback):
+    def _save_file_as_callback(self, save_file_callback, file_type: str = "txt"):
         try:
             root = tkinter.Tk()
             root.iconify()
-            selected_path = tkinter.filedialog.asksaveasfilename(defaultextension=".csv")
+            if file_type == "txt":
+                filetypes = [("Text Files", "*.txt"), ("All Files", "*.*")]
+                default_extension = ".txt"
+            elif file_type == "xlsx":
+                filetypes = [("Excel Files", "*.xlsx"), ("All Files", "*.*")]
+                default_extension = ".xlsx"
+            else:
+                filetypes = [("All Files", "*.*")]
+                default_extension = ""
+            selected_path = tkinter.filedialog.asksaveasfilename(
+                defaultextension=default_extension,
+                filetypes=filetypes,
+            )
             root.destroy()
         except tkinter.TclError:
             selected_path = None

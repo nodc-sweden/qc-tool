@@ -220,10 +220,10 @@ class QcTool:
         self._set_data(data)
 
     def save_file_callback(self, filename: Path):
-        self._data.to_csv(filename, sep="\t")
+        self._data.to_csv(filename, sep="\t", index=False)
 
     def save_diff_file_callback(self, filename: Path):
-        changes_report(self._data).to_csv(filename, sep="\t")
+        changes_report(self._data).to_excel(filename, index=False)
 
     def automatic_qc_callback(self):
         """Called when automatic qc has been requested."""

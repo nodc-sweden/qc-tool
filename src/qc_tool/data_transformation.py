@@ -18,5 +18,26 @@ def changes_report(data: pd.DataFrame):
     # Create dataframe with rows only where qc_incoming and qc_total differ
     incoming = data["quality_flag_long"].str.split("_").str[0]
     total = data["quality_flag_long"].str.split("_").str[-1]
+    report_columns = [
+        "LATIT",
+        "LONGI",
+        "STATN",
+        "CTRYID",
+        "SHIPC",
+        "CRUISE_NO",
+        "SERNO",
+        "sample_date",
+        "reported_sample_time",
+        "sea_basin",
+        "WADEP",
+        "DEPH",
+        "parameter",
+        "value",
+        "unit",
+        "INCOMING_QC",
+        "AUTO_QC",
+        "MANUAL_QC",
+        "TOTAL_QC",
+    ]
 
-    return data[incoming != total]
+    return data[incoming != total][report_columns]
