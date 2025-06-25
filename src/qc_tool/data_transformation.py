@@ -18,6 +18,7 @@ def changes_report(data: pd.DataFrame):
     # Create dataframe with rows only where qc_incoming and qc_total differ
     incoming = data["quality_flag_long"].str.split("_").str[0]
     total = data["quality_flag_long"].str.split("_").str[-1]
+    auto_qc_columns = [column for column in data.columns if "automatic" in column]
     report_columns = [
         "LATIT",
         "LONGI",
@@ -38,6 +39,7 @@ def changes_report(data: pd.DataFrame):
         "AUTO_QC",
         "MANUAL_QC",
         "TOTAL_QC",
+        *auto_qc_columns,
     ]
 
     return data[incoming != total][report_columns]

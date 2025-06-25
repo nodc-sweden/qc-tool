@@ -50,106 +50,63 @@ class QcTool:
         self._metadata_qc_handler = MetadataQcHandler()
 
         # Parameters
+        chemical_parameters = ["DOXY_BTL", "PHOS", "NTRI", "NTRA", "AMON", "SIO3-SI"]
         first_chemical_parameter = ProfileSlot(
-            parameter="DOXY_BTL",
+            parameter=chemical_parameters[0],
             value_selected_callback=self.select_values_callback,
         )
         first_chemical_parameter._figure.yaxis.axis_label = "Depth [m]"
         self._chemical_profile_parameters = [
             first_chemical_parameter,
-            ProfileSlot(
-                linked_parameter=first_chemical_parameter,
-                parameter="PHOS",
-                value_selected_callback=self.select_values_callback,
-            ),
-            ProfileSlot(
-                linked_parameter=first_chemical_parameter,
-                parameter="NTRI",
-                value_selected_callback=self.select_values_callback,
-            ),
-            ProfileSlot(
-                linked_parameter=first_chemical_parameter,
-                parameter="NTRA",
-                value_selected_callback=self.select_values_callback,
-            ),
-            ProfileSlot(
-                linked_parameter=first_chemical_parameter,
-                parameter="AMON",
-                value_selected_callback=self.select_values_callback,
-            ),
-            ProfileSlot(
-                linked_parameter=first_chemical_parameter,
-                parameter="SIO3-SI",
-                value_selected_callback=self.select_values_callback,
-            ),
+            *[
+                ProfileSlot(
+                    linked_parameter=first_chemical_parameter,
+                    parameter=parameter_name,
+                    value_selected_callback=self.select_values_callback,
+                )
+                for parameter_name in chemical_parameters[1:]
+            ],
         ]
-
+        physical_parameters = [
+            "SALT_CTD",
+            "TEMP_CTD",
+            "DOXY_CTD",
+            "DOXY_BTL",
+            "H2S",
+            "CHFL",
+        ]
         first_physical_parameter = ProfileSlot(
-            parameter="SALT_CTD",
+            parameter=physical_parameters[0],
             value_selected_callback=self.select_values_callback,
         )
         first_physical_parameter._figure.yaxis.axis_label = "Depth [m]"
         self._physical_profile_parameters = [
             first_physical_parameter,
-            ProfileSlot(
-                linked_parameter=first_physical_parameter,
-                parameter="TEMP_CTD",
-                value_selected_callback=self.select_values_callback,
-            ),
-            ProfileSlot(
-                linked_parameter=first_physical_parameter,
-                parameter="DOXY_CTD",
-                value_selected_callback=self.select_values_callback,
-            ),
-            ProfileSlot(
-                linked_parameter=first_physical_parameter,
-                parameter="DOXY_BTL",
-                value_selected_callback=self.select_values_callback,
-            ),
-            ProfileSlot(
-                linked_parameter=first_physical_parameter,
-                parameter="H2S",
-                value_selected_callback=self.select_values_callback,
-            ),
-            ProfileSlot(
-                linked_parameter=first_physical_parameter,
-                parameter="CHLFL",
-                value_selected_callback=self.select_values_callback,
-            ),
+            *[
+                ProfileSlot(
+                    linked_parameter=first_physical_parameter,
+                    parameter=parameter_name,
+                    value_selected_callback=self.select_values_callback,
+                )
+                for parameter_name in physical_parameters[1:]
+            ],
         ]
-
+        biological_parameters = ["CPHL", "PH_LAB", "ALKY", "HUMUS", "SALT_CTD"]
         first_biological_parameter = ProfileSlot(
-            parameter="CPHL",
+            parameter=biological_parameters[0],
             value_selected_callback=self.select_values_callback,
         )
         first_biological_parameter._figure.yaxis.axis_label = "Depth [m]"
         self._biological_profile_parameters = [
             first_biological_parameter,
-            ProfileSlot(
-                linked_parameter=first_biological_parameter,
-                parameter="PH_LAB",
-                value_selected_callback=self.select_values_callback,
-            ),
-            ProfileSlot(
-                linked_parameter=first_biological_parameter,
-                parameter="ALKY",
-                value_selected_callback=self.select_values_callback,
-            ),
-            ProfileSlot(
-                linked_parameter=first_biological_parameter,
-                parameter="HUMUS",
-                value_selected_callback=self.select_values_callback,
-            ),
-            ProfileSlot(
-                linked_parameter=first_biological_parameter,
-                parameter="CHLFL",
-                value_selected_callback=self.select_values_callback,
-            ),
-            ProfileSlot(
-                linked_parameter=first_biological_parameter,
-                parameter="SALT_CTD",
-                value_selected_callback=self.select_values_callback,
-            ),
+            *[
+                ProfileSlot(
+                    linked_parameter=first_biological_parameter,
+                    parameter=parameter_name,
+                    value_selected_callback=self.select_values_callback,
+                )
+                for parameter_name in biological_parameters[1:]
+            ],
         ]
 
         self._scatter_parameters = [
@@ -236,6 +193,7 @@ class QcTool:
         self._data[["INCOMING_QC", "AUTO_QC", "MANUAL_QC", "TOTAL_QC"]] = self._data[
             "quality_flag_long"
         ].str.split("_", expand=True)
+        fys_kem_qc.total_flag_info()
         self._set_data(self._data, self._selected_station.visit_key)
 
     def metadata_qc_callback(self):
