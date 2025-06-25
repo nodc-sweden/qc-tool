@@ -236,6 +236,7 @@ class QcTool:
         self._data[["INCOMING_QC", "AUTO_QC", "MANUAL_QC", "TOTAL_QC"]] = self._data[
             "quality_flag_long"
         ].str.split("_", expand=True)
+        fys_kem_qc.total_flag_info()
         self._set_data(self._data, self._selected_station.visit_key)
 
     def metadata_qc_callback(self):
