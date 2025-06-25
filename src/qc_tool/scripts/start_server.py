@@ -18,7 +18,16 @@ def start_server():
         print("Stop server with Ctrl-C")
         server_root_directory = Path(__file__).parent.parent
         subprocess.run(
-            ["bokeh", "serve", "--port", "5007", "--show", str(server_root_directory)]
+            [
+                "bokeh",
+                "serve",
+                "--port",
+                "5007",
+                "--show",
+                str(server_root_directory),
+                "--websocket-max-message-size",
+                "1000000000",
+            ]
         )
     except KeyboardInterrupt:
         print("Stopping server")

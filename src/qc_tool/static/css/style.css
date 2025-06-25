@@ -43,3 +43,54 @@ tr {
     width: 3em;
 }
 
+.validation-log-body {
+    border: 1px solid black;
+    padding: 1em;
+}
+
+.validation-log-body ul {
+    font-family: courier, monospace;
+}
+
+input[type='checkbox'] {
+    display: none;
+}
+
+.collapsible-container {
+    margin: 1em;
+    border: 1px solid black;
+    border-radius: 4px;
+}
+
+.toggle-label {
+    background: #F1F1F1;
+    border-radius: 4px;
+    padding: 1em;
+    font-size: larger;
+    font-weight: bold;
+    //text-align: center;
+    display: block;
+    cursor: pointer;
+    transition: border-radius .25s ease-in-out;
+}
+
+.collapsible-content {
+    font-family: courier, monospace;
+    max-height: 0px;
+    overflow: scroll;
+    transition: max-height .25s ease-in-out;
+}
+
+.toggle:checked + .toggle-label {
+    border-radius: 4px 4px 0 0;
+}
+
+
+.toggle:checked + .toggle-label + .collapsible-content {
+    max-height: 500px;
+}
+
+.collapsible-content .content-inner {
+    padding: 1em;
+}
+

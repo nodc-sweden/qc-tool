@@ -2,8 +2,9 @@ import time
 from pathlib import Path
 
 import geopandas as gpd
+import jinja2
 import pandas as pd
-from bokeh.models import Column, Row, TabPanel, Tabs
+from bokeh.models import Column, Div, ImportedStyleSheet, Row, TabPanel, Tabs
 from bokeh.plotting import curdoc
 from nodc_statistics import regions
 from ocean_data_qc.fyskem.parameter import Parameter
@@ -28,9 +29,39 @@ GEOLAYERS_AREATAG = {
 }
 
 
+_validation_log_template = jinja2.Template("""
+{% for key, value in validation.items() %}
+  <div class="collapsible-container">
+    <input id="collapsible-{{ key }}" class="toggle" type="checkbox">
+    <label for="collapsible-{{ key }}" class="toggle-label">{{ key }} ({{ value.success_count }} successes, {{ value.fail_count }} errors)</label>
+    <div class="collapsible-content">
+      <div class="content-inner">
+      {% if value.fail %}
+        <p>{{ value.description }}</p>
+        <ul>
+        {% for purpose, fail_rows in value.fail.items() %}
+          <li>{{ purpose }}</li>
+            <ul>
+          {% for fail_row in fail_rows %}
+              <li>{{ fail_row }}</li>
+          {% endfor %}
+            </ul>
+        {% endfor %}
+        </ul>
+      {% else %}
+        <p>No validation errors.</p>
+      {% endif %}
+      </div>
+    </div>
+  </div>
+{% endfor %}
+""")  # noqa: E501
+
+
 class QcTool:
     def __init__(self):
         self._data = None
+        self._validation = None
         self._stations = {}
         self._selected_station = None
 
@@ -163,18 +194,29 @@ class QcTool:
             title="Scatter",
         )
 
-        bottom_row = Row(Tabs(tabs=[profile_tab, scatter_tab]))
+        # Tab for logs
+
+        self._log_div = Div(
+            width=1000,
+            stylesheets=[ImportedStyleSheet(url="qc_tool/static/css/style.css")],
+        )
+        self._log_tab = TabPanel(
+            child=self._log_div,
+            title="Validation log",
+        )
+
+        bottom_row = Row(Tabs(tabs=[profile_tab, scatter_tab, self._log_tab]))
 
         # Full layout
         self.layout = Column(top_row, bottom_row)
         curdoc().title = "QC Tool"
         curdoc().add_root(self.layout)
 
-    def load_file_callback(self, data):
-        """Called when a cruise has been loaded from disk."""
+    def load_file_callback(self, data: pd.DataFrame, validation: dict):
         data = self._match_sea_basins(data)
         data = prepare_data(data)
         self._set_data(data)
+        self._set_validation(validation)
 
     def save_file_callback(self, filename: Path):
         self._data.to_csv(filename, sep="\t", index=False)
@@ -337,6 +379,10 @@ class QcTool:
 
     def _set_extra_info_tab(self, index: int):
         self._extra_info_tabs.active = index
+
+    def _set_validation(self, validation: dict):
+        self._validation = validation
+        self._log_div.text = _validation_log_template.render(validation=validation)
 
 
 def dms_to_dd(dms):
