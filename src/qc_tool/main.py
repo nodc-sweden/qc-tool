@@ -81,7 +81,16 @@ class QcTool:
         self._metadata_qc_handler = MetadataQcHandler()
 
         # Parameters
-        chemical_parameters = ["DOXY_BTL", "PHOS", "NTRI", "NTRA", "AMON", "SIO3-SI"]
+        chemical_parameters = [
+            "DOXY_BTL",
+            "PHOS",
+            "PTOT",
+            "AMON",
+            "NTRI",
+            "NTRA",
+            "NTOT",
+            "SIO3-SI",
+        ]
         first_chemical_parameter = ProfileSlot(
             parameter=chemical_parameters[0],
             value_selected_callback=self.select_values_callback,
@@ -104,7 +113,8 @@ class QcTool:
             "DOXY_CTD",
             "DOXY_BTL",
             "H2S",
-            "CHFL",
+            "CHLFL",
+            "CPHL",
         ]
         first_physical_parameter = ProfileSlot(
             parameter=physical_parameters[0],
@@ -122,7 +132,7 @@ class QcTool:
                 for parameter_name in physical_parameters[1:]
             ],
         ]
-        biological_parameters = ["CPHL", "PH_LAB", "ALKY", "HUMUS", "SALT_CTD"]
+        biological_parameters = ["CPHL", "PH_LAB", "PH_TOT", "ALKY", "HUMUS", "SALT_CTD"]
         first_biological_parameter = ProfileSlot(
             parameter=biological_parameters[0],
             value_selected_callback=self.select_values_callback,
