@@ -859,7 +859,7 @@ requires-dist = [
     { name = "ocean-data-qc", git = "https://github.com/nodc-sweden/ocean-data-qc" },
     { name = "pandas", specifier = ">=2.2.1" },
     { name = "pyproj", specifier = "==3.7.0" },
-    { name = "sharkadm", git = "https://github.com/nodc-sweden/SHARKadm?rev=release_fixes" },
+    { name = "sharkadm", git = "https://github.com/nodc-sweden/SHARKadm?rev=v3.2.0" },
 ]
 
 [package.metadata.requires-dev]
@@ -1027,8 +1027,8 @@ wheels = [
 
 [[package]]
 name = "sharkadm"
-version = "3.1.0"
-source = { git = "https://github.com/nodc-sweden/SHARKadm?rev=release_fixes#6bbac2baa0c6873c30766b39cf91d2420dba15af" }
+version = "3.2.0"
+source = { git = "https://github.com/nodc-sweden/SHARKadm?rev=v3.2.0#5bb0ed4d6cafccc860995d8874089c7084cf0d67" }
 dependencies = [
     { name = "fastexcel" },
     { name = "geopandas" },
