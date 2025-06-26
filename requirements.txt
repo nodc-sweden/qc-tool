@@ -676,7 +676,7 @@ shapely==2.1.1 \
     #   geopandas
     #   nodc-statistics
     #   sharkadm
-sharkadm @ git+https://github.com/nodc-sweden/SHARKadm@6bbac2baa0c6873c30766b39cf91d2420dba15af
+sharkadm @ git+https://github.com/nodc-sweden/SHARKadm@5bb0ed4d6cafccc860995d8874089c7084cf0d67
     # via qc-tool
 shellingham==1.5.4 \
     --hash=sha256:7ecfff8f2fd72616f7481040475a65b2bf8af90a56c89140852d1120324e8686 \
