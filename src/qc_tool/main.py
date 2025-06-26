@@ -114,7 +114,6 @@ class QcTool:
             "DOXY_BTL",
             "H2S",
             "CHLFL",
-            "CPHL",
         ]
         first_physical_parameter = ProfileSlot(
             parameter=physical_parameters[0],
@@ -133,6 +132,7 @@ class QcTool:
             ],
         ]
         biological_parameters = ["CPHL", "PH_LAB", "PH_TOT", "ALKY", "HUMUS", "SALT_CTD"]
+
         first_biological_parameter = ProfileSlot(
             parameter=biological_parameters[0],
             value_selected_callback=self.select_values_callback,
