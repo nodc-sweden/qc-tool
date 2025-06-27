@@ -39,13 +39,17 @@ _validation_log_template = jinja2.Template("""
       {% if value.fail %}
         <p>{{ value.description }}</p>
         <ul>
-        {% for purpose, fail_rows in value.fail.items() %}
-          <li>{{ purpose }}</li>
+        {% for category, fail_rows in value.fail.items() %}
+          {% if category != "General" %}
+          <li>{{ category }}</li>
             <ul>
+          {% endif %}
           {% for fail_row in fail_rows %}
               <li>{{ fail_row }}</li>
           {% endfor %}
+          {% if category != "General" %}
             </ul>
+          {% endif %}
         {% endfor %}
         </ul>
       {% else %}

@@ -17,6 +17,7 @@ from sharkadm.validators.station import (
     ValidateNameInMaster,
     ValidatePositionInOcean,
     ValidatePositionWithinStationRadius,
+    ValidateStationIdentity,
     ValidateSynonymsInMaster,
 )
 
@@ -184,9 +185,27 @@ class FileHandler(Layoutable):
             (ValidateCommonValuesByVisit, {}),
             (ValidatePositiveValues, {}),
             (
+                ValidateStationIdentity,
+                {
+                    "stations": [
+                        (
+                            key,
+                            value["synonyms"],
+                            value["longitude"],
+                            value["latitude"],
+                            value["radius"],
+                        )
+                        for key, value in stations_info.items()
+                    ],
+                    "station_name_key": "reported_station_name",
+                    "latitude_key": "sample_sweref99tm_y",
+                    "longitude_key": "sample_sweref99tm_x",
+                },
+            ),
+            (
                 ValidateNameInMaster,
                 {
-                    "station_names": stations_info.keys(),
+                    "station_names": set(stations_info.keys()),
                     "station_name_column": "reported_station_name",
                 },
             ),
@@ -244,14 +263,16 @@ class FileHandler(Layoutable):
 
         adm_logger.filter(log_types=[adm_logger.VALIDATION])
 
-        # Simplified solution.
         description_for_validator = {
-            validator._display_name: validator.get_validator_description()
+            validator.get_display_name(): validator.get_validator_description()
             for validator in (
+                ValidateCommonValuesByVisit,
                 ValidateCoordinatesDm,
                 ValidateNameInMaster,
                 ValidatePositionInOcean,
                 ValidatePositionWithinStationRadius,
+                ValidatePositiveValues,
+                ValidateStationIdentity,
                 ValidateSynonymsInMaster,
             )
         }
