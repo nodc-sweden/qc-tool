@@ -114,12 +114,6 @@ class FileHandler(Layoutable):
             )
         )
 
-        self._qc_header = Div(width=500, text="<h3>QC</h3>")
-
-        self._qc_button = Button(label="Automatic QC...")
-        self._qc_button.on_click(self._automatic_qc_callback)
-        self._qc_button.disabled = True
-
         self._file_loaded()
 
     def _load_file_callback(self, event):
@@ -134,18 +128,19 @@ class FileHandler(Layoutable):
         if not selected_path:
             return
         selected_path = Path(selected_path)
-        print(f"load data from {selected_path}...")
+        print(f"Load data from {selected_path}...")
         controller = sharkadm_controller.get_controller_with_data(selected_path)
         self._apply_transformers(controller=controller)
         self._run_validators(controller)
         validation = self._collect_validation_log()
-        print("data loaded")
+        print("Data loaded")
         data = controller.export(
             exporters.DataFrame(header_as="PhysicalChemical", float_columns=True)
         )
         self._file_name = selected_path.name
         self._file_loaded()
         self._external_load_file_callback(data, validation)
+        self._external_automatic_qc_callback()
 
     def _apply_transformers(self, controller):
         # this is already be handled in get_controller_with_data
@@ -306,10 +301,8 @@ class FileHandler(Layoutable):
     def _file_loaded(self):
         if self._file_name:
             file_info = f"<p>{self._file_name}</p>"
-            self._qc_button.disabled = False
         else:
             file_info = "<p>No file loaded</p>"
-            self._qc_button.disabled = True
         self._loaded_file_label.text = file_info
 
     def _save_file_as_callback(self, save_file_callback, file_type: str = "txt"):
@@ -346,6 +339,4 @@ class FileHandler(Layoutable):
             self._loaded_file_label,
             self._save_as_button,
             self._save_changes_as_button,
-            self._qc_header,
-            self._qc_button,
         )
