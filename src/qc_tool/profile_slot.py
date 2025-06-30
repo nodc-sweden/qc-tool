@@ -360,7 +360,10 @@ class ProfileSlot(Layoutable):
             "qc_incoming": [
                 f"{flags.incoming} ({flags.incoming.value})" for flags in qc_flags
             ],
-            "qc_automatic": [str(flags.automatic) for flags in qc_flags],
+            "qc_automatic": [
+                f"{flags.total_automatic} {flags.total_automatic_name}"
+                for flags in qc_flags
+            ],
             "qc_manual": [f"{flags.manual} ({flags.manual.value})" for flags in qc_flags],
         }
 

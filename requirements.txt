@@ -300,7 +300,7 @@ numpy==2.3.1 \
     #   scipy
     #   seawater
     #   shapely
-ocean-data-qc @ git+https://github.com/nodc-sweden/ocean-data-qc@34b6e060e96cf82744ec35b058f48b0e4ccdf8e2
+ocean-data-qc @ git+https://github.com/nodc-sweden/ocean-data-qc@af0a3b37ca30fefa8f4699f6bf8b6e722085e21c
     # via qc-tool
 openpyxl==3.1.5 \
     --hash=sha256:5282c12b107bffeef825f4617dc029afaf41d0ea60823bbb665ef3079dc79de2 \
