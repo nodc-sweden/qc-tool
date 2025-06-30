@@ -229,6 +229,7 @@ class QcTool:
     def load_file_callback(self, data: pd.DataFrame, validation: dict):
         data = self._match_sea_basins(data)
         data = prepare_data(data)
+        self.metadata_qc_callback()
         self._set_data(data)
         self._set_validation(validation)
 
@@ -357,7 +358,6 @@ class QcTool:
         }
         self._station_navigator.load_stations(self._stations)
         self._map.load_stations(self._stations)
-        self.metadata_qc_callback()
         self.set_station(station or station_visit[0])
 
     def _read_geo_info_file(self):
