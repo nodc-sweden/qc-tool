@@ -300,7 +300,7 @@ numpy==2.3.1 \
     #   scipy
     #   seawater
     #   shapely
-ocean-data-qc @ git+https://github.com/nodc-sweden/ocean-data-qc@af0a3b37ca30fefa8f4699f6bf8b6e722085e21c
+ocean-data-qc @ git+https://github.com/nodc-sweden/ocean-data-qc@f673ac8756cb1a976d04f6a74020cb7e48e57241
     # via qc-tool
 openpyxl==3.1.5 \
     --hash=sha256:5282c12b107bffeef825f4617dc029afaf41d0ea60823bbb665ef3079dc79de2 \
@@ -676,7 +676,7 @@ shapely==2.1.1 \
     #   geopandas
     #   nodc-statistics
     #   sharkadm
-sharkadm @ git+https://github.com/nodc-sweden/SHARKadm@c08cf75d050897c4eb45b01da6482cccad89d2f6
+sharkadm @ git+https://github.com/nodc-sweden/SHARKadm@b919471f81414481ddf668bf89553bb8ad973938
     # via qc-tool
 shellingham==1.5.4 \
     --hash=sha256:7ecfff8f2fd72616f7481040475a65b2bf8af90a56c89140852d1120324e8686 \

@@ -464,7 +464,7 @@ wheels = [
 [[package]]
 name = "ocean-data-qc"
 version = "2025.1.0"
-source = { git = "https://github.com/nodc-sweden/ocean-data-qc?rev=revise_qc#af0a3b37ca30fefa8f4699f6bf8b6e722085e21c" }
+source = { git = "https://github.com/nodc-sweden/ocean-data-qc?rev=revise_qc#f673ac8756cb1a976d04f6a74020cb7e48e57241" }
 dependencies = [
     { name = "jinja2" },
     { name = "pandas" },
@@ -859,7 +859,7 @@ requires-dist = [
     { name = "ocean-data-qc", git = "https://github.com/nodc-sweden/ocean-data-qc?rev=revise_qc" },
     { name = "pandas", specifier = ">=2.2.1" },
     { name = "pyproj", specifier = "==3.7.0" },
-    { name = "sharkadm", git = "https://github.com/nodc-sweden/SHARKadm?rev=station_identity" },
+    { name = "sharkadm", git = "https://github.com/nodc-sweden/SHARKadm?rev=main" },
 ]
 
 [package.metadata.requires-dev]
@@ -1028,7 +1028,7 @@ wheels = [
 [[package]]
 name = "sharkadm"
 version = "3.2.0"
-source = { git = "https://github.com/nodc-sweden/SHARKadm?rev=station_identity#c08cf75d050897c4eb45b01da6482cccad89d2f6" }
+source = { git = "https://github.com/nodc-sweden/SHARKadm?rev=main#b919471f81414481ddf668bf89553bb8ad973938" }
 dependencies = [
     { name = "fastexcel" },
     { name = "geopandas" },

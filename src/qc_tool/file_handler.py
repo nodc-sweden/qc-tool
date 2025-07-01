@@ -143,14 +143,9 @@ class FileHandler(Layoutable):
         self._external_automatic_qc_callback()
 
     def _apply_transformers(self, controller):
-        # this is already be handled in get_controller_with_data
-        controller.transform(
-            transformers.RemoveNonDataLines()
-        )  # This was used only in get_row_data_from_lims_export
+        controller.transform(transformers.RemoveNonDataLines())
         controller.transform(transformers.WideToLong())
-        controller.transform(
-            transformers.ReplaceCommaWithDot()
-        )  # This was used only in get_row_data_from_lims_export
+        controller.transform(transformers.ReplaceCommaWithDot())
         controller.transform(transformers.AddSampleDate())
         controller.transform(transformers.AddSampleTime())
         controller.transform(transformers.AddDatetime())
@@ -160,9 +155,8 @@ class FileHandler(Layoutable):
 
         controller.transform(multi_transformers.Position())
 
-        controller.transform(
-            transformers.MoveLessThanFlagRowFormat()
-        )  # This was used only in get_row_data_from_lims_export
+        controller.transform(transformers.MoveLessThanFlagRowFormat())
+        controller.transform(transformers.MoveLargerThanFlagRowFormat())
         controller.transform(transformers.ConvertFlagsToSDN())
         controller.transform(transformers.RemoveColumns("COPY_VARIABLE.*"))
         controller.transform(
