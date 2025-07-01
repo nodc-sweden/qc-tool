@@ -8,6 +8,8 @@ from qc_tool.layoutable import Layoutable
 from qc_tool.station import Station
 
 _metadata_template = jinja2.Template("""
+<div style="display: flex; gap: 20px; align-items: flex-start;">
+    <!-- Table with station info -->
     <table>
         {% for key, value, class in metadata %}
         <tr class="{{ class }}">
@@ -17,7 +19,21 @@ _metadata_template = jinja2.Template("""
         </tr>
         {% endfor %}
     </table>
-""")
+
+    <!-- Scrollable list -->
+    <div style="display: flex; flex-direction: column; height: 350px; width: 150px; border: 1px solid #ccc;">
+        <h3 style="margin: 0 0 8px 0;">Sampled Parameters</h3>
+        <div style="overflow-y: auto; flex: 1 1 auto;">
+            <ul style="margin: 0; padding-left: 20px;">
+                {% for item in side_list %}
+                <li>{{ item }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+""")  # noqa: E501
+
 
 _class_from_status = {
     MetadataFlag.NO_QC_PERFORMED: "no-qc-performed",
@@ -82,11 +98,13 @@ class StationInfo(Layoutable):
                 )
                 for key, header in StationInfo.STATION_DATA_FIELDS
             ]
+            side_list = self._station.parameters
         else:
             metadata = [
                 (header, "", "no-qc-performed") for _, header in self.STATION_DATA_FIELDS
             ]
-        self._div.text = _metadata_template.render(metadata=metadata)
+            side_list = []
+        self._div.text = _metadata_template.render(metadata=metadata, side_list=side_list)
 
     @property
     def layout(self):
