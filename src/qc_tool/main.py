@@ -113,11 +113,13 @@ class QcTool:
         ]
         physical_parameters = [
             "SALT_CTD",
+            "SALT_BTL",
             "TEMP_CTD",
+            "TEMP_BTL",
+            "oxygen saturation",
             "DOXY_CTD",
             "DOXY_BTL",
             "H2S",
-            "CHLFL",
         ]
         first_physical_parameter = ProfileSlot(
             parameter=physical_parameters[0],
@@ -135,7 +137,7 @@ class QcTool:
                 for parameter_name in physical_parameters[1:]
             ],
         ]
-        biological_parameters = ["CPHL", "PH_LAB", "PH_TOT", "ALKY", "HUMUS", "SALT_CTD"]
+        biological_parameters = ["CPHL", "CHLFL", "PH_LAB", "PH_TOT", "ALKY", "HUMUS"]
 
         first_biological_parameter = ProfileSlot(
             parameter=biological_parameters[0],
@@ -229,7 +231,6 @@ class QcTool:
     def load_file_callback(self, data: pd.DataFrame, validation: dict):
         data = self._match_sea_basins(data)
         data = prepare_data(data)
-        self.metadata_qc_callback()
         self._set_data(data)
         self._set_validation(validation)
 
@@ -357,6 +358,7 @@ class QcTool:
             for visit_key in station_visit
         }
         self._station_navigator.load_stations(self._stations)
+        self.metadata_qc_callback()
         self._map.load_stations(self._stations)
         self.set_station(station or station_visit[0])
 
