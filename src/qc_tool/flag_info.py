@@ -29,15 +29,21 @@ _flag_info_template = jinja2.Template("""
     <!-- Flag Descriptions -->
     <div>
         <p>Flag descriptions:</p>
-        <ol start=0>
-            {% for qc_value in qc_values %}<li>
-                <font color="{{ qc_colors[qc_value] }}">●</font> {{ qc_value }}
-            </li>{% endfor %}
+       <ol>
+            {% for flag_number, flag_name, color in qc_values %}
+                {% if color != "gray" %}
+                <li value="{{ flag_number }}">
+                    <span style="color:{{ color }}; font-size: 1.5em;">●</span> {{ flag_name }}
+                </li>
+                {% endif %}
+            {% endfor %}
         </ol>
-        <p><span style="color:black;">○</span> Flag changed by automatic or manual qc</p>
+        <p>
+        <span style="color:black; font-size: 1.5em;">○</span> Flag changed by automatic or manual QC
+        </p>
     </div>
     <div>
-        <p>Tests performed in automatic QC:</p>
+        <p>Order of tests performed in automatic QC:</p>
         <ol>
             {% for qc_field in qc_fields %}<li>{{ qc_field }}</li>{% endfor %}
         </ol>
@@ -50,7 +56,9 @@ class FlagInfo(Layoutable):
     def __init__(self):
         flag_info_content = _flag_info_template.render(
             qc_fields=[value.name for value in QcField],
-            qc_values=QcFlag,
+            qc_values=[
+                (flag.value, str(flag), QC_FLAG_CSS_COLORS[flag]) for flag in QcFlag
+            ],
             qc_colors=QC_FLAG_CSS_COLORS,
         )
         self._div = Div(text=flag_info_content)

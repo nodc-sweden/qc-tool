@@ -146,7 +146,7 @@ class ProfileSlot(Layoutable):
             ],
         }
         self._plot_values_config = {
-            "size": 7,
+            "size": 8,
             "alpha": 0.8,
             "name": "values",
         }

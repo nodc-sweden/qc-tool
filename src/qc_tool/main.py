@@ -86,14 +86,14 @@ class QcTool:
 
         # Parameters
         chemical_parameters = [
-            "DOXY_BTL",
+            "SIO3-SI",
             "PHOS",
             "PTOT",
+            "NTOT",
             "AMON",
             "NTRI",
             "NTRA",
-            "NTOT",
-            "SIO3-SI",
+            "NTRZ",
         ]
         first_chemical_parameter = ProfileSlot(
             parameter=chemical_parameters[0],
@@ -116,10 +116,10 @@ class QcTool:
             "SALT_BTL",
             "TEMP_CTD",
             "TEMP_BTL",
-            "oxygen saturation",
             "DOXY_CTD",
             "DOXY_BTL",
             "H2S",
+            "CHLFL",
         ]
         first_physical_parameter = ProfileSlot(
             parameter=physical_parameters[0],
@@ -197,7 +197,7 @@ class QcTool:
 
         profile_tab = TabPanel(
             child=Column(
-                chemical_profile_row, physical_profile_row, biological_profile_row
+                physical_profile_row, chemical_profile_row, biological_profile_row
             ),
             title="Profiles",
         )
