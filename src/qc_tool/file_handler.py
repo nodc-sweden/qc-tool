@@ -4,10 +4,9 @@ import tkinter
 import tkinter.filedialog
 from collections import defaultdict
 from pathlib import Path
-from typing import Any
 
 import geopandas as gp
-import pandas as pd
+import nodc_station
 from bokeh.models import Button, Column, Div, FileInput
 from sharkadm import adm_logger, exporters, multi_transformers, transformers
 from sharkadm import controller as sharkadm_controller
@@ -17,58 +16,34 @@ from sharkadm.validators.station import (
     ValidateNameInMaster,
     ValidatePositionInOcean,
     ValidatePositionWithinStationRadius,
+    ValidateStationIdentity,
     ValidateSynonymsInMaster,
 )
 
 from qc_tool.layoutable import Layoutable
 
+CONFIG_ENV = "NODC_CONFIG"
 
-def get_config_dir() -> Path | None:
-    if dir_from_env := os.getenv("NODC_CONFIG"):
-        conf_dir = Path(dir_from_env)
-        if conf_dir.exists():
-            return conf_dir
-
-    dir_in_home = Path.home() / "SHARKadmConfig"
-    if dir_in_home.exists():
-        return dir_in_home
+_home = Path.home()
+OTHER_CONFIG_SOURCES = [
+    _home / "NODC_CONFIG",
+    _home / ".NODC_CONFIG",
+    _home / "nodc_config",
+    _home / ".nodc_config",
+]
 
 
-def load_station_info() -> dict[str, Any]:
-    stations = {}
-    if _config_dir := get_config_dir():
-        stations_file = _config_dir / "station.txt"
-        if stations_file.exists():
-            stations_data = pd.read_csv(
-                stations_file, encoding="cp1252", sep="\t"
-            ).fillna("")
-
-            # Split synonyms on "<or>". All entries become lists
-            stations_data.SYNONYM_NAMES = stations_data.SYNONYM_NAMES.apply(
-                lambda x: x.split("<or>") if x else []
-            )
-
-            # Create a dictionary from station name to list of synonyms
-            stations = {
-                station_name: {
-                    "synonyms": synonyms,
-                    "latitude": latitude,
-                    "longitude": longitude,
-                    "radius": radius,
-                }
-                for station_name, synonyms, latitude, longitude, radius in zip(
-                    stations_data.STATION_NAME,
-                    stations_data.SYNONYM_NAMES,
-                    stations_data.LATITUDE_SWEREF99TM,
-                    stations_data.LONGITUDE_SWEREF99TM,
-                    stations_data.OUT_OF_BOUNDS_RADIUS,
-                )
-            }
-    return stations
+def _get_config_dir() -> Path | None:
+    if config_dir := os.getenv(CONFIG_ENV):
+        return Path(config_dir)
+    for config_dir in OTHER_CONFIG_SOURCES:
+        if config_dir.exists():
+            return config_dir
+    return None
 
 
 def load_ocean_shapefile():
-    if _config_dir := get_config_dir():
+    if _config_dir := _get_config_dir():
         shapefile = (
             _config_dir / "sharkweb_shapefiles" / "Havsomr_SVAR_2016_3c_CP1252.shp"
         )
@@ -113,12 +88,6 @@ class FileHandler(Layoutable):
             )
         )
 
-        self._qc_header = Div(width=500, text="<h3>QC</h3>")
-
-        self._qc_button = Button(label="Automatic QC...")
-        self._qc_button.on_click(self._automatic_qc_callback)
-        self._qc_button.disabled = True
-
         self._file_loaded()
 
     def _load_file_callback(self, event):
@@ -133,28 +102,24 @@ class FileHandler(Layoutable):
         if not selected_path:
             return
         selected_path = Path(selected_path)
-        print(f"load data from {selected_path}...")
+        print(f"Load data from {selected_path}...")
         controller = sharkadm_controller.get_controller_with_data(selected_path)
         self._apply_transformers(controller=controller)
         self._run_validators(controller)
         validation = self._collect_validation_log()
-        print("data loaded")
+        print("Data loaded")
         data = controller.export(
             exporters.DataFrame(header_as="PhysicalChemical", float_columns=True)
         )
         self._file_name = selected_path.name
         self._file_loaded()
         self._external_load_file_callback(data, validation)
+        self._external_automatic_qc_callback()
 
     def _apply_transformers(self, controller):
-        # this is already be handled in get_controller_with_data
-        controller.transform(
-            transformers.RemoveNonDataLines()
-        )  # This was used only in get_row_data_from_lims_export
+        controller.transform(transformers.RemoveNonDataLines())
         controller.transform(transformers.WideToLong())
-        controller.transform(
-            transformers.ReplaceCommaWithDot()
-        )  # This was used only in get_row_data_from_lims_export
+        controller.transform(transformers.ReplaceCommaWithDot())
         controller.transform(transformers.AddSampleDate())
         controller.transform(transformers.AddSampleTime())
         controller.transform(transformers.AddDatetime())
@@ -164,9 +129,8 @@ class FileHandler(Layoutable):
 
         controller.transform(multi_transformers.Position())
 
-        controller.transform(
-            transformers.MoveLessThanFlagRowFormat()
-        )  # This was used only in get_row_data_from_lims_export
+        controller.transform(transformers.MoveLessThanFlagRowFormat())
+        controller.transform(transformers.MoveLargerThanFlagRowFormat())
         controller.transform(transformers.ConvertFlagsToSDN())
         controller.transform(transformers.RemoveColumns("COPY_VARIABLE.*"))
         controller.transform(
@@ -176,27 +140,17 @@ class FileHandler(Layoutable):
     def _run_validators(self, controller):
         print("Running SHARKadm validators...")
         t0 = time.perf_counter()
-
-        stations_info = load_station_info()
         ocean_shapefile = load_ocean_shapefile()
 
         validators_and_parameters = (
             (ValidateCommonValuesByVisit, {}),
             (ValidatePositiveValues, {}),
             (
-                ValidateNameInMaster,
+                ValidateStationIdentity,
                 {
-                    "station_names": stations_info.keys(),
-                    "station_name_column": "reported_station_name",
-                },
-            ),
-            (
-                ValidateSynonymsInMaster,
-                {
-                    "station_aliases": {
-                        key: value["synonyms"] for key, value in stations_info.items()
-                    },
-                    "station_name_column": "reported_station_name",
+                    "stations": nodc_station.get_station_object(case_sensitive=False),
+                    "latitude_key": "sample_sweref99tm_y",
+                    "longitude_key": "sample_sweref99tm_x",
                 },
             ),
             (
@@ -210,18 +164,6 @@ class FileHandler(Layoutable):
                 ValidatePositionInOcean,
                 {
                     "ocean_shapefile": ocean_shapefile,
-                    "station_name_key": "reported_station_name",
-                    "latitude_key": "sample_sweref99tm_y",
-                    "longitude_key": "sample_sweref99tm_x",
-                },
-            ),
-            (
-                ValidatePositionWithinStationRadius,
-                {
-                    "stations": [
-                        (key, value["longitude"], value["latitude"], value["radius"])
-                        for key, value in stations_info.items()
-                    ],
                     "station_name_key": "reported_station_name",
                     "latitude_key": "sample_sweref99tm_y",
                     "longitude_key": "sample_sweref99tm_x",
@@ -244,14 +186,16 @@ class FileHandler(Layoutable):
 
         adm_logger.filter(log_types=[adm_logger.VALIDATION])
 
-        # Simplified solution.
         description_for_validator = {
-            validator._display_name: validator.get_validator_description()
+            validator.get_display_name(): validator.get_validator_description()
             for validator in (
+                ValidateCommonValuesByVisit,
                 ValidateCoordinatesDm,
                 ValidateNameInMaster,
                 ValidatePositionInOcean,
                 ValidatePositionWithinStationRadius,
+                ValidatePositiveValues,
+                ValidateStationIdentity,
                 ValidateSynonymsInMaster,
             )
         }
@@ -285,10 +229,8 @@ class FileHandler(Layoutable):
     def _file_loaded(self):
         if self._file_name:
             file_info = f"<p>{self._file_name}</p>"
-            self._qc_button.disabled = False
         else:
             file_info = "<p>No file loaded</p>"
-            self._qc_button.disabled = True
         self._loaded_file_label.text = file_info
 
     def _save_file_as_callback(self, save_file_callback, file_type: str = "txt"):
@@ -325,6 +267,4 @@ class FileHandler(Layoutable):
             self._loaded_file_label,
             self._save_as_button,
             self._save_changes_as_button,
-            self._qc_header,
-            self._qc_button,
         )

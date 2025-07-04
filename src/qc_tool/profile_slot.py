@@ -20,7 +20,7 @@ from bokeh.models import (
     WheelZoomTool,
 )
 from bokeh.plotting import figure
-from nodc_statistics import statistic
+from ocean_data_qc import statistic
 from ocean_data_qc.fyskem.parameter import Parameter
 from ocean_data_qc.fyskem.qc_flag import QC_FLAG_CSS_COLORS, QcFlag
 from ocean_data_qc.fyskem.qc_flags import QcFlags
@@ -94,9 +94,11 @@ class ProfileSlot(Layoutable):
         self._statistics_source = ColumnDataSource(
             data={
                 "depth": [],
-                "mean": [],
+                "median": [],
                 "lower_limit": [],
                 "upper_limit": [],
+                "min": [],
+                "max": [],
             }
         )
 
@@ -144,7 +146,7 @@ class ProfileSlot(Layoutable):
             ],
         }
         self._plot_values_config = {
-            "size": 7,
+            "size": 8,
             "alpha": 0.8,
             "name": "values",
         }
@@ -169,6 +171,7 @@ class ProfileSlot(Layoutable):
             "color": "grey",
             "alpha": 0.1,
         }
+        self._plot_line_min_max_config = {"color": "red", "line_width": 0.5, "alpha": 0.5}
         self._figure = figure(**self._figure_config)
         self._figure.toolbar.active_scroll = wheel_zoom
 
@@ -188,25 +191,37 @@ class ProfileSlot(Layoutable):
         self._figure.add_layout(self._ocean_floor)
 
         # Add statistics
-        self._mean_values_line = self._figure.line(
-            "mean",
+        self._median_values_line = self._figure.line(
+            "median",
             "depth",
             source=self._statistics_source,
             **self._plot_line_statistics_config,
         )
-        self._mean_values_dash = self._figure.scatter(
-            "mean",
+        self._median_values_dash = self._figure.scatter(
+            "median",
             "depth",
             marker="dash",
             source=self._statistics_source,
             **self._plot_dash_statistics_config,
         )
-        self._stdlimits_area = self._figure.harea(
+        self._limits_area = self._figure.harea(
             x1="lower_limit",
             x2="upper_limit",
             y="depth",
             source=self._statistics_source,
             **self._plot_area_statistics_config,
+        )
+        self._min_line = self._figure.line(
+            "min",
+            "depth",
+            source=self._statistics_source,
+            **self._plot_line_min_max_config,
+        )
+        self._max_line = self._figure.line(
+            "max",
+            "depth",
+            source=self._statistics_source,
+            **self._plot_line_min_max_config,
         )
 
         # Add values and lines
@@ -277,9 +292,11 @@ class ProfileSlot(Layoutable):
 
         self._statistics_source.data = {
             "depth": [],
-            "mean": [],
+            "median": [],
             "lower_limit": [],
             "upper_limit": [],
+            "min": [],
+            "max": [],
         }
 
         if self._parameter in self._station.parameters:
@@ -347,6 +364,7 @@ class ProfileSlot(Layoutable):
                     self._parameter,
                     self._station.sea_basin,
                     self._station.datetime,
+                    statistics=("median", "25p", "75p", "min", "max"),
                 )
             )
         self._update_statistics(parameter_statistics=parameter_statistics)
@@ -360,7 +378,10 @@ class ProfileSlot(Layoutable):
             "qc_incoming": [
                 f"{flags.incoming} ({flags.incoming.value})" for flags in qc_flags
             ],
-            "qc_automatic": [str(flags.automatic) for flags in qc_flags],
+            "qc_automatic": [
+                f"{flags.total_automatic} {flags.total_automatic_name}"
+                for flags in qc_flags
+            ],
             "qc_manual": [f"{flags.manual} ({flags.manual.value})" for flags in qc_flags],
         }
 
@@ -380,9 +401,11 @@ class ProfileSlot(Layoutable):
         # Update the Bokeh data source with the filtered statistics
         self._statistics_source.data = {
             "depth": filtered_stats["depth"].tolist(),
-            "mean": filtered_stats["mean"].tolist(),
-            "lower_limit": filtered_stats["lower_limit"].tolist(),
-            "upper_limit": filtered_stats["upper_limit"].tolist(),
+            "median": filtered_stats["median"].tolist(),
+            "lower_limit": filtered_stats["25p"].tolist(),
+            "upper_limit": filtered_stats["75p"].tolist(),
+            "min": filtered_stats["min"].tolist(),
+            "max": filtered_stats["max"].tolist(),
         }
 
     @property

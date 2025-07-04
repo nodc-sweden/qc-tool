@@ -47,7 +47,9 @@ class ManualQcHandler(Layoutable):
             stylesheets=[ImportedStyleSheet(url="qc_tool/static/css/style.css")],
         )
         self._qc_buttons = RadioButtonGroup(
-            labels=[str(flag) for flag in QcFlag],
+            labels=[
+                str(flag) for flag in QcFlag if not QC_FLAG_CSS_COLORS[flag] == "gray"
+            ],
             orientation="vertical",
             active=None,
         )

@@ -39,13 +39,17 @@ _validation_log_template = jinja2.Template("""
       {% if value.fail %}
         <p>{{ value.description }}</p>
         <ul>
-        {% for purpose, fail_rows in value.fail.items() %}
-          <li>{{ purpose }}</li>
+        {% for category, fail_rows in value.fail.items() %}
+          {% if category != "General" %}
+          <li>{{ category }}</li>
             <ul>
+          {% endif %}
           {% for fail_row in fail_rows %}
               <li>{{ fail_row }}</li>
           {% endfor %}
+          {% if category != "General" %}
             </ul>
+          {% endif %}
         {% endfor %}
         </ul>
       {% else %}
@@ -82,14 +86,14 @@ class QcTool:
 
         # Parameters
         chemical_parameters = [
-            "DOXY_BTL",
+            "SIO3-SI",
             "PHOS",
             "PTOT",
+            "NTOT",
             "AMON",
             "NTRI",
             "NTRA",
-            "NTOT",
-            "SIO3-SI",
+            "NTRZ",
         ]
         first_chemical_parameter = ProfileSlot(
             parameter=chemical_parameters[0],
@@ -109,7 +113,9 @@ class QcTool:
         ]
         physical_parameters = [
             "SALT_CTD",
+            "SALT_BTL",
             "TEMP_CTD",
+            "TEMP_BTL",
             "DOXY_CTD",
             "DOXY_BTL",
             "H2S",
@@ -131,7 +137,7 @@ class QcTool:
                 for parameter_name in physical_parameters[1:]
             ],
         ]
-        biological_parameters = ["CPHL", "PH_LAB", "PH_TOT", "ALKY", "HUMUS", "SALT_CTD"]
+        biological_parameters = ["CPHL", "CHLFL", "PH_LAB", "PH_TOT", "ALKY", "HUMUS"]
 
         first_biological_parameter = ProfileSlot(
             parameter=biological_parameters[0],
@@ -191,7 +197,7 @@ class QcTool:
 
         profile_tab = TabPanel(
             child=Column(
-                chemical_profile_row, physical_profile_row, biological_profile_row
+                physical_profile_row, chemical_profile_row, biological_profile_row
             ),
             title="Profiles",
         )
@@ -352,8 +358,8 @@ class QcTool:
             for visit_key in station_visit
         }
         self._station_navigator.load_stations(self._stations)
-        self._map.load_stations(self._stations)
         self.metadata_qc_callback()
+        self._map.load_stations(self._stations)
         self.set_station(station or station_visit[0])
 
     def _read_geo_info_file(self):
