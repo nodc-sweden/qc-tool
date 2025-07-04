@@ -15,9 +15,9 @@ _flag_info_template = jinja2.Template("""
 
     <!-- Information Text -->
     <div style="grid-column: span 2; font-size: 14px; margin-bottom: 10px;">
-        Profile plots show median values and 25 and 75 percentiles.\n
+        Profile plots show median values (grey line) and 25 and 75 percentiles (grey area).
         Min and max values are shown in thin red lines.
-        Statistics is based on data from 1993-2023 and is calculated per basin, month and standard depth\n
+        Statistics is based on data from 1993-2023 and is calculated per basin, month and standard depth.
         Basins outside 12 nm is according to HELCOM and OSPAR. Coastal data is aggregated per type.
     </div>
 

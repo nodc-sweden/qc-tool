@@ -475,7 +475,7 @@ wheels = [
 [[package]]
 name = "ocean-data-qc"
 version = "2025.1.0"
-source = { git = "https://github.com/nodc-sweden/ocean-data-qc?rev=revise_qc#8ce9ddda46e7b859e47da1d0350188c329593847" }
+source = { git = "https://github.com/nodc-sweden/ocean-data-qc?rev=v2025.1.1#07e53d76df0157d1d8c6534e20f540b216bffc9c" }
 dependencies = [
     { name = "jinja2" },
     { name = "pandas" },
@@ -898,7 +898,7 @@ requires-dist = [
     { name = "jinja2", specifier = ">=3.1.3" },
     { name = "nodc-codes", git = "https://github.com/nodc-sweden/nodc-codes?rev=v0.3.0" },
     { name = "nodc-statistics", git = "https://github.com/nodc-sweden/nodc-statistics?rev=v2025.1.0" },
-    { name = "ocean-data-qc", git = "https://github.com/nodc-sweden/ocean-data-qc?rev=revise_qc" },
+    { name = "ocean-data-qc", git = "https://github.com/nodc-sweden/ocean-data-qc?rev=v2025.1.1" },
     { name = "pandas", specifier = ">=2.2.1" },
     { name = "pyproj", specifier = "==3.7.1" },
     { name = "sharkadm", git = "https://github.com/nodc-sweden/SHARKadm?rev=with-nodc-station" },
