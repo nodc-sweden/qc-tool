@@ -103,7 +103,7 @@ class FileHandler(Layoutable):
             return
         selected_path = Path(selected_path)
         print(f"Load data from {selected_path}...")
-        controller = sharkadm_controller.get_controller_with_data(selected_path)
+        controller = sharkadm_controller.get_polars_controller_with_data(selected_path)
         self._apply_transformers(controller=controller)
         self._run_validators(controller)
         validation = self._collect_validation_log()
@@ -117,25 +117,24 @@ class FileHandler(Layoutable):
         self._external_automatic_qc_callback()
 
     def _apply_transformers(self, controller):
-        controller.transform(transformers.RemoveNonDataLines())
-        controller.transform(transformers.WideToLong())
-        controller.transform(transformers.ReplaceCommaWithDot())
-        controller.transform(transformers.AddSampleDate())
-        controller.transform(transformers.AddSampleTime())
-        controller.transform(transformers.AddDatetime())
-        controller.transform(transformers.AddMonth())
-        controller.transform(transformers.AddVisitKey())
-        controller.transform(transformers.AddAnalyseInfo())
+        controller.transform(transformers.PolarsRemoveNonDataLines())
+        controller.transform(transformers.PolarsReplaceCommaWithDot())
+        controller.transform(multi_transformers.DateTimePolars())
+        controller.transform(multi_transformers.PositionPolars())
+        controller.transform(transformers.PolarsAddVisitKey())
 
-        controller.transform(multi_transformers.Position())
+        controller.transform(transformers.PolarsWideToLong())
+        controller.transform(transformers.PolarsMoveLessThanFlagRowFormat())
+        controller.transform(transformers.PolarsMoveLargerThanFlagRowFormat())
+        controller.transform(transformers.PolarsConvertFlagsToSDN())
 
-        controller.transform(transformers.MoveLessThanFlagRowFormat())
-        controller.transform(transformers.MoveLargerThanFlagRowFormat())
-        controller.transform(transformers.ConvertFlagsToSDN())
-        controller.transform(transformers.RemoveColumns("COPY_VARIABLE.*"))
-        controller.transform(
-            transformers.MapperParameterColumn(import_column="SHARKarchive")
-        )
+        controller.transform(transformers.PolarsAddAnalyseInfo())
+        controller.transform(transformers.PolarsRemoveColumns("COPY_VARIABLE.*"))
+        controller.transform(transformers.PolarsMapperParameterColumn(import_column="SHARKarchive"))
+
+        controller.transform(transformers.ConvertFromPolarsToPandas())
+        controller.transform(transformers.AddLmqnt())
+        controller.transform(transformers.AddUncertainty())
 
     def _run_validators(self, controller):
         print("Running SHARKadm validators...")
