@@ -130,7 +130,9 @@ class FileHandler(Layoutable):
 
         controller.transform(transformers.PolarsAddAnalyseInfo())
         controller.transform(transformers.PolarsRemoveColumns("COPY_VARIABLE.*"))
-        controller.transform(transformers.PolarsMapperParameterColumn(import_column="SHARKarchive"))
+        controller.transform(
+            transformers.PolarsMapperParameterColumn(import_column="SHARKarchive")
+        )
 
         controller.transform(transformers.ConvertFromPolarsToPandas())
         controller.transform(transformers.AddLmqnt())
