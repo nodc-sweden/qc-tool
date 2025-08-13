@@ -1,15 +1,20 @@
 import pandas as pd
+import polars as pl
 from ocean_data_qc.fyskem.qc_flag_tuple import QcField
 
 
-def prepare_data(data: pd.DataFrame):
-    # Create station name with zero padded serial number
-    data["SERNO"] = data["SERNO"].map("{:03}".format)
-
+def prepare_data(data: pl.DataFrame):
     # Create the long qc string using "quality_flag" as incoming qc
     if "quality_flag_long" not in data.columns and "quality_flag" in data.columns:
-        data["quality_flag_long"] = (
-            data["quality_flag"] + f"_{'0' * len(QcField)}_0_" + data["quality_flag"]
+        auto_flags = f"_{'0' * len(QcField)}_0_"
+        data = data.with_columns(
+            pl.concat_str(
+                [
+                    pl.col("quality_flag"),
+                    pl.lit(auto_flags),
+                    pl.col("quality_flag"),
+                ]
+            ).alias("quality_flag_long")
         )
     return data
 

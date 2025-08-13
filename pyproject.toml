@@ -56,3 +56,4 @@ select = [
     "I",  # isort
     "RUF"  # Ruff-specific rules
 ]
+

@@ -4,6 +4,7 @@ from pathlib import Path
 import geopandas as gpd
 import jinja2
 import pandas as pd
+import polars as pl
 from bokeh.models import Column, Div, ImportedStyleSheet, Row, TabPanel, Tabs
 from bokeh.plotting import curdoc
 from nodc_statistics import regions
@@ -228,7 +229,7 @@ class QcTool:
         curdoc().title = "QC Tool"
         curdoc().add_root(self.layout)
 
-    def load_file_callback(self, data: pd.DataFrame, validation: dict):
+    def load_file_callback(self, data: pl.DataFrame, validation: dict):
         data = self._match_sea_basins(data)
         data = prepare_data(data)
         self._set_data(data)
@@ -244,13 +245,16 @@ class QcTool:
         """Called when automatic qc has been requested."""
         print("Automatic QC started...")
         t0 = time.perf_counter()
-        fys_kem_qc = FysKemQc(self._data)
+        fys_kem_qc = FysKemQc(self._data.to_pandas())
         fys_kem_qc.run_automatic_qc()
         t1 = time.perf_counter()
         print(f"Automatic QC finished ({t1 - t0:.3f} s.)")
-        self._data[["INCOMING_QC", "AUTO_QC", "MANUAL_QC", "TOTAL_QC"]] = self._data[
-            "quality_flag_long"
-        ].str.split("_", expand=True)
+        self._data = self._data.with_columns(
+            pl.col("quality_flag_long")
+            .str.split_exact("_", 4)
+            .struct.rename_fields(["INCOMING_QC", "AUTO_QC", "MANUAL_QC", "TOTAL_QC"])
+            .alias("split_qc_fields")
+        ).unnest("split_qc_fields")
         fys_kem_qc.total_flag_info()
         self._set_data(self._data, self._selected_station.visit_key)
 
@@ -328,16 +332,20 @@ class QcTool:
         # Assuming df is your DataFrame and regions.sea_basin_for_position is the function
         # to apply
         # Step 1: Extract unique combinations of LONGI and LATIT
-        unique_positions = data[["LONGI", "LATIT"]].drop_duplicates()
+        unique_positions = data[["LONGI", "LATIT"]].unique()
+
         # Step 2: Apply the function to each unique combination
-        unique_positions["sea_basin"] = unique_positions.apply(
-            lambda row: regions.sea_basin_for_position(
-                dms_to_dd(row["LONGI"]), dms_to_dd(row["LATIT"]), self._geo_info
-            ),
-            axis=1,
+        unique_positions = unique_positions.with_columns(
+            sea_basin=pl.struct(["LONGI", "LATIT"]).map_elements(
+                lambda row: regions.sea_basin_for_position(
+                    dms_to_dd(row["LONGI"]), dms_to_dd(row["LATIT"]), self._geo_info
+                ),
+                return_dtype=pl.String,
+            )
         )
+
         # Step 3: Map the results back to the original DataFrame
-        data = data.merge(unique_positions, on=["LONGI", "LATIT"], how="left")
+        data = data.join(unique_positions, on=["LONGI", "LATIT"], how="left")
         t1 = time.perf_counter()
         print(f"Matching sea basins finished ({t1 - t0:.3f} s.)")
         return data
@@ -352,7 +360,7 @@ class QcTool:
         self._stations = {
             visit_key: Station(
                 visit_key,
-                self._data[self._data["visit_key"] == visit_key],
+                self._data.filter(pl.col("visit_key") == visit_key),
                 self._geo_info,
             )
             for visit_key in station_visit

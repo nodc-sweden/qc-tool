@@ -1,5 +1,7 @@
 import datetime
 
+import pandas as pd
+import polars as pl
 from ocean_data_qc.metadata.visit import Visit
 from ocean_data_qc.metadataqc import MetadataQc
 
@@ -26,7 +28,7 @@ class Station:
         }
     )
 
-    def __init__(self, visit_key: str, data, geo_info):
+    def __init__(self, visit_key: str, data: pl.DataFrame, geo_info):
         self._visit_key = visit_key
         self._data = data
 
@@ -43,7 +45,7 @@ class Station:
         else:
             self._sea_basin = None
 
-        self._visit = Visit(self.data)
+        self._visit = Visit(self.data.to_pandas())
 
     def run_metadata_qc(self):
         metadata_qc = MetadataQc(self._visit)
@@ -58,7 +60,7 @@ class Station:
         return self._sea_basin
 
     @property
-    def data(self):
+    def data(self) -> pd.DataFrame:
         return self._data
 
     @property

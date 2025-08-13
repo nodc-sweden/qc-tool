@@ -1,6 +1,7 @@
 from typing import Self
 
 import pandas as pd
+import polars as pl
 from bokeh.colors import RGB
 from bokeh.core.enums import Align
 from bokeh.core.property.primitive import Bool
@@ -324,33 +325,35 @@ class ProfileSlot(Layoutable):
             self._value_selected_callback(selected_values, self)
 
     def _load_parameter(self):
-        self._parameter_data = self._station.data[
-            self._station.data["parameter"] == self._parameter
-        ].sort_values("DEPH")
+        self._parameter_data = self._station.data.filter(
+            pl.col("parameter") == self._parameter
+        ).sort("DEPH")
 
         if "quality_flag_long" not in self._parameter_data.columns:
             try:
                 self._parameter_data["quality_flag_long"] = self._parameter_data[
                     "quality_flag"
                 ].map(lambda x: str(QcFlags(QcFlag.parse(x), None, None, None)))
-            except Exception:
+            except FileExistsError:
+                print("OJOJOJOJOJ DUM EXCEPT!!!!!!!")
                 print(self._parameter)
                 raise
 
-        self._parameter_data["quality_flag"] = [
-            flags.total
-            for flags in map(
-                QcFlags.from_string, self._parameter_data["quality_flag_long"]
+        self._parameter_data = self._parameter_data.with_columns(
+            quality_flag=pl.struct("quality_flag_long").map_elements(
+                lambda row: QcFlags.from_string(row["quality_flag_long"]).total,
+                return_dtype=pl.Int8,
             )
-        ]
+        )
 
         qc_flags = list(
             map(QcFlags.from_string, self._parameter_data["quality_flag_long"])
         )
 
-        colors = self._parameter_data["quality_flag"].map(
-            lambda flag: QC_FLAG_CSS_COLORS[flag]
+        colors = list(
+            map(QC_FLAG_CSS_COLORS.get, list(self._parameter_data["quality_flag"]))
         )
+
         line_colors = [
             "black" if flags.incoming.value != flags.total.value else "none"
             for flags in qc_flags
@@ -370,8 +373,8 @@ class ProfileSlot(Layoutable):
         self._update_statistics(parameter_statistics=parameter_statistics)
 
         self._source.data = {
-            "x": self._parameter_data["value"],
-            "y": self._parameter_data["DEPH"],
+            "x": list(self._parameter_data["value"]),
+            "y": list(self._parameter_data["DEPH"]),
             "color": colors,
             "line_color": line_colors,
             "qc": [f"{flags.total} ({flags.total.value})" for flags in qc_flags],
