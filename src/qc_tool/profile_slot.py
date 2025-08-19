@@ -319,7 +319,9 @@ class ProfileSlot(Layoutable):
         self._load_parameter()
 
     def _value_selected(self, attr, old, new):
-        selected_values = [Parameter(self._parameter_data.iloc[n]) for n in new]
+        selected_values = [
+            Parameter(self._parameter_data.row(n, named=True)) for n in new
+        ]
         self._statistics_source.selected.indices = []
         if not self._clear_called:
             self._value_selected_callback(selected_values, self)

@@ -236,25 +236,32 @@ class QcTool:
         self._set_validation(validation)
 
     def save_file_callback(self, filename: Path):
-        self._data.to_csv(filename, sep="\t", index=False)
+        self._data.write_csv(filename, separator="\t")
 
     def save_diff_file_callback(self, filename: Path):
-        changes_report(self._data).to_excel(filename, index=False)
+        changes_report(self._data).write_excel(
+            filename,
+            header_format={"bold": True, "border": 2},
+            freeze_panes=(1, 0),
+            column_formats={
+                "LATIT": "0.00",
+                "LONGI": "0.00",
+                "value": "0.00",
+                "DEPH": "0",
+                "WADEP": "0",
+            },
+        )
 
     def automatic_qc_callback(self):
         """Called when automatic qc has been requested."""
         print("Automatic QC started...")
         t0 = time.perf_counter()
-        fys_kem_qc = FysKemQc(self._data.to_pandas())
+        fys_kem_qc = FysKemQc(self._data)
         fys_kem_qc.run_automatic_qc()
+        self._data = fys_kem_qc._data
         t1 = time.perf_counter()
         print(f"Automatic QC finished ({t1 - t0:.3f} s.)")
-        self._data = self._data.with_columns(
-            pl.col("quality_flag_long")
-            .str.split_exact("_", 4)
-            .struct.rename_fields(["INCOMING_QC", "AUTO_QC", "MANUAL_QC", "TOTAL_QC"])
-            .alias("split_qc_fields")
-        ).unnest("split_qc_fields")
+
         fys_kem_qc.total_flag_info()
         self._set_data(self._data, self._selected_station.visit_key)
 
@@ -273,18 +280,19 @@ class QcTool:
         # Update quality flag in data
         t0 = time.perf_counter()
         for value in values:
-            self._data.loc[
-                (self._data["SERNO"] == value._data["SERNO"])
-                & (self._data["parameter"] == value._data["parameter"])
-                & (self._data["DEPH"] == value._data["DEPH"]),
-                "quality_flag_long",
-            ] = str(value.qc)
+            self._data = self._data.with_columns(
+                pl.when(
+                    (pl.col("SERNO") == value._data["SERNO"])
+                    & (pl.col("parameter") == value._data["parameter"])
+                    & (pl.col("DEPH") == value._data["DEPH"])
+                )
+                .then(pl.lit(str(value.qc)))
+                .otherwise(pl.col("quality_flag_long"))
+                .alias("quality_flag_long")
+            )
         t1 = time.perf_counter()
         print(f"Manual QC finished ({t1 - t0:.3f} s.)")
 
-        self._data[["INCOMING_QC", "AUTO_QC", "MANUAL_QC", "TOTAL_QC"]] = self._data[
-            "quality_flag_long"
-        ].str.split("_", expand=True)
         # Reload data
         self._set_data(self._data, self._selected_station.visit_key)
 
@@ -329,29 +337,54 @@ class QcTool:
 
         print("Matching sea basins...")
         t0 = time.perf_counter()
-        # Assuming df is your DataFrame and regions.sea_basin_for_position is the function
-        # to apply
-        # Step 1: Extract unique combinations of LONGI and LATIT
-        unique_positions = data[["LONGI", "LATIT"]].unique()
-
-        # Step 2: Apply the function to each unique combination
-        unique_positions = unique_positions.with_columns(
-            sea_basin=pl.struct(["LONGI", "LATIT"]).map_elements(
-                lambda row: regions.sea_basin_for_position(
-                    dms_to_dd(row["LONGI"]), dms_to_dd(row["LATIT"]), self._geo_info
-                ),
-                return_dtype=pl.String,
-            )
+        # Step 1: Extract unique positions and create decimal degree columns
+        positions_dd_pl = data.unique(subset=["LONGI", "LATIT"]).with_columns(
+            [
+                pl.col("LONGI").map_elements(dms_to_dd).alias("LONGI_DD"),
+                pl.col("LATIT").map_elements(dms_to_dd).alias("LATIT_DD"),
+            ]
         )
 
-        # Step 3: Map the results back to the original DataFrame
-        data = data.join(unique_positions, on=["LONGI", "LATIT"], how="left")
+        # Step 2: Call the bulk function
+        positions_dd = [
+            (lon, lat)
+            for lon, lat in positions_dd_pl.select(["LONGI_DD", "LATIT_DD"]).to_numpy()
+        ]
+        basins_dict = regions.sea_basins_for_positions(
+            positions_dd, geo_info=self._geo_info
+        )
+        basins_pl = pl.DataFrame(basins_dict)
+
+        # Step 3: Join the sea_basins back to the unique positions, drop DD columns
+        positions_with_basins = positions_dd_pl.join(
+            basins_pl, on=["LONGI_DD", "LATIT_DD"], how="left"
+        ).drop(["LONGI_DD", "LATIT_DD"])
+
+        # Step 4: Join back to the original data
+        data = data.join(positions_with_basins, on=["LONGI", "LATIT"], how="left")
+
         t1 = time.perf_counter()
         print(f"Matching sea basins finished ({t1 - t0:.3f} s.)")
+
         return data
 
-    def _set_data(self, data: pd.DataFrame, station: str | None = None):
-        self._data = data
+    def _set_data(self, data: pl.DataFrame, station: str | None = None):
+        """Ensure QC columns always reflect quality_flag_long."""
+        if not data.is_empty():
+            split = (
+                pl.col("quality_flag_long")
+                .str.split_exact("_", 3)
+                .struct.rename_fields(["INCOMING_QC", "AUTO_QC", "MANUAL_QC", "TOTAL_QC"])
+                .alias("split_qc_fields")
+            )
+
+            # Drop existing QC columns to avoid duplicates
+            qc_cols = ["INCOMING_QC", "AUTO_QC", "MANUAL_QC", "TOTAL_QC"]
+            data = data.drop([c for c in qc_cols if c in data.columns])
+
+            self._data = data.with_columns(split).unnest("split_qc_fields")
+        else:
+            self._data = data
 
         # Extract list of all station visits
         station_visit = sorted(data["visit_key"].unique())

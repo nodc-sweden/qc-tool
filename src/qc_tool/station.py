@@ -1,6 +1,5 @@
 import datetime
 
-import pandas as pd
 import polars as pl
 from ocean_data_qc.metadata.visit import Visit
 from ocean_data_qc.metadataqc import MetadataQc
@@ -33,19 +32,19 @@ class Station:
         self._data = data
 
         self._common = {
-            column: self._data[column].unique()[0]
+            column: self._data[column].unique().to_list()[0]
             for column in self.COMMON_COLUMNS
-            if column in self._data
+            if column in self._data.columns
         }
 
-        self._parameters = sorted(data["parameter"].unique())
+        self._parameters = sorted(self._data["parameter"].unique().to_list())
 
         if "sea_basin" in self._data.columns:
-            self._sea_basin = data["sea_basin"].unique()[0]
+            self._sea_basin = self._data["sea_basin"].unique().to_list()[0]
         else:
             self._sea_basin = None
 
-        self._visit = Visit(self.data.to_pandas())
+        self._visit = Visit(self.data)
 
     def run_metadata_qc(self):
         metadata_qc = MetadataQc(self._visit)
@@ -60,7 +59,7 @@ class Station:
         return self._sea_basin
 
     @property
-    def data(self) -> pd.DataFrame:
+    def data(self) -> pl.DataFrame:
         return self._data
 
     @property
