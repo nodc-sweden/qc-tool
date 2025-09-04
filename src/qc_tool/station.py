@@ -64,14 +64,7 @@ class Station:
 
     @property
     def datetime(self):
-        date_string = self._common.get("SDATE")
-        time_string = self._common.get("STIME")
-        try:
-            date = datetime.datetime.strptime(date_string, "%Y-%m-%d").date()
-            time = datetime.datetime.strptime(time_string, "%H:%M").time()
-        except ValueError:
-            return None
-        return datetime.datetime.combine(date, time)
+        return self._data.select("datetime").to_series()[0]
 
     @property
     def country_ship_cruise_visit_key(self):
