@@ -1,5 +1,6 @@
 import time
 from pathlib import Path
+from typing import List, Optional
 
 import geopandas as gpd
 import jinja2
@@ -86,7 +87,7 @@ class QcTool:
         self._metadata_qc_handler = MetadataQcHandler()
 
         # Parameters
-        chemical_parameters = [
+        self.chemical_parameters = [
             "SIO3-SI",
             "PHOS",
             "PTOT",
@@ -97,7 +98,7 @@ class QcTool:
             "NTRZ",
         ]
         first_chemical_parameter = ProfileSlot(
-            parameter=chemical_parameters[0],
+            parameter=self.chemical_parameters[0],
             value_selected_callback=self.select_values_callback,
         )
         first_chemical_parameter._figure.yaxis.axis_label = "Depth [m]"
@@ -109,10 +110,10 @@ class QcTool:
                     parameter=parameter_name,
                     value_selected_callback=self.select_values_callback,
                 )
-                for parameter_name in chemical_parameters[1:]
+                for parameter_name in self.chemical_parameters[1:]
             ],
         ]
-        physical_parameters = [
+        self.physical_parameters = [
             "SALT_CTD",
             "SALT_BTL",
             "TEMP_CTD",
@@ -123,7 +124,7 @@ class QcTool:
             "CHLFL",
         ]
         first_physical_parameter = ProfileSlot(
-            parameter=physical_parameters[0],
+            parameter=self.physical_parameters[0],
             value_selected_callback=self.select_values_callback,
         )
         first_physical_parameter._figure.yaxis.axis_label = "Depth [m]"
@@ -135,13 +136,20 @@ class QcTool:
                     parameter=parameter_name,
                     value_selected_callback=self.select_values_callback,
                 )
-                for parameter_name in physical_parameters[1:]
+                for parameter_name in self.physical_parameters[1:]
             ],
         ]
-        biological_parameters = ["CPHL", "CHLFL", "PH_LAB", "PH_TOT", "ALKY", "HUMUS"]
+        self.biological_parameters = [
+            "CPHL",
+            "CHLFL",
+            "PH_LAB",
+            "PH_TOT",
+            "ALKY",
+            "HUMUS",
+        ]
 
         first_biological_parameter = ProfileSlot(
-            parameter=biological_parameters[0],
+            parameter=self.biological_parameters[0],
             value_selected_callback=self.select_values_callback,
         )
         first_biological_parameter._figure.yaxis.axis_label = "Depth [m]"
@@ -153,7 +161,7 @@ class QcTool:
                     parameter=parameter_name,
                     value_selected_callback=self.select_values_callback,
                 )
-                for parameter_name in biological_parameters[1:]
+                for parameter_name in self.biological_parameters[1:]
             ],
         ]
 
@@ -306,14 +314,29 @@ class QcTool:
         if self._selected_station._visit.qc_log:
             self._set_extra_info_tab(1)
 
-        for parameter in self._chemical_profile_parameters:
-            parameter.update_station(self._selected_station)
+        available = self._selected_station.parameters
+        print(available)
 
-        for parameter in self._physical_profile_parameters:
-            parameter.update_station(self._selected_station)
+        default_groups = [
+            self.physical_parameters,
+            self.chemical_parameters,
+            self.biological_parameters,
+        ]
 
-        for parameter in self._biological_profile_parameters:
-            parameter.update_station(self._selected_station)
+        merged_parameters = self._merge_parameters(default_groups, available)
+
+        for group_slots, parameters in zip(
+            [
+                self._physical_profile_parameters,
+                self._chemical_profile_parameters,
+                self._biological_profile_parameters,
+            ],
+            merged_parameters,
+        ):
+            for slot, parameter in zip(group_slots, parameters):
+                slot.update_station(self._selected_station)
+                if parameter is not None:
+                    slot.set_parameter(parameter)
 
         for parameter in self._scatter_parameters:
             parameter.update_station(self._selected_station)
@@ -368,6 +391,44 @@ class QcTool:
 
         return data
 
+    def _merge_parameters(
+        self,
+        default_groups: List[List[str]],
+        available: List[str],
+    ) -> List[List[Optional[str]]]:
+        """
+        Merge multiple groups of default parameters with available ones.
+        - Keep preferred order where possible.
+        - Fill holes with other available parameters not in defaults.
+        - Do not overflow beyond total slots.
+        """
+        # Flatten all defaults
+        all_defaults = [p for group in default_groups for p in group]
+
+        # Compute unused = available not already in defaults
+        unused = [p for p in available if p not in all_defaults]
+
+        result_groups: List[List[Optional[str]]] = []
+
+        for group in default_groups:
+            print(f"now replacing in default list: {group}")
+            merged_group: List[Optional[str]] = []
+            for param in group:
+                if param in available:
+                    print(f"found {param} in {available}")
+                    merged_group.append(param)
+                elif unused:
+                    print(
+                        f"did not find {param} in {available} replacing with {unused[0]}"
+                    )
+                    merged_group.append(unused.pop(0))  # fill hole
+                else:
+                    print(f"did not find {param} or any unused param in {unused}")
+                    merged_group.append(None)  # no more available
+            result_groups.append(merged_group)
+
+        return result_groups
+
     def _set_data(self, data: pl.DataFrame, station: str | None = None):
         """Ensure QC columns always reflect quality_flag_long."""
         if not data.is_empty():
@@ -385,6 +446,7 @@ class QcTool:
             self._data = data.with_columns(split).unnest("split_qc_fields")
         else:
             self._data = data
+            print("dataframe is empty")
 
         # Extract list of all station visits
         station_visit = sorted(data["visit_key"].unique())
