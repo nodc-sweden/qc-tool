@@ -63,5 +63,7 @@ def changes_report(data: pl.DataFrame) -> pl.DataFrame:
         *auto_qc_columns,
     ]
 
+    report_columns = [col for col in report_columns if col in data.columns]
+
     # Filter rows where incoming != total and select the report columns
     return data.filter(incoming != total).select(report_columns)
