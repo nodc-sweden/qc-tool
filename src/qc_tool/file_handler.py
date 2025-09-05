@@ -126,10 +126,8 @@ class FileHandler(Layoutable):
             transformers.PolarsMapperParameterColumn(import_column="SHARKarchive")
         )
 
-        controller.transform(transformers.ConvertFromPolarsToPandas())
-        controller.transform(transformers.AddLmqnt())
-        controller.transform(transformers.AddUncertainty())
-        controller.transform(transformers.ConvertFromPandasToPolars())
+        controller.transform(transformers.PolarsAddLmqnt())
+        controller.transform(transformers.PolarsAddUncertainty())
 
     def _run_validators(self, controller):
         print("Running SHARKadm validators...")
