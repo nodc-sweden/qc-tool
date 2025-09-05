@@ -1,5 +1,3 @@
-import datetime
-
 import polars as pl
 from ocean_data_qc.metadata.visit import Visit
 from ocean_data_qc.metadataqc import MetadataQc
