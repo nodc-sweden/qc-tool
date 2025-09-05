@@ -1,4 +1,4 @@
-import pandas as pd
+import polars as pl
 from bokeh.events import MenuItemClick
 from bokeh.layouts import column
 from bokeh.models import (
@@ -13,7 +13,7 @@ from bokeh.models import (
     WheelZoomTool,
 )
 from bokeh.plotting import figure
-from ocean_data_qc.fyskem.qc_flag import QC_FLAG_CSS_COLORS
+from ocean_data_qc.fyskem.qc_flag import QC_FLAG_CSS_COLORS, QcFlag
 from ocean_data_qc.fyskem.qc_flags import QcFlags
 
 from qc_tool.layoutable import Layoutable
@@ -159,33 +159,45 @@ class ScatterSlot(Layoutable):
 
     def _load_parameters(self):
         if {self._x_parameter, self._y_parameter} <= set(self._station.parameters):
-            x_data = self._station.data[
-                self._station.data["parameter"] == self._x_parameter
-            ].sort_values("DEPH")
+            x_data = self._station.data.filter(
+                pl.col("parameter") == self._x_parameter
+            ).sort("DEPH")
 
-            y_data = self._station.data[
-                self._station.data["parameter"] == self._y_parameter
-            ].sort_values("DEPH")
+            y_data = self._station.data.filter(
+                pl.col("parameter") == self._y_parameter
+            ).sort("DEPH")
 
-            merged_data = pd.merge(x_data, y_data, on="DEPH", suffixes=("_x", "_y"))
+            merged_data = x_data.join(y_data, on="DEPH", suffix="_y")
 
-            merged_data["quality_flag_x"] = [
-                flags.total
-                for flags in map(QcFlags.from_string, merged_data["quality_flag_long_x"])
-            ]
-            merged_data["quality_flag_y"] = [
-                flags.total
-                for flags in map(QcFlags.from_string, merged_data["quality_flag_long_y"])
-            ]
-            colors = merged_data["quality_flag_x"].map(
-                lambda flag: QC_FLAG_CSS_COLORS[flag]
+            merged_data = merged_data.with_columns(
+                quality_flag_x=[
+                    flags.total
+                    for flags in map(
+                        QcFlags.from_string, list(merged_data["quality_flag_long"])
+                    )
+                ],
+                quality_flag_y=[
+                    flags.total
+                    for flags in map(
+                        QcFlags.from_string, list(merged_data["quality_flag_long_y"])
+                    )
+                ],
             )
+
+            colors = list(
+                map(
+                    QC_FLAG_CSS_COLORS.get, map(QcFlag.parse, merged_data["quality_flag"])
+                )
+            )
+
             qc_flags_x = list(
-                map(QcFlags.from_string, merged_data["quality_flag_long_x"])
+                map(QcFlags.from_string, list(merged_data["quality_flag_long"]))
             )
+
             qc_flags_y = list(
-                map(QcFlags.from_string, merged_data["quality_flag_long_y"])
+                map(QcFlags.from_string, list(merged_data["quality_flag_long_y"]))
             )
+
             # Evaluate and store all .value values first
             total_values = [flags.total.value for flags in qc_flags_x]
             incoming_values = [flags.incoming.value for flags in qc_flags_x]
@@ -193,12 +205,13 @@ class ScatterSlot(Layoutable):
                 "black" if inc != tot else "none"
                 for inc, tot in zip(incoming_values, total_values)
             ]
+
             self._source.data = {
-                "x": merged_data["value_x"],
-                "y": merged_data["value_y"],
+                "x": list(merged_data["value"]),
+                "y": list(merged_data["value_y"]),
                 "colors": colors,
                 "line_colors": line_colors,
-                "deph": merged_data["DEPH"],
+                "deph": list(merged_data["DEPH"]),
                 "qcx": [f"{flags.total} ({flags.total.value})" for flags in qc_flags_x],
                 "qcy": [f"{flags.total} ({flags.total.value})" for flags in qc_flags_y],
             }

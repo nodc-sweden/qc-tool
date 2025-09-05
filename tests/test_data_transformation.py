@@ -1,4 +1,4 @@
-import pandas as pd
+import polars as pl
 import pytest
 
 from qc_tool import data_transformation
@@ -7,16 +7,16 @@ from qc_tool import data_transformation
 @pytest.mark.parametrize(
     "given_serno, expected_serno",
     (
-        (0, "000"),
-        (1, "001"),
-        (99, "099"),
-        (100, "100"),
+        (0, "0000"),
+        (1, "0001"),
+        (99, "0099"),
+        (100, "0100"),
         (1001, "1001"),
     ),
 )
 def test_prepare_data_makes_series_number_zero_padded_string(given_serno, expected_serno):
     # Given data where data has a given serial number
-    given_data = pd.DataFrame(
+    given_data = pl.DataFrame(
         (
             {"STATN": "Fladen", "SERNO": given_serno},
             {"STATN": "Fladen", "SERNO": given_serno},
@@ -54,7 +54,7 @@ def test_prepare_data_adds_quality_flag_long_column_with_input_from_quality_flag
     given_quality_flag,
 ):
     # Given data
-    given_data = pd.DataFrame(
+    given_data = pl.DataFrame(
         (
             {"STATN": "FLADEN", "SERNO": 1, "quality_flag": given_quality_flag},
             {"STATN": "ANHOLT E", "SERNO": 2, "quality_flag": given_quality_flag},
@@ -72,7 +72,7 @@ def test_prepare_data_adds_quality_flag_long_column_with_input_from_quality_flag
     transformed_data = data_transformation.prepare_data(given_data)
 
     # Then the column 'quality_flag_long' is added
-    assert "quality_flag_long" in given_data.columns
+    assert "quality_flag_long" in transformed_data.columns
 
     # And all rows have the same value
     all_quality_flag_long = transformed_data["quality_flag_long"].unique()

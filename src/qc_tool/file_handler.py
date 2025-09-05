@@ -8,17 +8,8 @@ from pathlib import Path
 import geopandas as gp
 import nodc_station
 from bokeh.models import Button, Column, Div, FileInput
-from sharkadm import adm_logger, exporters, multi_transformers, transformers
+from sharkadm import adm_logger, exporters, multi_transformers, transformers, validators
 from sharkadm import controller as sharkadm_controller
-from sharkadm.validators import ValidateCommonValuesByVisit, ValidatePositiveValues
-from sharkadm.validators.station import (
-    ValidateCoordinatesDm,
-    ValidateNameInMaster,
-    ValidatePositionInOcean,
-    ValidatePositionWithinStationRadius,
-    ValidateStationIdentity,
-    ValidateSynonymsInMaster,
-)
 
 from qc_tool.layoutable import Layoutable
 
@@ -106,10 +97,11 @@ class FileHandler(Layoutable):
         controller = sharkadm_controller.get_polars_controller_with_data(selected_path)
         self._apply_transformers(controller=controller)
         self._run_validators(controller)
+
         validation = self._collect_validation_log()
         print("Data loaded")
         data = controller.export(
-            exporters.DataFrame(header_as="PhysicalChemical", float_columns=True)
+            exporters.PolarsDataFrame(header_as="PhysicalChemical", float_columns=True)
         )
         self._file_name = selected_path.name
         self._file_loaded()
@@ -137,6 +129,7 @@ class FileHandler(Layoutable):
         controller.transform(transformers.ConvertFromPolarsToPandas())
         controller.transform(transformers.AddLmqnt())
         controller.transform(transformers.AddUncertainty())
+        controller.transform(transformers.ConvertFromPandasToPolars())
 
     def _run_validators(self, controller):
         print("Running SHARKadm validators...")
@@ -144,10 +137,13 @@ class FileHandler(Layoutable):
         ocean_shapefile = load_ocean_shapefile()
 
         validators_and_parameters = (
-            (ValidateCommonValuesByVisit, {}),
-            (ValidatePositiveValues, {}),
+            (validators.ValidateCommonValuesByVisit, {}),
+            (validators.ValidateDateAndTime, {}),
+            (validators.ValidatePositiveValues, {}),
+            (validators.ValidateSampleDepth, {}),
+            (validators.ValidateSecchiDepth, {}),
             (
-                ValidateStationIdentity,
+                validators.ValidateStationIdentity,
                 {
                     "stations": nodc_station.get_station_object(case_sensitive=False),
                     "latitude_key": "sample_sweref99tm_y",
@@ -155,14 +151,14 @@ class FileHandler(Layoutable):
                 },
             ),
             (
-                ValidateCoordinatesDm,
+                validators.ValidateCoordinatesDm,
                 {
                     "latitude_dm_column": "visit_reported_latitude",
                     "longitude_dm_column": "visit_reported_longitude",
                 },
             ),
             (
-                ValidatePositionInOcean,
+                validators.ValidatePositionInOcean,
                 {
                     "ocean_shapefile": ocean_shapefile,
                     "station_name_key": "reported_station_name",
@@ -190,14 +186,17 @@ class FileHandler(Layoutable):
         description_for_validator = {
             validator.get_display_name(): validator.get_validator_description()
             for validator in (
-                ValidateCommonValuesByVisit,
-                ValidateCoordinatesDm,
-                ValidateNameInMaster,
-                ValidatePositionInOcean,
-                ValidatePositionWithinStationRadius,
-                ValidatePositiveValues,
-                ValidateStationIdentity,
-                ValidateSynonymsInMaster,
+                validators.ValidateCommonValuesByVisit,
+                validators.ValidateCoordinatesDm,
+                validators.ValidateDateAndTime,
+                validators.ValidateNameInMaster,
+                validators.ValidatePositionInOcean,
+                validators.ValidatePositionWithinStationRadius,
+                validators.ValidatePositiveValues,
+                validators.ValidateSampleDepth,
+                validators.ValidateSecchiDepth,
+                validators.ValidateStationIdentity,
+                validators.ValidateSynonymsInMaster,
             )
         }
 

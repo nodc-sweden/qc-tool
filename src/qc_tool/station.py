@@ -1,5 +1,4 @@
-import datetime
-
+import polars as pl
 from ocean_data_qc.metadata.visit import Visit
 from ocean_data_qc.metadataqc import MetadataQc
 
@@ -26,20 +25,20 @@ class Station:
         }
     )
 
-    def __init__(self, visit_key: str, data, geo_info):
+    def __init__(self, visit_key: str, data: pl.DataFrame, geo_info):
         self._visit_key = visit_key
         self._data = data
 
         self._common = {
-            column: self._data[column].unique()[0]
+            column: self._data[column].unique().to_list()[0]
             for column in self.COMMON_COLUMNS
-            if column in self._data
+            if column in self._data.columns
         }
 
-        self._parameters = sorted(data["parameter"].unique())
+        self._parameters = sorted(self._data["parameter"].unique().to_list())
 
         if "sea_basin" in self._data.columns:
-            self._sea_basin = data["sea_basin"].unique()[0]
+            self._sea_basin = self._data["sea_basin"].unique().to_list()[0]
         else:
             self._sea_basin = None
 
@@ -58,19 +57,12 @@ class Station:
         return self._sea_basin
 
     @property
-    def data(self):
+    def data(self) -> pl.DataFrame:
         return self._data
 
     @property
     def datetime(self):
-        date_string = self._common.get("SDATE")
-        time_string = self._common.get("STIME")
-        try:
-            date = datetime.datetime.strptime(date_string, "%Y-%m-%d").date()
-            time = datetime.datetime.strptime(time_string, "%H:%M").time()
-        except ValueError:
-            return None
-        return datetime.datetime.combine(date, time)
+        return self._data.select("datetime").to_series()[0]
 
     @property
     def country_ship_cruise_visit_key(self):
