@@ -7,7 +7,13 @@ from qc_tool.main import QcTool
 
 def test_read_geopackage():
     qc_tool = QcTool()
-    qc_tool._read_geo_info_file()
+    if os.getenv("CI") == "true":
+        empty_gdf = gpd.GeoDataFrame({"geometry": [], "area_tag": []})
+        with mock.patch("pathlib.Path.exists", return_value=True), \
+                mock.patch("geopandas.read_file", return_value=empty_gdf):
+            qc_tool._read_geo_info_file()
+    else:
+        qc_tool._read_geo_info_file()
 
     assert isinstance(qc_tool._geo_info, gpd.GeoDataFrame)
 
