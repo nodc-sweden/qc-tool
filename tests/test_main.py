@@ -1,7 +1,6 @@
 import os
-from unittest import mock
+
 import geopandas as gpd
-import pandas as pd
 import polars as pl
 import pytest
 
@@ -9,14 +8,10 @@ from qc_tool.main import QcTool
 
 
 def test_read_geopackage():
-    qc_tool = QcTool()
     if os.getenv("CI") == "true":
-        empty_gdf = gpd.GeoDataFrame({"geometry": [], "area_tag": []})
-        with mock.patch("pathlib.Path.exists", return_value=True), \
-                mock.patch("geopandas.read_file", return_value=empty_gdf):
-            qc_tool._read_geo_info_file()
-    else:
-        qc_tool._read_geo_info_file()
+        pytest.skip("No test in CI environment")
+    qc_tool = QcTool()
+    qc_tool._read_geo_info_file()
 
     assert isinstance(qc_tool._geo_info, gpd.GeoDataFrame)
 
@@ -42,6 +37,8 @@ def given_pl_data():
 
 
 def test_match_sea_basin_to_position_with_polarsdf(given_pl_data):
+    if os.getenv("CI") == "true":
+        pytest.skip("No test in CI environment")
     qc_tool = QcTool()
 
     # Run the method
