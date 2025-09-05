@@ -7,9 +7,8 @@ import pytest
 from qc_tool.main import QcTool
 
 
+@pytest.mark.skipif(os.getenv("CI") == "true", reason="Skipping test in CI environment")
 def test_read_geopackage():
-    if os.getenv("CI") == "true":
-        pytest.skip("No test in CI environment")
     qc_tool = QcTool()
     qc_tool._read_geo_info_file()
 
@@ -36,9 +35,8 @@ def given_pl_data():
     return pl.DataFrame(rows)
 
 
+@pytest.mark.skipif(os.getenv("CI") == "true", reason="Skipping test in CI environment")
 def test_match_sea_basin_to_position_with_polarsdf(given_pl_data):
-    if os.getenv("CI") == "true":
-        pytest.skip("No test in CI environment")
     qc_tool = QcTool()
 
     # Run the method
