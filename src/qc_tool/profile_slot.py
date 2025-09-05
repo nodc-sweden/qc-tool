@@ -314,9 +314,12 @@ class ProfileSlot(Layoutable):
         self._source.selected.indices = []
         self._clear_called = False
 
-    def _parameter_selected(self, event: MenuItemClick):
-        self._parameter = event.item
+    def set_parameter(self, parameter: str):
+        self._parameter = parameter
         self._load_parameter()
+
+    def _parameter_selected(self, event: MenuItemClick):
+        self.set_parameter(event.item)
 
     def _value_selected(self, attr, old, new):
         selected_values = [
