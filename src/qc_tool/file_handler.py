@@ -120,14 +120,17 @@ class FileHandler(Layoutable):
         controller.transform(transformers.PolarsMoveLargerThanFlagRowFormat())
         controller.transform(transformers.PolarsConvertFlagsToSDN())
 
+        controller.transform(transformers.PolarsAddPressure())
+        controller.transform(transformers.PolarsAddDensity())
+
         controller.transform(transformers.PolarsAddAnalyseInfo())
+        controller.transform(transformers.PolarsAddLmqnt())
+        controller.transform(transformers.PolarsAddUncertainty())
+
         controller.transform(transformers.PolarsRemoveColumns("COPY_VARIABLE.*"))
         controller.transform(
             transformers.PolarsMapperParameterColumn(import_column="SHARKarchive")
         )
-
-        controller.transform(transformers.PolarsAddLmqnt())
-        controller.transform(transformers.PolarsAddUncertainty())
 
     def _run_validators(self, controller):
         print("Running SHARKadm validators...")
