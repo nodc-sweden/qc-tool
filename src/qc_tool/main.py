@@ -258,11 +258,11 @@ class QcTool:
         t0 = time.perf_counter()
         fys_kem_qc = FysKemQc(self._data)
         fys_kem_qc.run_automatic_qc()
+        fys_kem_qc.total_flag_info()
         self._data = fys_kem_qc._data
         t1 = time.perf_counter()
         print(f"Automatic QC finished ({t1 - t0:.3f} s.)")
 
-        fys_kem_qc.total_flag_info()
         self._set_data(self._data, self._selected_station.visit_key)
 
     def metadata_qc_callback(self):
