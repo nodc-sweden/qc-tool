@@ -122,6 +122,7 @@ class FileHandler(Layoutable):
 
         controller.transform(transformers.PolarsAddPressure())
         controller.transform(transformers.PolarsAddDensity())
+        controller.transform(transformers.PolarsAddOxygenSaturation())
 
         controller.transform(transformers.PolarsAddAnalyseInfo())
         controller.transform(transformers.PolarsAddLmqnt())
