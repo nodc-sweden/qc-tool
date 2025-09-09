@@ -247,8 +247,8 @@ class QcTool:
                 "LATIT": "0.00",
                 "LONGI": "0.00",
                 "value": "0.00",
-                "DEPH": "0",
-                "WADEP": "0",
+                "DEPH": "0.00",
+                "WADEP": "0.00",
             },
         )
 
