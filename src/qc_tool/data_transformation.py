@@ -37,7 +37,7 @@ def changes_report(data: pl.DataFrame) -> pl.DataFrame:
     total = pl.col("quality_flag_long").str.split("_").list.get(-1)
 
     # Find all automatic QC columns dynamically
-    auto_qc_columns = [c for c in data.columns if "automatic" in c]
+    auto_qc_columns = [c for c in data.columns if "total_automatic" in c]
 
     # Columns to include in the report
     report_columns = [
