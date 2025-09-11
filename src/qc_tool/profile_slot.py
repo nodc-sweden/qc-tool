@@ -1,4 +1,5 @@
-from typing import Self
+from dataclasses import dataclass
+from typing import Optional, Self
 
 import pandas as pd
 import polars as pl
@@ -17,6 +18,7 @@ from bokeh.models import (
     HoverTool,
     Label,
     LassoSelectTool,
+    MultiChoice,
     Span,
     WheelZoomTool,
 )
@@ -27,7 +29,7 @@ from ocean_data_qc.fyskem.qc_flag import QC_FLAG_CSS_COLORS, QcFlag
 from ocean_data_qc.fyskem.qc_flags import QcFlags
 
 from qc_tool.layoutable import Layoutable
-from qc_tool.station import Station
+from qc_tool.station import Station, get_available_parameters_from_stations
 
 PARAMETER_ABBREVIATIONS = {
     "ALKY": "Alkalinity",
@@ -65,6 +67,500 @@ def expand_abbreviation(abbreviation: str) -> str:
     return PARAMETER_ABBREVIATIONS.get(abbreviation, abbreviation)
 
 
+@dataclass
+class SeriesSpecification:
+    parameter: str
+    station: Station
+
+
+class ProfileSlotBase(Layoutable):
+    """
+    - Initialize the figure and the ColumnDataSources.
+    - Provide a method set_series(series_list: list[SeriesSpec]).
+    - Handle fetching/transforming/loading in _load_series.
+    """
+
+    def __init__(self, value_selected_callback=None, selected_parameters=None):
+        self._value_selected_callback = value_selected_callback or (lambda *args: None)
+        self._selected_parameters = selected_parameters
+        self._series: list[SeriesSpecification] = []
+        self._width = 300
+        self._height = 400
+        self._initialize_plot()
+        # Store series info per (station, parameter)
+        self._series_glyphs = {}  # key: SeriesSpecification -> dict of glyphs
+        self._series_sources = {}  # key: SeriesSpecification -> dict of ColumnDataSource
+        self._series_keys = []
+
+        # --- MultiChoice widget for parameter selection ---
+        self._parameter_multichoice = MultiChoice(
+            title="Select Parameters",
+            options=[],  # will be updated in update_stations
+            value=[],  # active selection
+            height=100,
+            width=300,
+        )
+        self._parameter_multichoice.on_change("value", self._on_parameters_changed)
+
+    def _initialize_plot(self, linked_parameter=None):
+        # figure tools
+        wheel_zoom = WheelZoomTool()
+        hover = HoverTool()
+        select = LassoSelectTool()
+
+        #  Crosshairs (share with linked parameter if available)
+        if linked_parameter:
+            self._crosshair_width = linked_parameter._crosshair_width
+            self._crosshair_height = linked_parameter._crosshair_height
+        else:
+            self._crosshair_width = Span(
+                dimension="width", line_dash="dashed", line_width=1
+            )
+            self._crosshair_height = Span(
+                dimension="height", line_dash="dashed", line_width=1
+            )
+        crosshair = CrosshairTool(overlay=[self._crosshair_width, self._crosshair_height])
+
+        self._figure_config = {
+            "height": self._height,
+            "width": self._width,
+            "toolbar_location": "below",
+            "tools": ["reset", "pan", wheel_zoom, hover, crosshair, select],
+            "tooltips": [
+                ("Source", "@series_label"),
+                ("Value", "@x"),
+                ("Depth", "@y"),
+                ("QC", "@qc"),
+                ("Incoming QC", "@qc_incoming"),
+                ("Automatic QC", "@qc_automatic"),
+                ("Manual QC", "@qc_manual"),
+            ],
+            "y_axis_label": "Depth [m]",
+        }
+        self._figure = figure(**self._figure_config)
+        self._figure.toolbar.active_scroll = wheel_zoom
+        # Keep a handle to hover so we can add renderers later
+        self._hover_tool = hover
+        self._hover_renderers = []
+
+        # Add sea level and sky
+        self._sky = self._figure.image_url(
+            url=["qc_tool/static/images/gull.png"], x=0, y=-500
+        )
+        self._sea_level = BoxAnnotation(
+            bottom=0, fill_color="lightskyblue", fill_alpha=0.10
+        )
+        self._sea_level.level = "underlay"
+        self._figure.add_layout(self._sea_level)
+
+        # Add ocean floor placeholder (bounds will be set dynamically)
+        self._ocean_floor = BoxAnnotation(fill_color=RGB(60, 25, 0), fill_alpha=0.50)
+        self._ocean_floor.level = "underlay"
+        self._figure.add_layout(self._ocean_floor)
+
+        # Y range setup
+        if linked_parameter:
+            self._figure.y_range = linked_parameter.y_range
+        else:
+            self._figure.y_range.flipped = True
+
+        self._plot_values_config = {
+            "size": 8,
+            "alpha": 0.8,
+            "name": "values",
+        }
+        self._plot_line_config = {
+            "line_width": 1,
+            "color": "navy",
+            "alpha": 0.8,
+            "name": "connecting_line",
+        }
+        self._plot_line_statistics_config = {
+            "line_width": 4,
+            "color": "black",
+            "alpha": 0.3,
+        }
+        self._plot_dash_statistics_config = {
+            "line_width": 2,
+            "size": 10,
+            "color": "black",
+            "alpha": 0.3,
+        }
+        self._plot_area_statistics_config = {
+            "color": "grey",
+            "alpha": 0.1,
+        }
+        self._plot_line_min_max_config = {"color": "red", "line_width": 0.5, "alpha": 0.5}
+
+    def _make_data_source(self) -> ColumnDataSource:
+        return ColumnDataSource(
+            data={
+                "x": [],
+                "y": [],
+                "color": [],
+                "line_color": [],
+                "qc": [],
+                "qc_incoming": [],
+                "qc_automatic": [],
+                "qc_manual": [],
+                "series_label": [],
+            }
+        )
+
+    def _make_statistics_source(self) -> ColumnDataSource:
+        return ColumnDataSource(
+            data={
+                "depth": [],
+                "median": [],
+                "lower_limit": [],
+                "upper_limit": [],
+                "min": [],
+                "max": [],
+            }
+        )
+
+    def set_series(self, series: list[SeriesSpecification]):
+        print("set series")
+        self._series = series
+        self._load_series()
+
+    def _update_series(self):
+        self._series.clear()
+        for station in self._stations:
+            for parameter in self._selected_parameters:
+                spec = SeriesSpecification(parameter=parameter, station=station)
+                self._series.append(spec)
+
+    # ------------------------------
+    # Station + parameter management
+    # ------------------------------
+    def update_stations(self, stations: list):
+        """
+        Called from main.py with selected station(s).
+        Updates parameter options in multichoice accordingly.
+        """
+        self._stations = stations or []
+
+        # Get available parameters
+        available_params = get_available_parameters_from_stations(self._stations)
+
+        # Update widget options
+        self._parameter_multichoice.options = list(
+            zip(available_params, map(expand_abbreviation, available_params))
+        )
+
+        if self._selected_parameters:
+            self._parameter_multichoice.value = self._selected_parameters
+
+        # Default behavior:
+        # - If multiple stations: only allow one parameter at a time (preselect first)
+        # - If one or no stations keep selection if existing or update to first available
+        if 0 < len(self._stations) > 1 and len(self._parameter_multichoice.value) > 1:
+            self._parameter_multichoice.value = self._parameter_multichoice.value[:1]
+        elif not self._parameter_multichoice.value:
+            self._parameter_multichoice.value = available_params[:1]
+            self._selected_parameters = available_params[:1]
+
+        # self._selected_parameters = self._parameter_multichoice.value
+
+        self._update_series()
+
+        self._load_series()
+        # Trigger actual series update
+        # self._on_parameters_changed(None, None, default_params)
+
+    def _on_parameters_changed(self, attr, old, new):
+        """
+        Called when MultiChoice selection changes.
+        Rebuilds series list and reloads glyphs.
+        """
+        selected_parameters = new
+        if not self._stations or not selected_parameters:
+            return
+
+        # If multiple stations → force single parameter
+        if len(self._stations) > 1:
+            selected_parameters = selected_parameters[:1]
+        self._selected_parameters = selected_parameters
+
+        self._update_series()
+
+        # Load new series into figure
+        self._load_series()
+
+    def _load_series(self):
+        # clear old
+        print("load series")
+        # self._figure.renderers = []  # or selectively remove only series glyphs
+        active_keys = set()
+
+        for spec in self._series:
+            print(f"plot {spec.parameter} from {spec.station.name}")
+            key = (spec.station.visit_key, spec.parameter)
+            active_keys.add(key)
+            if key in self._series_glyphs:
+                # already plotted → skip adding glyphs again
+                continue
+
+            # build sources to populate
+            main_source = self._make_data_source()
+            stats_source = self._make_statistics_source()
+
+            df, has_data = self._fetch_data(spec)
+            print("data fetched")
+            if not has_data:
+                print(
+                    f"Did not find any data for {spec.parameter} at {spec.station.name}"
+                )
+                continue
+            print("transform data")
+            records = self._transform_data(spec, df)
+            print("populate source")
+            self._populate_source(main_source, records)
+            print("fetch stats")
+            stats = self._fetch_statistics(spec)
+            if stats:
+                stats_source.data = stats
+            print("add glyphs")
+            self._add_glyphs(spec, main_source, stats_source)
+            print("add series sources")
+            # store for reference in next update
+            self._series_sources[key] = {
+                "main": main_source,
+                "stats": stats_source,
+            }
+
+        # remove anything that's no longer in self._series
+        print("remove unused series")
+        self._remove_unused_series(active_keys)
+
+        # Now update the ocean floor based on loaded stations
+        self._update_ocean_floor()
+
+    def _remove_unused_series(self, active_keys: set):
+        """
+        Remove glyphs and sources that are no longer active.
+        """
+        to_remove = set(self._series_glyphs.keys()) - active_keys
+
+        for key in to_remove:
+            glyphs = self._series_glyphs.pop(key, {})
+            for g in glyphs.values():
+                try:
+                    self._figure.renderers.remove(g)
+                except ValueError:
+                    pass  # already removed
+
+            self._series_sources.pop(key, None)
+
+    def _fetch_data(self, spec: SeriesSpecification):
+        print(f"fetch data for parameter: {spec.parameter}")
+        print(
+            spec.station.data.filter(pl.col("parameter") == spec.parameter).select(
+                ["DEPH", "parameter", "value"]
+            )
+        )
+
+        # Filter lazy dataframe for the parameter
+        df = spec.station.data.filter(pl.col("parameter") == spec.parameter).sort("DEPH")
+
+        # Check if any rows exist by limiting to 1 row
+        has_data = not df.limit(1).is_empty()
+
+        return df, has_data
+
+    def _transform_data(self, spec: SeriesSpecification, df):
+        """
+        Takes series object and the data from the series object
+        Returns data as dict in list to add to all_records
+        """
+        qc_flags = list(map(QcFlags.from_string, df["quality_flag_long"]))
+        colors = [QC_FLAG_CSS_COLORS.get(flag.total) for flag in qc_flags]
+        line_colors = [
+            "black" if f.incoming.value != f.total.value else "none" for f in qc_flags
+        ]
+
+        return [
+            dict(
+                x=row["value"],
+                y=row["DEPH"],
+                color=color,
+                line_color=lcolor,
+                qc=f"{flags.total} ({flags.total.value})",
+                qc_incoming=f"{flags.incoming} ({flags.incoming.value})",
+                qc_automatic=f"{flags.total_automatic} {flags.total_automatic_name}",
+                qc_manual=f"{flags.manual} ({flags.manual.value})",
+                series_label=f"{spec.parameter} @ {spec.station.name}",
+            )
+            for row, flags, color, lcolor in zip(
+                df.iter_rows(named=True), qc_flags, colors, line_colors
+            )
+        ]
+
+    def _fetch_statistics(self, spec: SeriesSpecification) -> Optional[dict[str, list]]:
+        """Fetch statistics for one series (parameter + station)."""
+        station = spec.station
+        if station.sea_basin is None:
+            return None
+
+        stats = statistic.get_profile_statistics_for_parameter_and_sea_basin(
+            spec.parameter,
+            station.sea_basin,
+            station.datetime,
+            statistics=("median", "25p", "75p", "min", "max"),
+        )
+
+        if stats is None:
+            return None
+
+        stats_df = pd.DataFrame(stats)
+
+        # Filter depths to within 110% of station water depth
+        filtered = stats_df[stats_df["depth"] <= station.water_depth * 1.1]
+
+        return {
+            "depth": filtered["depth"].tolist(),
+            "median": filtered["median"].tolist(),
+            "lower_limit": filtered["25p"].tolist(),
+            "upper_limit": filtered["75p"].tolist(),
+            "min": filtered["min"].tolist(),
+            "max": filtered["max"].tolist(),
+        }
+
+    def _populate_source(self, source: ColumnDataSource, records: list[dict]):
+        if not records:
+            source.data = {k: [] for k in source.data.keys()}
+            return
+        columns = {key: [rec[key] for rec in records] for key in records[0]}
+        source.data = columns
+
+    def _add_glyphs(
+        self,
+        spec: SeriesSpecification,
+        source: ColumnDataSource,
+        stats_source: ColumnDataSource,
+    ):
+        key = (
+            spec.station.visit_key,
+            spec.parameter,
+        )
+        # Skip if the series is already added
+        if key in self._series_glyphs:
+            return
+        if key not in self._series_keys:
+            self._series_keys.append(key)
+
+        # Add values and lines
+        _lines = self._figure.line("x", "y", source=source, **self._plot_line_config)
+
+        _parameter_values = self._figure.scatter(
+            "x",
+            "y",
+            source=source,
+            color="color",
+            line_color="line_color",
+            # legend_label=f"{spec.parameter} @ {spec.station.name}",
+            **self._plot_values_config,
+        )
+
+        self._hover_renderers.append(_parameter_values)
+
+        # Add statistics glyphs
+        _median_values_line = self._figure.line(
+            "median",
+            "depth",
+            source=stats_source,
+            **self._plot_line_statistics_config,
+        )
+        _median_values_dash = self._figure.scatter(
+            "median",
+            "depth",
+            marker="dash",
+            source=stats_source,
+            **self._plot_dash_statistics_config,
+        )
+        _limits_area = self._figure.harea(
+            x1="lower_limit",
+            x2="upper_limit",
+            y="depth",
+            source=stats_source,
+            **self._plot_area_statistics_config,
+        )
+        _min_line = self._figure.line(
+            "min",
+            "depth",
+            source=stats_source,
+            **self._plot_line_min_max_config,
+        )
+        _max_line = self._figure.line(
+            "max",
+            "depth",
+            source=stats_source,
+            **self._plot_line_min_max_config,
+        )
+
+        self._series_glyphs[key] = {
+            "values": _parameter_values,
+            "line": _lines,
+            "median_line": _median_values_line,
+            "median_dash": _median_values_dash,
+            "limits_area": _limits_area,
+            "min_line": _min_line,
+            "max_line": _max_line,
+        }
+        self._series_sources[key] = {
+            "values": source,
+            "statistics": stats_source,
+        }
+
+        # Update hover tool
+        self._hover_tool.renderers = (
+            self._hover_renderers
+        )  # move this to after add_glyphs call
+
+    def _value_selected(self, attr, old, new, series_spec: SeriesSpecification):
+        """
+        attr, old, new: standard Bokeh selected callback args
+        series_spec: which series in this slot triggered the selection
+        """
+        selected_indices = self._series_sources[series_spec][0].selected.indices
+        selected_values = [
+            self._series_sources[series_spec][0].data["x"][i] for i in selected_indices
+        ]
+        # Call the main callback with slot and series
+        self._value_selected_callback(selected_values, self, series_spec)
+
+    def _update_ocean_floor(self):
+        """
+        Update ocean floor depth based on max WADEP of all stations in current series.
+        """
+        if not self._series:
+            return
+
+        # Collect valid WADEP values
+        water_depth_values = [
+            getattr(spec.station, "water_depth", None)
+            for spec in self._series
+            if getattr(spec.station, "water_depth", None) is not None
+        ]
+
+        if not water_depth_values:
+            # No valid WADEP values found, fall back to a default
+            self._ocean_floor.bottom = 10
+            self._ocean_floor.top = 12  # arbitrary safe default
+            return
+
+        max_water_depth = max(water_depth_values)
+
+        # Set bottom of ocean floor to max WADEP and extend with 2 % + 1 m
+        self._ocean_floor.bottom = max_water_depth
+        self._ocean_floor.top = max_water_depth * 1.02 + 1
+
+    @property
+    def layout(self):
+        return column(self._parameter_multichoice, self._figure)
+
+
 class ProfileSlot(Layoutable):
     def __init__(
         self,
@@ -74,8 +570,8 @@ class ProfileSlot(Layoutable):
     ):
         self._value_selected_callback = value_selected_callback or (lambda *args: None)
         self._clear_called = False
-        self._width = 300
-        self._height = 400
+        self._width = 375
+        self._height = 500
         self._parameter = parameter
         self._station: Station = None
         self._parameter_data = None
@@ -145,6 +641,7 @@ class ProfileSlot(Layoutable):
                 ("Automatic QC", "@qc_automatic"),
                 ("Manual QC", "@qc_manual"),
             ],
+            "y_axis_label": "Depth [m]",
         }
         self._plot_values_config = {
             "size": 8,
@@ -314,9 +811,12 @@ class ProfileSlot(Layoutable):
         self._source.selected.indices = []
         self._clear_called = False
 
+    def set_parameter(self, parameter: str):
+        self._parameter = parameter
+        self._load_parameter()
+
     def _parameter_selected(self, event: MenuItemClick):
         self._parameter = event.item
-        self._load_parameter()
 
     def _value_selected(self, attr, old, new):
         selected_values = [

@@ -15,9 +15,9 @@ from qc_tool.data_transformation import changes_report, prepare_data
 from qc_tool.file_handler import FileHandler
 from qc_tool.flag_info import FlagInfo
 from qc_tool.manual_qc_handler import ManualQcHandler
-from qc_tool.map import Map
+from qc_tool.map import Map, MultiStationMap
 from qc_tool.metadata_qc_handler import MetadataQcHandler
-from qc_tool.profile_slot import ProfileSlot
+from qc_tool.profile_slot import ProfileSlot, ProfileSlotBase
 from qc_tool.scatter_slot import ScatterSlot
 from qc_tool.static.station_navigator import StationNavigator
 from qc_tool.station import Station
@@ -69,10 +69,12 @@ class QcTool:
         self._validation = None
         self._stations = {}
         self._selected_station = None
+        self._selected_stations = None
 
         self._station_navigator = StationNavigator(self.set_station)
         self._station_info = StationInfo()
         self._map = Map(self.set_station)
+        self._multimap = MultiStationMap(self.update_selected_stations)
         self._read_geo_info_file()
 
         self._file_handler = FileHandler(
@@ -196,11 +198,41 @@ class QcTool:
             ]
         )
 
+        self._default_parameters = [
+            ["SALT_CTD", "SALT_BTL"],
+            ["TEMP_CTD", "TEMP_BTL"],
+            ["DOXY_CTD", "DOXY_BTL"],
+            ["NTRA", "NTRI", "AMON"],
+            ["PTOT", "PHOS"],
+            ["CPHL", "CHFL"],
+            ["PH_TOT", "ALKY"],
+        ]
+
+        self._new_profile_slots = [
+            ProfileSlotBase(
+                selected_parameters=parameter_name,
+            )
+            for parameter_name in self._default_parameters
+        ]
+
+        self.new_profile_slot = ProfileSlotBase(
+            selected_parameters=["SALT_CTD", "SALT_BTL"]
+        )
+        profileslot_row = Row(self.new_profile_slot.layout)
+
         profile_tab = TabPanel(
             child=Column(
                 physical_profile_row, chemical_profile_row, biological_profile_row
             ),
             title="Profiles",
+        )
+
+        new_profile_tab = TabPanel(
+            child=Column(
+                profileslot_row,
+                Row(self._multimap.layout),
+            ),
+            title="Multiprofiles",
         )
 
         # Tab for scatter plots
@@ -222,7 +254,9 @@ class QcTool:
             title="Validation log",
         )
 
-        bottom_row = Row(Tabs(tabs=[profile_tab, scatter_tab, self._log_tab]))
+        bottom_row = Row(
+            Tabs(tabs=[new_profile_tab, profile_tab, scatter_tab, self._log_tab])
+        )
 
         # Full layout
         self.layout = Column(top_row, bottom_row)
@@ -318,6 +352,25 @@ class QcTool:
         for parameter in self._scatter_parameters:
             parameter.update_station(self._selected_station)
 
+    def update_selected_stations(self, selected_visits):
+        """
+        update selected stations based on selected visits in map
+        update plots with new stations
+        """
+        print(
+            f"in main.py update_selected_stations print selected_stations from clicking map: \n{selected_visits}"  # noqa: E501
+        )
+        self._multimap.set_map_stations(selected_visits)
+        selected_stations = list(
+            map(lambda visit_key: self._stations.get(visit_key, None), selected_visits)
+        )
+        print(f"list of selected stations objects {selected_stations}")
+
+        if self._selected_stations != selected_stations:
+            self._selected_stations = selected_stations
+
+        self.new_profile_slot.update_stations(self._selected_stations)
+
     def select_values_callback(self, values, sender):
         for profile_slot in (
             self._chemical_profile_parameters
@@ -401,6 +454,7 @@ class QcTool:
         self._station_navigator.load_stations(self._stations)
         self.metadata_qc_callback()
         self._map.load_stations(self._stations)
+        self._multimap.load_stations(self._stations)
         self.set_station(station or station_visit[0])
 
     def _read_geo_info_file(self):
