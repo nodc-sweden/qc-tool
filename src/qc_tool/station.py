@@ -82,6 +82,10 @@ class Station:
         return self._visit_key
 
     @property
+    def name(self):
+        return self._common.get("STATN")
+
+    @property
     def common(self):
         compound_values = {
             "SDATE+STIME": self.datetime,
@@ -103,3 +107,16 @@ class Station:
     def latitude(self):
         degrees, remainder = divmod(self._common.get("LATIT"), 100)
         return degrees + remainder / 60
+
+
+# utility function
+def get_available_parameters_from_stations(stations: list[Station]) -> list[str]:
+    """Return a sorted list of unique parameters from a list of Station objects."""
+    if not stations:
+        return []
+    for station in stations:
+        print(type(station))
+        print(dir(station))
+        print(station.parameters)
+    param_sets = [set(station.parameters) for station in stations]
+    return sorted(set.union(*param_sets))
