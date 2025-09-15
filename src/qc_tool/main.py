@@ -338,30 +338,35 @@ class QcTool:
         print("Matching sea basins...")
         t0 = time.perf_counter()
         # Step 1: Extract unique positions and create decimal degree columns
-        positions_dd_pl = data.unique(subset=["LONGI", "LATIT"]).with_columns(
-            [
-                pl.col("LONGI").map_elements(dms_to_dd).alias("LONGI_DD"),
-                pl.col("LATIT").map_elements(dms_to_dd).alias("LATIT_DD"),
-            ]
-        )
+        positions_dd_pl = data.select(
+            ["sample_longitude_dd", "sample_latitude_dd"]
+        ).unique()
 
         # Step 2: Call the bulk function
         positions_dd = [
             (lon, lat)
-            for lon, lat in positions_dd_pl.select(["LONGI_DD", "LATIT_DD"]).to_numpy()
+            for lon, lat in positions_dd_pl.select(
+                ["sample_longitude_dd", "sample_latitude_dd"]
+            ).to_numpy()
         ]
         basins_dict = regions.sea_basins_for_positions(
             positions_dd, geo_info=self._geo_info
         )
-        basins_pl = pl.DataFrame(basins_dict)
+        basins_pl = pl.DataFrame(basins_dict).rename(
+            {"LONGI_DD": "sample_longitude_dd", "LATIT_DD": "sample_latitude_dd"}
+        )
 
         # Step 3: Join the sea_basins back to the unique positions, drop DD columns
         positions_with_basins = positions_dd_pl.join(
-            basins_pl, on=["LONGI_DD", "LATIT_DD"], how="left"
-        ).drop(["LONGI_DD", "LATIT_DD"])
+            basins_pl, on=["sample_longitude_dd", "sample_latitude_dd"], how="left"
+        )
 
         # Step 4: Join back to the original data
-        data = data.join(positions_with_basins, on=["LONGI", "LATIT"], how="left")
+        data = data.join(
+            positions_with_basins,
+            on=["sample_longitude_dd", "sample_latitude_dd"],
+            how="left",
+        )
 
         t1 = time.perf_counter()
         print(f"Matching sea basins finished ({t1 - t0:.3f} s.)")
