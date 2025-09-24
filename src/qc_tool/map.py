@@ -26,8 +26,8 @@ class Map(Layoutable):
         self._map = figure(
             x_axis_type="mercator",
             y_axis_type="mercator",
-            x_range=(700000, 2500000),
-            y_range=(7000000, 8500000),
+            x_range=(0, 3_812_500),
+            y_range=(6_950_000, 10_000_000),
             width=500,
             height=400,
             tools=[PanTool(), tap, wheel_zoom, ResetTool()],
@@ -79,6 +79,34 @@ class Map(Layoutable):
             "latitudes": latitudes,
             "visits": station_names,
         }
+
+        self.zoom_to_points()
+
+    def zoom_to_points(self):
+        margin_ratio = 1.25
+        x_min = min(self._map_unselected_source.data["longitudes"])
+        x_max = max(self._map_unselected_source.data["longitudes"])
+        y_min = min(self._map_unselected_source.data["latitudes"])
+        y_max = max(self._map_unselected_source.data["latitudes"])
+
+        data_width = (x_max - x_min) * margin_ratio
+        data_height = (y_max - y_min) * margin_ratio
+
+        center_x = (x_max + x_min) / 2
+        center_y = (y_max + y_min) / 2
+
+        plot_ratio = self._map.width / self._map.height
+        data_ratio = data_width / data_height
+
+        if data_ratio > plot_ratio:
+            data_height = data_width / plot_ratio
+        else:
+            data_width = data_height * plot_ratio
+
+        self._map.x_range.start = center_x - data_width / 2
+        self._map.x_range.end = center_x + data_width / 2
+        self._map.y_range.start = center_y - data_height / 2
+        self._map.y_range.end = center_y + data_height / 2
 
     def set_station(self, station_visit: Optional[str]):
         self._selected_station = station_visit
