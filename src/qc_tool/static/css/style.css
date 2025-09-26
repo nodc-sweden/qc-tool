@@ -74,6 +74,10 @@ input[type='checkbox'] {
     transition: border-radius .25s ease-in-out;
 }
 
+.errors {
+	background: #FFD0D0
+}
+
 .collapsible-content {
     font-family: courier, monospace;
     max-height: 0px;

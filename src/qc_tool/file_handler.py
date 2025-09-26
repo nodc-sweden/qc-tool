@@ -33,7 +33,7 @@ def _get_config_dir() -> Path | None:
     return None
 
 
-def load_ocean_shapefile():
+def _load_ocean_shapefile():
     if _config_dir := _get_config_dir():
         shapefile = (
             _config_dir / "sharkweb_shapefiles" / "Havsomr_SVAR_2016_3c_CP1252.shp"
@@ -65,7 +65,7 @@ class FileHandler(Layoutable):
         )
 
         self._file_button = Button(label="Select data...")
-        self._file_button.on_click(self._load_file_callback)
+        self._file_button.on_click(self._load_file)
 
         self._save_as_button = Button(label="Save as...")
         self._save_as_button.on_click(
@@ -81,11 +81,11 @@ class FileHandler(Layoutable):
 
         self._file_loaded()
 
-    def _load_file_callback(self, event):
+    def _load_file(self, event):
         try:
             root = tkinter.Tk()
             root.iconify()
-            selected_path = tkinter.filedialog.askopenfilename()
+            selected_path = tkinter.filedialog.askdirectory()
             root.destroy()
         except tkinter.TclError:
             selected_path = None
@@ -95,63 +95,66 @@ class FileHandler(Layoutable):
         selected_path = Path(selected_path)
         print(f"Load data from {selected_path}...")
         controller = sharkadm_controller.get_polars_controller_with_data(selected_path)
-        self._apply_transformers(controller=controller)
-        self._run_validators(controller)
 
-        validation = self._collect_validation_log()
+        self._reset_validation_logs()
+        self._apply_transformers(controller)
+        self._run_validators(controller)
+        validation = self._collect_validation_logs()
         print("Data loaded")
         data = controller.export(
             exporters.PolarsDataFrame(header_as="PhysicalChemical", float_columns=True)
         )
+
         self._file_name = selected_path.name
         self._file_loaded()
         self._external_load_file_callback(data, validation)
         self._external_automatic_qc_callback()
 
     def _apply_transformers(self, controller):
-        controller.transform(transformers.PolarsRemoveNonDataLines())
-        controller.transform(transformers.PolarsReplaceCommaWithDot())
-        controller.transform(multi_transformers.DateTimePolars())
-        controller.transform(multi_transformers.PositionPolars())
-        controller.transform(transformers.PolarsAddVisitKey())
+        print("Running SHARKadm transformers...")
+        t0 = time.perf_counter()
+        for transformer, args, kwargs in (
+            (transformers.PolarsRemoveNonDataLines, (), {}),
+            (transformers.PolarsReplaceCommaWithDot, (), {}),
+            (multi_transformers.DateTimePolars, (), {}),
+            (multi_transformers.PositionPolars, (), {}),
+            (transformers.PolarsAddVisitKey, (), {}),
+            (transformers.PolarsWideToLong, (), {}),
+            (transformers.PolarsMoveLessThanFlagRowFormat, (), {}),
+            (transformers.PolarsMoveLargerThanFlagRowFormat, (), {}),
+            (transformers.PolarsConvertFlagsToSDN, (), {}),
+            (transformers.PolarsAddPressure, (), {}),
+            (transformers.PolarsAddDensity, (), {}),
+            (transformers.PolarsAddOxygenSaturation, (), {}),
+            (transformers.PolarsAddAnalyseInfo, (), {}),
+            (transformers.PolarsAddLmqnt, (), {}),
+            (transformers.PolarsAddUncertainty, (), {}),
+            (transformers.PolarsRemoveColumns, ("COPY_VARIABLE.*",), {}),
+            (
+                transformers.PolarsMapperParameterColumn,
+                (),
+                {"import_column": "SHARKarchive"},
+            ),
+        ):
+            tn_0 = time.perf_counter()
+            controller.transform(transformer(*args, **kwargs))
+            tn_1 = time.perf_counter()
+            print(f"\t{transformer.__name__}: {tn_1 - tn_0:.3f} s.")
 
-        controller.transform(transformers.PolarsWideToLong())
-        controller.transform(transformers.PolarsMoveLessThanFlagRowFormat())
-        controller.transform(transformers.PolarsMoveLargerThanFlagRowFormat())
-        controller.transform(transformers.PolarsConvertFlagsToSDN())
-
-        controller.transform(transformers.PolarsAddPressure())
-        controller.transform(transformers.PolarsAddDensity())
-        controller.transform(transformers.PolarsAddOxygenSaturation())
-
-        controller.transform(transformers.PolarsAddAnalyseInfo())
-        controller.transform(transformers.PolarsAddLmqnt())
-        controller.transform(transformers.PolarsAddUncertainty())
-
-        controller.transform(transformers.PolarsRemoveColumns("COPY_VARIABLE.*"))
-        controller.transform(
-            transformers.PolarsMapperParameterColumn(import_column="SHARKarchive")
-        )
+        t1 = time.perf_counter()
+        print(f"SHARKadm transformers finished ({t1 - t0:.3f} s.)")
 
     def _run_validators(self, controller):
         print("Running SHARKadm validators...")
         t0 = time.perf_counter()
-        ocean_shapefile = load_ocean_shapefile()
+
+        shapefile_t0 = time.perf_counter()
+        ocean_shapefile = _load_ocean_shapefile()
+        shapefile_t1 = time.perf_counter()
+        print(f"\tOpening ocean shapefile: {shapefile_t1 - shapefile_t0:.3f} s.")
 
         validators_and_parameters = (
             (validators.ValidateCommonValuesByVisit, {}),
-            (validators.ValidateDateAndTime, {}),
-            (validators.ValidatePositiveValues, {}),
-            (validators.ValidateSampleDepth, {}),
-            (validators.ValidateSecchiDepth, {}),
-            (
-                validators.ValidateStationIdentity,
-                {
-                    "stations": nodc_station.get_station_object(case_sensitive=False),
-                    "latitude_key": "sample_sweref99tm_y",
-                    "longitude_key": "sample_sweref99tm_x",
-                },
-            ),
             (
                 validators.ValidateCoordinatesDm,
                 {
@@ -159,6 +162,7 @@ class FileHandler(Layoutable):
                     "longitude_dm_column": "visit_reported_longitude",
                 },
             ),
+            (validators.ValidateDateAndTime, {}),
             (
                 validators.ValidatePositionInOcean,
                 {
@@ -168,14 +172,35 @@ class FileHandler(Layoutable):
                     "longitude_key": "sample_sweref99tm_x",
                 },
             ),
+            (validators.ValidatePositiveValues, {}),
+            (validators.ValidateSampleDepth, {}),
+            (validators.ValidateSecchiDepth, {}),
+            (validators.ValidateSerialNumber, {}),
+            (validators.ValidateSpeed, {}),
+            (
+                validators.ValidateStationIdentity,
+                {
+                    "stations": nodc_station.get_station_object(case_sensitive=False),
+                    "latitude_key": "sample_sweref99tm_y",
+                    "longitude_key": "sample_sweref99tm_x",
+                },
+            ),
+            (validators.ValidateWindir, {}),
+            (validators.ValidateWinsp, {}),
         )
         for validator, parameters in validators_and_parameters:
+            tn_0 = time.perf_counter()
             validator(**parameters).validate(controller.data_holder)
+            tn_1 = time.perf_counter()
+            print(f"\t{validator(**parameters).name}: {tn_1 - tn_0:.3f} s.")
 
         t1 = time.perf_counter()
         print(f"SHARKadm validators finished ({t1 - t0:.3f} s.)")
 
-    def _collect_validation_log(self):
+    def _reset_validation_logs(self):
+        adm_logger.reset_log()
+
+    def _collect_validation_logs(self):
         validation_remarks = defaultdict(
             lambda: {
                 "fail": defaultdict(list),
@@ -197,8 +222,12 @@ class FileHandler(Layoutable):
                 validators.ValidatePositiveValues,
                 validators.ValidateSampleDepth,
                 validators.ValidateSecchiDepth,
+                validators.ValidateSerialNumber,
+                validators.ValidateSpeed,
                 validators.ValidateStationIdentity,
                 validators.ValidateSynonymsInMaster,
+                validators.ValidateWindir,
+                validators.ValidateWinsp,
             )
         }
 
