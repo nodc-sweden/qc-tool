@@ -109,13 +109,29 @@ class FileHandler(Layoutable):
         self._external_automatic_qc_callback()
 
     def _apply_transformers(self, controller):
+        apply_on_export_columns = (
+            "visit_year",
+            "platform_code",
+            "reported_station_name",
+            "visit_date",
+            "sample_time",
+            "sample_depth_mparameter",
+            "value",
+            "unit",
+            "quality_flag",
+        )
+        col_prefix = "export"
+
         controller.transform(transformers.PolarsRemoveNonDataLines())
         controller.transform(transformers.PolarsReplaceCommaWithDot())
         controller.transform(multi_transformers.DateTimePolars())
         controller.transform(multi_transformers.PositionPolars())
         controller.transform(transformers.PolarsAddVisitKey())
-
         controller.transform(transformers.PolarsWideToLong())
+
+        controller.transform(
+            transformers.AddColumnsWithPrefix(apply_on_export_columns, col_prefix)
+        )
         controller.transform(transformers.PolarsMoveLessThanFlagRowFormat())
         controller.transform(transformers.PolarsMoveLargerThanFlagRowFormat())
         controller.transform(transformers.PolarsConvertFlagsToSDN())
