@@ -34,7 +34,7 @@ _validation_log_template = jinja2.Template("""
 {% for key, value in validation.items() %}
   <div class="collapsible-container">
     <input id="collapsible-{{ key }}" class="toggle" type="checkbox">
-    <label for="collapsible-{{ key }}" class="toggle-label">{{ key }} ({{ value.success_count }} successes, {{ value.fail_count }} errors)</label>
+    <label for="collapsible-{{ key }}" class="toggle-label{% if value.fail_count %} errors{% endif %}">{{ key }} ({{ value.success_count }} successes, {{ value.fail_count }} errors)</label>
     <div class="collapsible-content">
       <div class="content-inner">
       {% if value.fail %}
