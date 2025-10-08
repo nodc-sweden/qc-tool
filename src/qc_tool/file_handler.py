@@ -85,7 +85,7 @@ class FileHandler(Layoutable):
         try:
             root = tkinter.Tk()
             root.iconify()
-            selected_path = tkinter.filedialog.askdirectory()
+            selected_path = tkinter.filedialog.askopenfilename()
             root.destroy()
         except tkinter.TclError:
             selected_path = None
