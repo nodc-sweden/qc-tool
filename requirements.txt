@@ -5,9 +5,9 @@ bokeh==3.7.3 \
     --hash=sha256:70a89a9f797b103d5ee6ad15fb7944adda115cf0da996ed0b75cfba61cb12f2b \
     --hash=sha256:b0e79dd737f088865212e4fdcb0f3b95d087f0f088bf8ca186a300ab1641e2c7
     # via qc-tool
-certifi==2025.8.3 \
-    --hash=sha256:e564105f78ded564e3ae7c923924435e1daa7463faeab5bb932bc53ffae63407 \
-    --hash=sha256:f6c12493cfb1b06ba2ff328595af9350c65d6644968e5d3a2ffd78699af217a5
+certifi==2025.10.5 \
+    --hash=sha256:0f212c2744a9bb6de0c56639a6f68afe01ecd92d91f14ae897c4fe7bbeeef0de \
+    --hash=sha256:47c09d31ccf2acf0be3f701ea53595ee7e0b8fa08801c6624be771df09ae7b43
     # via
     #   pyogrio
     #   pyproj
@@ -484,9 +484,9 @@ mdurl==0.1.2 \
     --hash=sha256:84008a41e51615a49fc9966191ff91509e3c40b939176e643fd50a5c2196b8f8 \
     --hash=sha256:bb413d29f5eea38f31dd4754dd7377d4465116fb207585f97bf925588687c1ba
     # via markdown-it-py
-narwhals==2.6.0 \
-    --hash=sha256:3215ea42afb452c6c8527e79cefbe542b674aa08d7e2e99d46b2c9708870e0d4 \
-    --hash=sha256:5c9e2ba923e6a0051017e146184e49fb793548936f978ce130c9f55a9a81240e
+narwhals==2.7.0 \
+    --hash=sha256:010791aa0cee86d90bf2b658264aaec3eeea34fb4ddf2e83746ea4940bcffae3 \
+    --hash=sha256:e3fff7f1610fd3318ede78c969bc5954ce710d585eefdb689586fb69da3da43c
     # via bokeh
 nodc-calculations @ git+https://github.com/nodc-sweden/nodc-calculations@7fc845ecb690ec5c1dae6b37cae4cb1c473495c8
     # via nodc-statistics
@@ -586,7 +586,7 @@ numpy==2.3.3 \
     #   scipy
     #   seawater
     #   shapely
-ocean-data-qc @ git+https://github.com/nodc-sweden/ocean-data-qc@5d5126a509fb2ca621a9b05173684543108935f4
+ocean-data-qc @ git+https://github.com/nodc-sweden/ocean-data-qc@d9ec22f4d59e5457524381ea61197082ec1c7d02
     # via qc-tool
 openpyxl==3.1.5 \
     --hash=sha256:5282c12b107bffeef825f4617dc029afaf41d0ea60823bbb665ef3079dc79de2 \
@@ -932,26 +932,26 @@ rich==14.1.0 \
     # via
     #   sharkadm
     #   typer
-ruff==0.13.3 \
-    --hash=sha256:17b951f9d9afb39330b2bdd2dd144ce1c1335881c277837ac1b50bfd99985ed3 \
-    --hash=sha256:1a993b17ec03719c502881cb2d5f91771e8742f2ca6de740034433a97c561989 \
-    --hash=sha256:1c9e6469864f94a98f412f20ea143d547e4c652f45e44f369d7b74ee78185838 \
-    --hash=sha256:2bdad6512fb666b40fcadb65e33add2b040fc18a24997d2e47fee7d66f7fcae2 \
-    --hash=sha256:311860a4c5e19189c89d035638f500c1e191d283d0cc2f1600c8c80d6dcd430c \
-    --hash=sha256:4fb75e7c402d504f7a9a259e0442b96403fa4a7310ffe3588d11d7e170d2b1e3 \
-    --hash=sha256:5b0ba0db740eefdfbcce4299f49e9eaefc643d4d007749d77d047c2bab19908e \
-    --hash=sha256:5bf62b705f319476c78891e0e97e965b21db468b3c999086de8ffb0d40fd2822 \
-    --hash=sha256:6052f8088728898e0a449f0dde8fafc7ed47e4d878168b211977e3e7e854f662 \
-    --hash=sha256:621e2e5812b691d4f244638d693e640f188bacbb9bc793ddd46837cea0503dd2 \
-    --hash=sha256:6b139f638a80eae7073c691a5dd8d581e0ba319540be97c343d60fb12949c8d0 \
-    --hash=sha256:6b547def0a40054825de7cfa341039ebdfa51f3d4bfa6a0772940ed351d2746c \
-    --hash=sha256:78cc1abed87ce40cb07ee0667ce99dbc766c9f519eabfd948ed87295d8737c60 \
-    --hash=sha256:8e5640349493b378431637019366bbd73c927e515c9c1babfea3e932f5e68e1d \
-    --hash=sha256:9cc48a3564423915c93573f1981d57d101e617839bef38504f85f3677b3a0a3e \
-    --hash=sha256:9e9e9d699841eaf4c2c798fa783df2fabc680b72059a02ca0ed81c460bc58330 \
-    --hash=sha256:dc742c50f4ba72ce2a3be362bd359aef7d0d302bf7637a6f942eaa763bd292af \
-    --hash=sha256:f14e0d1fe6460f07814d03c6e32e815bff411505178a1f539a38f6097d3e8ee3 \
-    --hash=sha256:fc6fa4637284708d6ed4e5e970d52fc3b76a557d7b4e85a53013d9d201d93286
+ruff==0.14.0 \
+    --hash=sha256:16b68e183a0e28e5c176d51004aaa40559e8f90065a10a559176713fcf435206 \
+    --hash=sha256:30a58c087aef4584c193aebf2700f0fbcfc1e77b89c7385e3139956fa90434e2 \
+    --hash=sha256:3ba9a8925e90f861502f7d974cc60e18ca29c72bb0ee8bfeabb6ade35a3abde7 \
+    --hash=sha256:4c63b2d99fafa05efca0ab198fd48fa6030d57e4423df3f18e03aa62518c565f \
+    --hash=sha256:58e15bffa7054299becf4bab8a1187062c6f8cafbe9f6e39e0d5aface455d6b3 \
+    --hash=sha256:62ec8969b7510f77945df916de15da55311fade8d6050995ff7f680afe582c57 \
+    --hash=sha256:668fce701b7a222f3f5327f86909db2bbe99c30877c8001ff934c5413812ac02 \
+    --hash=sha256:703799d059ba50f745605b04638fa7e9682cc3da084b2092feee63500ff3d9b8 \
+    --hash=sha256:7450a243d7125d1c032cb4b93d9625dea46c8c42b4f06c6b709baac168e10543 \
+    --hash=sha256:7eb0499a2e01f6e0c285afc5bac43ab380cbfc17cd43a2e1dd10ec97d6f2c42d \
+    --hash=sha256:838d1b065f4df676b7c9957992f2304e41ead7a50a568185efd404297d5701e8 \
+    --hash=sha256:a86bf575e05cb68dcb34e4c7dfe1064d44d3f0c04bbc0491949092192b515296 \
+    --hash=sha256:c958f66ab884b7873e72df38dcabee03d556a8f2ee1b8538ee1c2bbd619883dd \
+    --hash=sha256:e41f785498bd200ffc276eb9e1570c019c1d907b07cfb081092c8ad51975bbe7 \
+    --hash=sha256:ea95da28cd874c4d9c922b39381cbd69cb7e7b49c21b8152b014bd4f52acddc2 \
+    --hash=sha256:eb732d17db2e945cfcbbc52af0143eda1da36ca8ae25083dd4f66f1542fdf82e \
+    --hash=sha256:eec3bbbf3a7d5482b5c1f42d5fc972774d71d107d447919fca620b0be3e3b75e \
+    --hash=sha256:f42c9495f5c13ff841b1da4cb3c2a42075409592825dada7c5885c2c844ac730 \
+    --hash=sha256:f8d07350bc7af0a5ce8812b7d5c1a7293cf02476752f23fdfc500d24b79b783c
 scipy==1.16.2 \
     --hash=sha256:024dd4a118cccec09ca3209b7e8e614931a6ffb804b2a601839499cb88bdf925 \
     --hash=sha256:033570f1dcefd79547a88e18bccacff025c8c647a330381064f561d43b821232 \
@@ -1073,7 +1073,7 @@ shapely==2.1.2 \
     #   geopandas
     #   nodc-statistics
     #   sharkadm
-sharkadm @ git+https://github.com/nodc-sweden/SHARKadm@6f4c94ff7640f818e0b524223dd3a86a4db7efed
+sharkadm @ git+https://github.com/nodc-sweden/SHARKadm@75468a332d668ff8917266b854d4b65e670a3e11
     # via qc-tool
 shellingham==1.5.4 \
     --hash=sha256:7ecfff8f2fd72616f7481040475a65b2bf8af90a56c89140852d1120324e8686 \

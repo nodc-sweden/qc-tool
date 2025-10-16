@@ -58,5 +58,5 @@ select = [
 ]
 
 [tool.uv.sources]
-ocean-data-qc = { git = "https://github.com/nodc-sweden/ocean-data-qc", branch = "polars" }
+ocean-data-qc = { git = "https://github.com/nodc-sweden/ocean-data-qc" }
 
