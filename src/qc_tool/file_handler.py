@@ -187,6 +187,13 @@ class FileHandler(Layoutable):
             ),
             (validators.ValidateWindir, {}),
             (validators.ValidateWinsp, {}),
+            (validators.ValidateAirtemp, {}),
+            (validators.ValidateAirpres, {}),
+            (validators.ValidateWeath, {}),
+            (validators.ValidateCloud, {}),
+            (validators.ValidateWeatherConsistency, {}),
+            (validators.ValidateWaves, {}),
+            (validators.ValidateIceob, {}),
         )
         for validator, parameters in validators_and_parameters:
             tn_0 = time.perf_counter()
