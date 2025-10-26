@@ -1261,7 +1261,7 @@ wheels = [
 
 [[package]]
 name = "qc-tool"
-version = "2025.2.2"
+version = "2025.2.3"
 source = { editable = "." }
 dependencies = [
     { name = "bokeh" },
@@ -1290,7 +1290,7 @@ requires-dist = [
     { name = "ocean-data-qc", git = "https://github.com/nodc-sweden/ocean-data-qc?rev=v2025.1.2" },
     { name = "pandas", specifier = ">=2.2.1" },
     { name = "pyproj", specifier = "==3.7.1" },
-    { name = "sharkadm", git = "https://github.com/nodc-sweden/SHARKadm?branch=261-add-visit-info-to-validation-fail-log" },
+    { name = "sharkadm", git = "https://github.com/nodc-sweden/SHARKadm?rev=v3.3.0" },
 ]
 
 [package.metadata.requires-dev]
@@ -1499,8 +1499,8 @@ wheels = [
 
 [[package]]
 name = "sharkadm"
-version = "3.2.0"
-source = { git = "https://github.com/nodc-sweden/SHARKadm?branch=261-add-visit-info-to-validation-fail-log#5325c9f494789c1d2a4e330eb380d50c59fdc4d9" }
+version = "3.3.0"
+source = { git = "https://github.com/nodc-sweden/SHARKadm?rev=v3.3.0#0ff223aa1001071b93495cddcaecf6b61d1f070a" }
 dependencies = [
     { name = "fastexcel" },
     { name = "geopandas" },
