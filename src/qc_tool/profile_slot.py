@@ -98,6 +98,10 @@ class ProfileSlot(Layoutable):
                 "median": [],
                 "lower_limit": [],
                 "upper_limit": [],
+                "flag2_upper": [],
+                "flag3_upper": [],
+                "flag2_lower": [],
+                "flag3_lower": [],
                 "min": [],
                 "max": [],
             }
@@ -172,6 +176,10 @@ class ProfileSlot(Layoutable):
             "color": "grey",
             "alpha": 0.1,
         }
+        self._plot_flag3_fill_statistics_config = {
+            "color": "orange",
+            "alpha": 0.1,
+        }
         self._plot_line_min_max_config = {"color": "red", "line_width": 0.5, "alpha": 0.5}
         self._figure = figure(**self._figure_config)
         self._figure.toolbar.active_scroll = wheel_zoom
@@ -211,6 +219,20 @@ class ProfileSlot(Layoutable):
             y="depth",
             source=self._statistics_source,
             **self._plot_area_statistics_config,
+        )
+        self._flag3_lower_limits_area = self._figure.harea(
+            x1="flag3_lower",
+            x2="flag2_lower",
+            y="depth",
+            source=self._statistics_source,
+            **self._plot_flag3_fill_statistics_config,
+        )
+        self._flag3_upper_limits_area = self._figure.harea(
+            x1="flag3_upper",
+            x2="flag2_upper",
+            y="depth",
+            source=self._statistics_source,
+            **self._plot_flag3_fill_statistics_config,
         )
         self._min_line = self._figure.line(
             "min",
@@ -296,6 +318,10 @@ class ProfileSlot(Layoutable):
             "median": [],
             "lower_limit": [],
             "upper_limit": [],
+            "flag2_lower": [],
+            "flag2_upper": [],
+            "flag3_lower": [],
+            "flag3_upper": [],
             "min": [],
             "max": [],
         }
@@ -369,7 +395,17 @@ class ProfileSlot(Layoutable):
                     self._parameter,
                     self._station.sea_basin,
                     self._station.datetime,
-                    statistics=("median", "25p", "75p", "min", "max"),
+                    statistics=(
+                        "median",
+                        "25p",
+                        "75p",
+                        "min",
+                        "max",
+                        "flag2_lower",
+                        "flag2_upper",
+                        "flag3_lower",
+                        "flag3_upper",
+                    ),
                 )
             )
         self._update_statistics(parameter_statistics=parameter_statistics)
@@ -411,6 +447,10 @@ class ProfileSlot(Layoutable):
             "upper_limit": filtered_stats["75p"].tolist(),
             "min": filtered_stats["min"].tolist(),
             "max": filtered_stats["max"].tolist(),
+            "flag2_lower": filtered_stats["flag2_lower"].tolist(),
+            "flag2_upper": filtered_stats["flag2_upper"].tolist(),
+            "flag3_lower": filtered_stats["flag3_lower"].tolist(),
+            "flag3_upper": filtered_stats["flag3_upper"].tolist(),
         }
 
     @property

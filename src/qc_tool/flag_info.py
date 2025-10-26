@@ -15,10 +15,11 @@ _flag_info_template = jinja2.Template("""
 
     <!-- Information Text -->
     <div style="grid-column: span 2; font-size: 14px; margin-bottom: 10px;">
-        Profile plots show median values (grey line) and 25 and 75 percentiles (grey area).
-        Min and max values are shown in thin red lines.
-        Statistics is based on data from 1993-2023 and is calculated per basin, month and standard depth.
-        Basins outside 12 nm is according to HELCOM and OSPAR. Coastal data is aggregated per type.
+        Statistics is based on data from 1993-2023 and is calculated per basin, month and standard depth.<br>
+        Profile plots show median values (grey line) and 25th and 75th percentiles (grey area).
+        This means 50% of the data from the 1993-2023 dataset lies within the grey area.
+        Orange area marks data that will be given flag 3 (bad data correctanle). Min and max values are shown in thin red lines.<br>
+        Basins outside 12 nm is according to HELCOM and OSPAR. Coastal data is aggregated by typology (type areas).
     </div>
 
     <!-- Horizontal Line Separator -->
