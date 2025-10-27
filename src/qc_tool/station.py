@@ -1,6 +1,5 @@
 import polars as pl
 from ocean_data_qc.metadata.visit import Visit
-from ocean_data_qc.metadataqc import MetadataQc
 
 
 class Station:
@@ -43,10 +42,6 @@ class Station:
             self._sea_basin = None
 
         self._visit = Visit(self.data)
-
-    def run_metadata_qc(self):
-        metadata_qc = MetadataQc(self._visit)
-        metadata_qc.run_qc()
 
     @property
     def parameters(self) -> list[str]:

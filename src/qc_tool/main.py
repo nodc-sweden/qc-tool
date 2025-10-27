@@ -265,16 +265,6 @@ class QcTool:
 
         self._set_data(self._data, self._selected_station.visit_key)
 
-    def metadata_qc_callback(self):
-        print("Metadata QC started...")
-        t0 = time.perf_counter()
-        for station in self._stations.values():
-            station.run_metadata_qc()
-        t1 = time.perf_counter()
-        print(f"Metadata QC finished ({t1 - t0:.3f} s.)")
-        self._station_info.update()
-        self._metadata_qc_handler.update()
-
     def manual_qc_callback(self, values: list[Parameter]):
         """ "Called when manual qc has been applied."""
         # Update quality flag in data
@@ -404,7 +394,6 @@ class QcTool:
             for visit_key in station_visit
         }
         self._station_navigator.load_stations(self._stations)
-        self.metadata_qc_callback()
         self._map.load_stations(self._stations)
         self.set_station(station or station_visit[0])
 
