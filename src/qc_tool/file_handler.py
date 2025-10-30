@@ -172,7 +172,7 @@ class FileHandler(Layoutable):
                     "longitude_key": "sample_sweref99tm_x",
                 },
             ),
-            (validators.ValidatePositiveValues, {}),
+            (validators.ValidateWaterDepth, {}),
             (validators.ValidateSampleDepth, {}),
             (validators.ValidateSecchiDepth, {}),
             (validators.ValidateSerialNumber, {}),
