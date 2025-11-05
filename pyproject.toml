@@ -7,7 +7,7 @@ authors = [
     {name = "Lena Viktorsson", email = "lena.viktorsson@smhi.se"},
 ]
 dependencies = [
-    "bokeh==3.7.3",
+    "bokeh==3.8.0",
     "pyproj==3.7.1",
     "pandas==2.3.3",
     "nodc-statistics",
@@ -19,6 +19,7 @@ dependencies = [
 requires-python = ">=3.11"
 readme = "README.md"
 license = {file = "LICENSE"}
+
 [project.gui-scripts]
 qc-tool  = "qc_tool.scripts.start_server:main"
 
@@ -49,11 +50,12 @@ line-ending = "auto"
 
 [tool.ruff.lint]
 select = [
-    "A",  # flake8-builtins
-    "F",  # pyflakes
-    "E",  # pycodestyle: error
-    "W",  # pycodestyle: warning
-    "I",  # isort
+    "A",   # flake8-builtins
+    "F",   # pyflakes
+    "E",   # pycodestyle: error
+    "W",   # pycodestyle: warning
+    "I",   # isort
+    "BLE", # flake8-blind-except (disallow broad/blanket except)
     "RUF"  # Ruff-specific rules
 ]
 
