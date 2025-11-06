@@ -59,6 +59,6 @@ select = [
 
 [tool.uv.sources]
 nodc-statistics = { git = "https://github.com/nodc-sweden/nodc-statistics", rev = "v2025.1.1" }
-ocean-data-qc = { git = "https://github.com/nodc-sweden/ocean-data-qc", rev = "v2025.1.2" }
 sharkadm = { git = "https://github.com/nodc-sweden/SHARKadm", branch = "main" }
+ocean-data-qc = { git = "https://github.com/nodc-sweden/ocean-data-qc", rev = "polars-version" }
 
