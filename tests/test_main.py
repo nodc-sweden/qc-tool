@@ -22,15 +22,22 @@ def test_match_seabasin_to_position_with_polarsdf():
 # Fixture: provides the test dataframe
 @pytest.fixture
 def given_pl_data():
-    latitudes = [5711.562, 5515.002, 5815.59]
-    longitudes = [1139.446, 1559.044, 1126.141]
+    latitudes = [57.11562, 55.15002, 58.1559]
+    longitudes = [11.39446, 15.59044, 11.26141]
     depths = [10, 50, 100]  # example DEPH values
 
     # Expand to multiple rows per position
     rows = []
     for lat, lon in zip(latitudes, longitudes):
         for dep in depths:
-            rows.append({"LATIT": lat, "LONGI": lon, "SDATE": "2025-08-18", "DEPH": dep})
+            rows.append(
+                {
+                    "sample_latitude_dd": lat,
+                    "sample_longitude_dd": lon,
+                    "SDATE": "2025-08-18",
+                    "DEPH": dep,
+                }
+            )
 
     return pl.DataFrame(rows)
 
@@ -47,7 +54,7 @@ def test_match_sea_basin_to_position_with_polarsdf(given_pl_data):
 
     # Check that the three unique positions have different sea_basin values
     unique_positions = (
-        enriched_data.unique(subset=["LATIT", "LONGI"])
+        enriched_data.unique(subset=["sample_latitude_dd", "sample_longitude_dd"])
         .select(["sea_basin"])
         .to_series()
         .to_list()
