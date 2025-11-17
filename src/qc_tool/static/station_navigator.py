@@ -17,11 +17,15 @@ class StationNavigator(Layoutable):
         self._station_dropdown = Dropdown(
             label="Select station",
             button_type="default",
-            min_width=400,
+            min_width=250,
+            max_width=400,
         )
         self._station_dropdown.on_click(self._select_station_callback)
         self._layout = Row(
-            self._previous_button, self._station_dropdown, self._next_button
+            self._previous_button,
+            self._station_dropdown,
+            self._next_button,
+            width=400,
         )
 
     def _select_station_callback(self, event):
