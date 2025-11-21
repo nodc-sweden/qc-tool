@@ -1,7 +1,7 @@
 import typing
 
 if typing.TYPE_CHECKING:
-    from qc_tool.controllers.profiles_controller import ProfilesController
+    from qc_tool.controllers.visits_browser_controller import VisitsBrowserController
 
 import time
 from pathlib import Path
@@ -18,7 +18,6 @@ from ocean_data_qc.fyskemqc import FysKemQc
 
 from qc_tool.app_state import AppState
 from qc_tool.data_transformation import changes_report, prepare_data
-from qc_tool.file_handler import FileHandler
 from qc_tool.manual_qc_handler import ManualQcHandler
 from qc_tool.metadata_qc_handler import MetadataQcHandler
 from qc_tool.scatter_slot import ScatterSlot
@@ -94,17 +93,17 @@ chemical_parameters = (
 biological_parameters = ("CPHL", "CHLFL", "PH_LAB", "PH_TOT", "ALKY", "HUMUS")
 
 
-class ProfilesView(BaseView):
+class VisitsBrowserView(BaseView):
     def __init__(
         self,
-        controller: "ProfilesController",
+        controller: "VisitsBrowserController",
         state: AppState,
         map_controller,
         visit_selector_controller,
         profile_grid_controller,
     ):
         self._controller = controller
-        self._controller.profile_view = self
+        self._controller.visits_browser_view = self
 
         self._state = state
 
@@ -117,15 +116,10 @@ class ProfilesView(BaseView):
             controller.visit_info_controller, state.visits, width=400
         )
 
-        self._file_handler = FileHandler(
-            self.load_file_callback,
-            self.save_file_callback,
-            self.save_diff_file_callback,
-            self.automatic_qc_callback,
-        )
-
         self._read_geo_info_file()
-        self._manual_qc_handler = ManualQcHandler(self.manual_qc_callback)
+        self._manual_qc_handler = ManualQcHandler(
+            self._state.manual_qc, self.manual_qc_callback
+        )
         self._metadata_qc_handler = MetadataQcHandler()
 
         self._scatter_parameters = [
@@ -167,7 +161,11 @@ class ProfilesView(BaseView):
         )
 
         self._profile_tab_handler = ProfileGridView(
-            profile_grid_controller, state.profile_grid, state.parameters, state.visits
+            profile_grid_controller,
+            state.profile_grid,
+            state.parameters,
+            state.visits,
+            state.manual_qc,
         )
 
         self._profile_tab = TabPanel(

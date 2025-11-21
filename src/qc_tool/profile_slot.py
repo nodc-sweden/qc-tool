@@ -19,6 +19,7 @@ from bokeh.models import (
 from bokeh.plotting import figure
 from ocean_data_qc.fyskem.parameter import Parameter
 
+from qc_tool.models.manual_qc_model import ManualQcModel
 from qc_tool.views.base_view import BaseView
 
 PARAMETER_ABBREVIATIONS = {
@@ -92,11 +93,13 @@ class ProfileSlot(BaseView):
 
     def __init__(
         self,
+        manual_qc_model: ManualQcModel,
         title: str = "",
         linked_plot: Self | None = None,
         value_selected_callback=None,
     ):
         self._title = title
+        self._manual_qc_model = manual_qc_model
         self._station = None
         self._data = None
         self._parameter_data = []
@@ -179,16 +182,16 @@ class ProfileSlot(BaseView):
         ]
 
         self._sources[0].selected.on_change(
-            "indices", partial(self._value_selected, index=0)
+            "indices", partial(self._on_value_selected, index=0)
         )
         self._sources[1].selected.on_change(
-            "indices", partial(self._value_selected, index=1)
+            "indices", partial(self._on_value_selected, index=1)
         )
         self._sources[2].selected.on_change(
-            "indices", partial(self._value_selected, index=2)
+            "indices", partial(self._on_value_selected, index=2)
         )
         self._sources[3].selected.on_change(
-            "indices", partial(self._value_selected, index=3)
+            "indices", partial(self._on_value_selected, index=3)
         )
 
         hover.renderers = self._values
@@ -344,13 +347,13 @@ class ProfileSlot(BaseView):
             source.selected.indices = []
         self._clear_called = False
 
-    def _value_selected(self, attr, old, new, index):
+    def _on_value_selected(self, attr, old, new, index):
         selected_values = [
             Parameter(self._parameter_data[index].row(n, named=True)) for n in new
         ]
         self._statistics_source.selected.indices = []
         if not self._clear_called:
-            self._value_selected_callback(selected_values, self)
+            self._manual_qc_model.selected_values = selected_values
 
     def update_statistics(self, parameter_statistics, water_depth):
         if parameter_statistics is None:

@@ -6,8 +6,8 @@ import pandas as pd
 from pyproj import Transformer
 
 from qc_tool.app_state import AppState
-from qc_tool.controllers.profiles_controller import ProfilesController
 from qc_tool.controllers.summary_controller import SummaryController
+from qc_tool.controllers.visits_browser_controller import VisitsBrowserController
 from qc_tool.controllers.visits_controller import VisitsController
 from qc_tool.data_transformation import changes_report
 
@@ -34,7 +34,7 @@ class MainController:
             map_model=self._state.map,
             validation_log_model=self._state.validation_log,
         )
-        self.profiles_controller = ProfilesController(self._state)
+        self.profiles_controller = VisitsBrowserController(self._state)
 
     def save_file_callback(self, filename: Path):
         self._data.write_csv(filename, separator="\t")

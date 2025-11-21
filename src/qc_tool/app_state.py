@@ -1,5 +1,6 @@
 from qc_tool.callback_queue import CallbackQueue
 from qc_tool.models.file_model import FileModel
+from qc_tool.models.manual_qc_model import ManualQcModel
 from qc_tool.models.map_model import MapModel
 from qc_tool.models.parameters_model import ParametersModel
 from qc_tool.models.profiles_grid_model import ProfileGridModel
@@ -16,3 +17,4 @@ class AppState:
         self.validation_log = ValidationLogModel(self._message_queue)
         self.parameters = ParametersModel(self._message_queue)
         self.profile_grid = ProfileGridModel(2, 5, self._message_queue)
+        self.manual_qc = ManualQcModel(self._message_queue)

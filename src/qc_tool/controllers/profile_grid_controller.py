@@ -32,6 +32,7 @@ class ProfileGridController:
         self.profile_grid_view.update_grid_content()
 
     def _on_new_selection(self):
+        print("profile_grid_controller._on_new_selection")
         self.profile_grid_view.update_grid_content()
 
     def _on_new_grid_size(self):

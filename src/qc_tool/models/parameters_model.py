@@ -49,7 +49,6 @@ class ParametersModel(BaseModel):
     @available_parameters.setter
     def available_parameters(self, available_parameters: list[str]):
         self._available_parameters = set(available_parameters)
-
         self._available_multi_parameters = set()
         for parameters in self._multi_parameters:
             if set(parameters).issubset(self._available_parameters):
@@ -83,5 +82,7 @@ class ParametersModel(BaseModel):
     # TODO: kolla att man inte valt för många
 
     def set_default_parameters(self):
-        self._selected_parameters = list(self._default_parameters)
-        self._notify_listeners(self.NEW_SELECTION)
+        self.selected_parameters = list(self._default_parameters)
+
+    def reset_parameter_data(self):
+        self._parameter_data = {}

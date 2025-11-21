@@ -31,6 +31,7 @@ class ParameterSelectorController:
         self.parameter_selector_view: ParameterSelectorView = None
 
     def _on_new_grid_size(self):
+        print("parameter_selector_controller._on_new_grid_size")
         self._parameters_model.selected_parameters = (
             self._parameters_model.selected_parameters[
                 : self._profiles_model.number_of_profiles
@@ -42,7 +43,8 @@ class ParameterSelectorController:
         self._parameters_model.set_default_parameters()
 
     def _on_visit_selected(self):
-        print("_on_visit_selected")
+        print("parameter_selector_controller._on_visit_selected")
+        self._parameters_model.reset_parameter_data()
         self._parameters_model.available_parameters = (
             self._visits_model.selected_visit.parameters
         )
@@ -58,7 +60,12 @@ class ParameterSelectorController:
             return None
 
         self.parameter_selector_view.clear_all_selections()
-        self._parameters_model.selected_parameters += selection
+
+        # TODO: Why is this not the same as +=
+        self._parameters_model.selected_parameters = (
+            self._parameters_model.selected_parameters + selection
+        )
+
         self.parameter_selector_view.update_parameters()
 
     def deselect_parameters(self, selection):

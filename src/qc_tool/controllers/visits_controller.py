@@ -21,12 +21,12 @@ class VisitsController:
         self._file_model = file_model
         self._geo_info = None
         self._visits_model = visits_model
-        self._file_model.register_listener(self._file_model.NEW_DATA, self._data_updated)
+        self._file_model.register_listener(self._file_model.NEW_DATA, self._on_new_data)
         self._visits_model.register_listener(
-            self._visits_model.NEW_VISITS, self._visits_updated
+            self._visits_model.NEW_VISITS, self._on_new_visits
         )
 
-    def _data_updated(self):
+    def _on_new_data(self):
         # Extract list of all station visits
         station_visit = sorted(self._file_model.data["visit_key"].unique())
 
@@ -42,7 +42,7 @@ class VisitsController:
 
         self._visits_model.set_visits(visits)
 
-    def _visits_updated(self):
+    def _on_new_visits(self):
         print("visits_controller._visits_updated()")
         self._visits_model.set_visit(self._visits_model.visit_by_index(0))
 

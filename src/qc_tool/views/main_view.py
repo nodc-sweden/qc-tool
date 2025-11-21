@@ -5,8 +5,8 @@ from qc_tool.controllers.main_controller import MainController
 from qc_tool.views.base_view import BaseView
 from qc_tool.views.filter_view import FilterView
 from qc_tool.views.help_view import HelpView
-from qc_tool.views.profiles_view import ProfilesView
 from qc_tool.views.summary_view import SummaryView
+from qc_tool.views.visits_browser_view import VisitsBrowserView
 
 
 class MainView(BaseView):
@@ -17,7 +17,7 @@ class MainView(BaseView):
         # Create child views
         self._filter_view = FilterView()
 
-        self._profile_view = ProfilesView(
+        self._visits_browser_view = VisitsBrowserView(
             self._controller.profiles_controller,
             state,
             self._controller.profiles_controller.map_controller,
@@ -39,8 +39,8 @@ class MainView(BaseView):
         self._filter = Row(children=[self._filter_view.layout])
         self._tabs = Tabs(
             tabs=[
-                TabPanel(child=self._summary_view.layout, title="Summary"),
-                TabPanel(child=self._profile_view.layout, title="Profiles"),
+                TabPanel(child=self._summary_view.layout, title="Details"),
+                TabPanel(child=self._visits_browser_view.layout, title="Visits browser"),
                 TabPanel(child=self._help_view.layout, title="Help"),
             ]
         )

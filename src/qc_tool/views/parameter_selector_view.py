@@ -19,13 +19,13 @@ class ParameterSelectorView(BaseView):
         self,
         controller: "ParameterSelectorController",
         parameters_model: ParametersModel,
-        profiles_model: ProfileGridModel,
+        profile_grid_model: ProfileGridModel,
     ):
         self._controller = controller
         self._controller.parameter_selector_view = self
 
         self._parameters_model = parameters_model
-        self._profiles_model = profiles_model
+        self._profile_grid_model = profile_grid_model
 
         self._available_parameters_select = MultiSelect(
             title="Available parameters", size=10, width=200
@@ -40,7 +40,7 @@ class ParameterSelectorView(BaseView):
         )
 
         self._rows_input = Spinner(
-            value=self._profiles_model.rows,
+            value=self._profile_grid_model.rows,
             low=1,
             high=10,
             step=1,
@@ -49,7 +49,7 @@ class ParameterSelectorView(BaseView):
         )
 
         self._columns_input = Spinner(
-            value=self._profiles_model.columns,
+            value=self._profile_grid_model.columns,
             low=1,
             high=10,
             step=1,
@@ -153,11 +153,16 @@ class ParameterSelectorView(BaseView):
             self._parameters_model.available_multiparameters
         )
         self._selected_parameters.options = self._parameters_model.selected_parameters
+        self.sync_button_state()
 
     def sync_button_state(self):
         enabled = self._parameters_model.enabled
         self._select_button.disabled = not (
-            enabled and (self.max_selection > self.selection_size)
+            enabled
+            and (
+                self._profile_grid_model.number_of_profiles
+                > self._parameters_model.selection_size
+            )
         )
         self._deselect_button.disabled = not enabled
         self._move_up_button.disabled = not enabled

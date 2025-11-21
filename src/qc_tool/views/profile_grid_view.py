@@ -1,5 +1,7 @@
 import typing
 
+from qc_tool.models.manual_qc_model import ManualQcModel
+
 if typing.TYPE_CHECKING:
     from qc_tool.controllers.profile_grid_controller import ProfileGridController
 
@@ -23,6 +25,7 @@ class ProfileGridView(BaseView):
         profile_grid_model: ProfileGridModel,
         parameters_model: ParametersModel,
         visits_model: VisitsModel,
+        manual_qc_model: ManualQcModel,
     ):
         self._controller = controller
         self._controller.profile_grid_view = self
@@ -30,6 +33,7 @@ class ProfileGridView(BaseView):
         self._profile_grid_model = profile_grid_model
         self._parameters_model = parameters_model
         self._visits_model = visits_model
+        self._manual_qc_model = manual_qc_model
 
         # Persistent layout container to allow dynamic, in-place updates
         self._profiles = []
@@ -50,7 +54,10 @@ class ProfileGridView(BaseView):
     def update_grid_size(self):
         """Syncs layout with the correct rows and columns."""
         if not self._profiles:
-            self._primary_plot = ProfileSlot(value_selected_callback=self._value_selected)
+            self._primary_plot = ProfileSlot(
+                manual_qc_model=self._manual_qc_model,
+                value_selected_callback=self._value_selected,
+            )
             self._profiles.append(self._primary_plot)
 
         if len(self._profiles) < self._profile_grid_model.number_of_profiles:
@@ -60,6 +67,7 @@ class ProfileGridView(BaseView):
             ):
                 self._profiles.append(
                     ProfileSlot(
+                        manual_qc_model=self._manual_qc_model,
                         linked_plot=self._primary_plot,
                         value_selected_callback=self._value_selected,
                     )
@@ -92,8 +100,8 @@ class ProfileGridView(BaseView):
                 self.plot_rows.remove(extra_row)
             self._profiles = self._profiles[: self._profile_grid_model.rows]
 
-    def _value_selected(self):
-        pass
+    def _value_selected(self, *args):
+        print(args)
 
     @property
     def layout(self):

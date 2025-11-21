@@ -3,7 +3,7 @@ import typing
 if typing.TYPE_CHECKING:
     from qc_tool.controllers.file_controller import FileController
 
-import tkinter
+import tkinter.filedialog
 from pathlib import Path
 
 from bokeh.io import curdoc
