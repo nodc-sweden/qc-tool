@@ -1,0 +1,51 @@
+from bokeh.models import Column, Row, TabPanel, Tabs
+
+from qc_tool.app_state import AppState
+from qc_tool.controllers.main_controller import MainController
+from qc_tool.views.base_view import BaseView
+from qc_tool.views.filter_view import FilterView
+from qc_tool.views.help_view import HelpView
+from qc_tool.views.profiles_view import ProfilesView
+from qc_tool.views.summary_view import SummaryView
+
+
+class MainView(BaseView):
+    def __init__(self, controller: MainController, state: AppState):
+        self._controller = controller
+        self._controller.main_view = self
+
+        # Create child views
+        self._filter_view = FilterView()
+
+        self._profile_view = ProfilesView(
+            self._controller.profiles_controller,
+            state,
+            self._controller.profiles_controller.map_controller,
+            self._controller.profiles_controller.visit_selector_controller,
+            self._controller.profiles_controller.profile_grid_controller,
+        )
+
+        self._summary_view = SummaryView(
+            self._controller.summary_controller,
+            state,
+            self._controller.summary_controller.map_controller,
+            self._controller.summary_controller.file_controller,
+            self._controller.summary_controller.validation_log_controller,
+        )
+
+        self._help_view = HelpView()
+
+        # Create layout
+        self._filter = Row(children=[self._filter_view.layout])
+        self._tabs = Tabs(
+            tabs=[
+                TabPanel(child=self._summary_view.layout, title="Summary"),
+                TabPanel(child=self._profile_view.layout, title="Profiles"),
+                TabPanel(child=self._help_view.layout, title="Help"),
+            ]
+        )
+        self._layout = Column(children=[self._filter, self._tabs])
+
+    @property
+    def layout(self):
+        return self._layout

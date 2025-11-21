@@ -1,8 +1,8 @@
 import polars as pl
-from ocean_data_qc.metadata.visit import Visit
+from ocean_data_qc.metadata.visit import Visit as MetadataVisit
 
 
-class Station:
+class Visit:
     COMMON_COLUMNS = frozenset(
         {
             "AIRPRES",
@@ -41,7 +41,7 @@ class Station:
         else:
             self._sea_basin = None
 
-        self._visit = Visit(self.data)
+        self._metadata_visit = MetadataVisit(self.data)
 
     @property
     def parameters(self) -> list[str]:
@@ -98,3 +98,7 @@ class Station:
     def latitude(self):
         degrees, remainder = divmod(self._common.get("LATIT"), 100)
         return degrees + remainder / 60
+
+    @property
+    def metadata(self):
+        return self._metadata_visit

@@ -1,56 +1,43 @@
+import typing
+
+if typing.TYPE_CHECKING:
+    from qc_tool.controllers.profile_grid_controller import ProfileGridController
+
 import polars as pl
 from bokeh.models import Column, Row
 from ocean_data_qc import statistic
 from ocean_data_qc.fyskem.qc_flag import QC_FLAG_CSS_COLORS, QcFlag
 from ocean_data_qc.fyskem.qc_flags import QcFlags
 
-from qc_tool.layoutable import Layoutable
-from qc_tool.new_profile_slot import NewProfileSlot
-from qc_tool.parameter_handler import ParameterHandler
-
-MULTI_PARAMETERS = [
-    ("SALT_CTD", "SALT_BTL"),
-    ("TEMP_CTD", "TEMP_BTL"),
-    ("SALT_CTD", "TEMP_CTD"),
-    ("DOXY_CTD", "DOXY_BTL"),
-    ("DOXY_CTD", "DOXY_BTL", "H2S"),
-    ("AMON", "NTRA", "NTRI"),
-    ("AMON", "NTRZ", "NTRI"),
-    ("PTOT", "PHOS", "SIO3-SI"),
-    ("NTOT", "NTRA", "AMON"),
-    ("NTOT", "NTRZ", "AMON"),
-    ("PHOS", "AMON", "DOXY_BTL"),
-    ("ALK", "PH-TOT"),
-    ("CPHL", "CHLFL", "DOXY_BTL"),
-    ("CHLFL", "DOXY_CTD"),
-]
+from qc_tool.models.parameters_model import ParametersModel
+from qc_tool.models.profiles_grid_model import ProfileGridModel
+from qc_tool.models.visits_model import VisitsModel
+from qc_tool.profile_slot import ProfileSlot
+from qc_tool.views.base_view import BaseView
 
 
-class ProfileTabHandler(Layoutable):
+class ProfileGridView(BaseView):
     def __init__(
         self,
-        parameter_handler: ParameterHandler,
-        columns=5,
-        rows=2,
-        value_selected_callback=None,
+        controller: "ProfileGridController",
+        profile_grid_model: ProfileGridModel,
+        parameters_model: ParametersModel,
+        visits_model: VisitsModel,
     ):
-        self._columns = columns
-        self._rows = rows
+        self._controller = controller
+        self._controller.profile_grid_view = self
 
-        self._parameter_handler = parameter_handler
-        self._value_selected_callback = value_selected_callback
-        self._plotted_parameters = []
-
-        self._station = None
-        self._profiles = []
-        self._plot_rows = []
-        self._parameter_data = {}
+        self._profile_grid_model = profile_grid_model
+        self._parameters_model = parameters_model
+        self._visits_model = visits_model
 
         # Persistent layout container to allow dynamic, in-place updates
+        self._profiles = []
+        self._primary_plot = None
+
         self._column = Column(children=[], sizing_mode="stretch_both")
 
-        self._init_grid()
-        self._fill_plot_grid()
+        self.update_grid_size()
 
     @property
     def plot_rows(self):
@@ -60,91 +47,65 @@ class ProfileTabHandler(Layoutable):
     def plot_rows(self, rows):
         self._column.children = rows
 
-    def _init_grid(self):
+    def update_grid_size(self):
         """Syncs layout with the correct rows and columns."""
-        # Make sure that the number of selected parameters
-        # is not greater than the current grid size
-        self.selected_parameters = self.selected_parameters[: len(self)]
-
         if not self._profiles:
-            self._primary_plot = NewProfileSlot(
-                value_selected_callback=self._value_selected_callback
-            )
+            self._primary_plot = ProfileSlot(value_selected_callback=self._value_selected)
             self._profiles.append(self._primary_plot)
 
-        if len(self._profiles) < len(self):
+        if len(self._profiles) < self._profile_grid_model.number_of_profiles:
             # Too few profiles, creating new.
-            for _ in range(len(self) - len(self._profiles)):
+            for _ in range(
+                self._profile_grid_model.number_of_profiles - len(self._profiles)
+            ):
                 self._profiles.append(
-                    NewProfileSlot(
+                    ProfileSlot(
                         linked_plot=self._primary_plot,
-                        value_selected_callback=self._value_selected_callback,
+                        value_selected_callback=self._value_selected,
                     )
                 )
-
-        elif len(self._profiles) < len(self):
+        elif len(self._profiles) > self._profile_grid_model.number_of_profiles:
             # Too many profiles, removing extra.
-            self._profiles = self._profiles[: len(self)]
+            self._profiles = self._profiles[: self._profile_grid_model.number_of_profiles]
 
         for n, row in enumerate(self.plot_rows):
-            if len(row.children) != self._columns:
+            if len(row.children) != self._profile_grid_model.columns:
                 # Wrong column width for row, recreating from profiles
-                start = n * self._columns
-                end = start + self._columns
+                start = n * self._profile_grid_model.columns
+                end = start + self._profile_grid_model.columns
                 row.children = [profile.layout for profile in self._profiles[start:end]]
 
-        if len(self.plot_rows) < self._rows:
+        if len(self.plot_rows) < self._profile_grid_model.rows:
             # Too few rows, creating new
             plotted_rows = len(self.plot_rows)
-            for n in range(self._rows - plotted_rows):
-                start = (plotted_rows + n) * self._columns
-                end = start + self._columns
+            for n in range(self._profile_grid_model.rows - plotted_rows):
+                start = (plotted_rows + n) * self._profile_grid_model.columns
+                end = start + self._profile_grid_model.columns
                 self.plot_rows.append(
                     Row(
                         children=[profile.layout for profile in self._profiles[start:end]]
                     )
                 )
-        elif len(self.plot_rows) > self._rows:
+        elif len(self.plot_rows) > self._profile_grid_model.rows:
             # Too many rows, removing extra
-            for extra_row in self.plot_rows[self._rows :]:
+            for extra_row in self.plot_rows[self._profile_grid_model.rows :]:
                 self.plot_rows.remove(extra_row)
-            self._profiles = self._profiles[: self._rows]
+            self._profiles = self._profiles[: self._profile_grid_model.rows]
 
-    def __len__(self):
-        return self._columns * self._rows
-
-    @property
-    def available_parameters(self):
-        return self._parameter_handler.available_parameters
-
-    @available_parameters.setter
-    def available_parameters(self, available_parameters: list[str]):
-        self._parameter_handler.available_parameters = available_parameters
-
-    @property
-    def available_multi_parameters(self):
-        return self._parameter_handler.available_multi_parameters
-
-    def clear_other_selection(self, profile):
-        for profile_slot in self._profiles:
-            if profile_slot is not profile:
-                profile_slot.clear_selection()
-
-    @property
-    def selected_parameters(self):
-        return self._parameter_handler.selected_parameters
-
-    @selected_parameters.setter
-    def selected_parameters(self, parameters: list[str]):
-        self._parameter_handler.selected_parameters = parameters[: len(self)]
+    def _value_selected(self):
+        pass
 
     @property
     def layout(self):
         return self._column
 
-    def _fill_plot_grid(self):
-        empty_slots = [""] * max(len(self) - len(self.selected_parameters), 0)
-        parameters = self.selected_parameters + empty_slots
+    def update_grid_content(self):
+        empty_slots = [""] * max(
+            self._profile_grid_model.number_of_profiles
+            - len(self._parameters_model.selected_parameters),
+            0,
+        )
+        parameters = self._parameters_model.selected_parameters + empty_slots
 
         for n, (profile, parameter) in enumerate(zip(self._profiles, parameters)):
             if "+" in parameter:
@@ -158,23 +119,28 @@ class ProfileTabHandler(Layoutable):
                 profile.set_data(
                     parameter,
                     data,
-                    station=self._station,
+                    station=self._visits_model.selected_visit,
                 )
             else:
                 parameter_data, parameter_statistics = self._load_parameter(parameter)
                 profile.set_data(
                     parameter,
                     [(parameter, parameter_data)] if parameter else [],
-                    self._station,
+                    self._visits_model.selected_visit,
                 )
                 profile.update_statistics(
                     parameter_statistics=parameter_statistics,
-                    water_depth=self._station.water_depth if self._station else None,
+                    water_depth=self._visits_model.selected_visit.water_depth
+                    if self._visits_model.selected_visit
+                    else None,
                 )
 
     def _load_parameter(self, parameter):
-        if parameter not in self._parameter_data and self._station is not None:
-            parameter_data = self._station.data.filter(
+        if (
+            parameter not in self._parameters_model.parameter_data
+            and self._visits_model.selected_visit is not None
+        ):
+            parameter_data = self._visits_model.selected_visit.data.filter(
                 pl.col("parameter") == parameter
             ).sort("DEPH")
 
@@ -226,9 +192,19 @@ class ProfileTabHandler(Layoutable):
                     "data": parameter_data,
                 }
 
-            if None in (self._station.sea_basin, source_data):
+            if None in (self._visits_model.selected_visit.sea_basin, source_data):
                 parameter_statistics = None
             else:
+                # TODO
+                """
+                Om salt, temp, eller dox, använd nedanstående:
+                SALT_CTD
+                TEMP_CTD
+                DOX_BTL
+                OBS: även i multiplott med tex olika salt.
+                OBS: Lämna tydliga spår så att det blir lätt att koppla in ny statistik
+                """
+
                 parameter_statistics = (
                     statistic.get_profile_statistics_for_parameter_and_sea_basin(
                         parameter,
@@ -247,23 +223,9 @@ class ProfileTabHandler(Layoutable):
                         ),
                     )
                 )
-            self._parameter_data[parameter] = (source_data, parameter_statistics)
+            self._parameters_model.parameter_data[parameter] = (
+                source_data,
+                parameter_statistics,
+            )
 
-        return self._parameter_data.get(parameter, (None, None))
-
-    def set_station(self, station):
-        self._station = station
-        self.available_parameters = self._station.parameters
-        self._parameter_handler.init_multi_parameters(MULTI_PARAMETERS)
-        self._parameter_data = {}
-        self._parameter_handler.sync_button_state(self._station is not None)
-
-        self._fill_plot_grid()
-
-    def sync_profiles(self, *, columns: int, rows: int):
-        if (columns, rows) != (self._columns, self._rows):
-            self._columns = columns
-            self._rows = rows
-            self._init_grid()
-            self._parameter_handler.sync_button_state()
-        self._fill_plot_grid()
+        return self._parameters_model.parameter_data.get(parameter, (None, None))

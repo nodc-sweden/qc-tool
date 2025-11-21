@@ -3,7 +3,7 @@ from bokeh.models import Column, Div, ImportedStyleSheet, RadioButtonGroup, Row
 from ocean_data_qc.fyskem.qc_flag import QC_FLAG_CSS_COLORS, QcFlag
 from ocean_data_qc.fyskem.qc_flag_tuple import QcField
 
-from qc_tool.layoutable import Layoutable
+from qc_tool.views.base_view import BaseView
 
 _flag_info_template = jinja2.Template("""
 {% if values %}
@@ -36,7 +36,7 @@ _flag_info_template = jinja2.Template("""
 """)  # noqa: E501
 
 
-class ManualQcHandler(Layoutable):
+class ManualQcHandler(BaseView):
     def __init__(self, values_changed_callback=None):
         self._manual_qc_header = Div(width=500, text="<h3>Perfom manual QC</h3>")
         self._manual_qc_info = Div(width=500, text="Select samples with the lasso tool")

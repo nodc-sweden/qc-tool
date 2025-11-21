@@ -53,7 +53,7 @@ _flag_info_template = jinja2.Template("""
 """)  # noqa: E501
 
 
-class FlagInfo(BaseView):
+class HelpView(BaseView):
     def __init__(self):
         flag_info_content = _flag_info_template.render(
             qc_fields=[value.name for value in QcField],

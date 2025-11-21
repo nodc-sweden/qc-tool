@@ -19,7 +19,7 @@ from bokeh.models import (
 from bokeh.plotting import figure
 from ocean_data_qc.fyskem.parameter import Parameter
 
-from qc_tool.layoutable import Layoutable
+from qc_tool.views.base_view import BaseView
 
 PARAMETER_ABBREVIATIONS = {
     "ALKY": "Alkalinity",
@@ -63,7 +63,7 @@ class ProfileData:
         self.water_depth = 50
 
 
-class NewProfileSlot(Layoutable):
+class ProfileSlot(BaseView):
     _width = 300
     _height = 400
 

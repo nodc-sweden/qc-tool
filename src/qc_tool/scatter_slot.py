@@ -16,8 +16,8 @@ from bokeh.plotting import figure
 from ocean_data_qc.fyskem.qc_flag import QC_FLAG_CSS_COLORS, QcFlag
 from ocean_data_qc.fyskem.qc_flags import QcFlags
 
-from qc_tool.layoutable import Layoutable
-from qc_tool.station import Station
+from qc_tool.views.base_view import BaseView
+from qc_tool.visit import Visit
 
 PARAMETER_ABBREVIATIONS = {
     "ALKY": "Alkalinity",
@@ -54,7 +54,7 @@ def expand_abbreviation(abbreviation: str) -> str:
     return PARAMETER_ABBREVIATIONS.get(abbreviation, abbreviation)
 
 
-class ScatterSlot(Layoutable):
+class ScatterSlot(BaseView):
     def __init__(
         self,
         x_parameter: str = "",
@@ -228,7 +228,7 @@ class ScatterSlot(Layoutable):
             self._source.data = {"x": [], "y": [], "colors": [], "line_colors": []}
             self._no_data_label.visible = True
 
-    def update_station(self, station: Station):
+    def update_station(self, station: Visit):
         self._station = station
         self._x_parameter_dropdown.menu = [
             (expand_abbreviation(parameter), parameter)

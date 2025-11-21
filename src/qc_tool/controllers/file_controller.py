@@ -1,18 +1,26 @@
 import os
 import time
-import tkinter
-import tkinter.filedialog
 from collections import defaultdict
 from pathlib import Path
 
-import geopandas as gp
+import geopandas
 import nodc_station
-from bokeh.io import curdoc
-from bokeh.models import Button, Column, Div, FileInput, ImportedStyleSheet
-from sharkadm import adm_logger, exporters, multi_transformers, transformers, validators
-from sharkadm import controller as sharkadm_controller
+import polars as pl
+from nodc_statistics import regions
+from sharkadm import (
+    adm_logger,
+    exporters,
+    multi_transformers,
+    transformers,
+    validators,
+)
+from sharkadm import (
+    controller as sharkadm_controller,
+)
 
-from qc_tool.views.base_view import BaseView
+from qc_tool.data_transformation import prepare_data
+from qc_tool.models.file_model import FileModel
+from qc_tool.models.validation_log_model import ValidationLogModel
 
 CONFIG_ENV = "NODC_CONFIG"
 
@@ -24,107 +32,59 @@ OTHER_CONFIG_SOURCES = [
     _home / ".nodc_config",
 ]
 
-
-def _get_config_dir() -> Path | None:
-    if config_dir := os.getenv(CONFIG_ENV):
-        return Path(config_dir)
-    for config_dir in OTHER_CONFIG_SOURCES:
-        if config_dir.exists():
-            return config_dir
-    return None
+GEOLAYERS_AREATAG = {
+    "SVAR2022_typomrkust_lagad": "TYPOMRKUST",
+    "ospar_subregions_20160418_3857_lagad": "area_tag",
+    "helcom_subbasins_with_coastal_and_offshore_division_2022_level3_lagad": "level_34",
+}
 
 
-def _load_ocean_shapefile():
-    if _config_dir := _get_config_dir():
-        shapefile = (
-            _config_dir / "sharkweb_shapefiles" / "Havsomr_SVAR_2016_3c_CP1252.shp"
-        )
-        if shapefile.exists():
-            return gp.read_file(shapefile)
-    return gp.GeoDataFrame()
+class FileController:
+    def __init__(self, file_model: FileModel, validation_log_model: ValidationLogModel):
+        self._file_model = file_model
+        self._file_model.register_listener(FileModel.NEW_DATA, self._new_file)
+        self._file_model.register_listener(FileModel.LOAD_ABORTED, self._load_aborted)
 
+        self._validation_log_model = validation_log_model
 
-class FileHandler(BaseView):
-    def __init__(
-        self,
-        external_load_file_callback,
-        external_save_file_callback,
-        external_save_changes_file_callback,
-        external_automatic_qc_callback,
-    ):
-        self._file_name = None
+        self.file_view = None
+        self._geo_info = None
 
-        self._external_load_file_callback = external_load_file_callback
-        self._external_save_file_callback = external_save_file_callback
-        self._external_save_changes_file_callback = external_save_changes_file_callback
-        self._external_automatic_qc_callback = external_automatic_qc_callback
+    @property
+    def file_model(self):
+        return self._file_model
 
-        self._load_header = Div(width=500, text="<h3>Load and save</h3>")
-        self._loaded_file_label = Div(width=500)
-
-        self._file_input = FileInput(
-            title="Select file:", accept=".txt,.csv", max_width=500
-        )
-
-        self._file_button = Button(label="Select data...")
-        self._file_button.on_click(self._load_file)
-
-        self._save_as_button = Button(label="Save as...")
-        self._save_as_button.on_click(
-            lambda: self._save_file_as_callback(self._external_save_file_callback)
-        )
-
-        self._save_changes_as_button = Button(label="Save only changed rows as...")
-        self._save_changes_as_button.on_click(
-            lambda: self._save_file_as_callback(
-                self._external_save_changes_file_callback, file_type="xlsx"
-            )
-        )
-
-        self._load_indicator = Div(
-            width=120,
-            height=120,
-            text='<div class="loader"></div>',
-            stylesheets=[ImportedStyleSheet(url="qc_tool/static/css/style.css")],
-        )
-        self._load_indicator.visible = False
-
-        self._file_loaded()
-
-    def _load_file(self, event):
+    def load_file(self, file_path):
+        print(f"Loading data from {file_path}...")
         try:
-            root = tkinter.Tk()
-            root.iconify()
-            selected_path = tkinter.filedialog.askopenfilename()
-            root.destroy()
-        except tkinter.TclError:
-            selected_path = None
-
-        if not selected_path:
+            controller = sharkadm_controller.get_polars_controller_with_data(file_path)
+        except Exception:  # noqa: BLE001
+            # Catching exceptions this broadly is not recommended, but sharkadm does not
+            # guarantee a specific exception.
+            self._file_model.no_new_data()
             return
-        selected_path = Path(selected_path)
-        print(f"Load data from {selected_path}...")
-        self._load_indicator.visible = True
-        curdoc().add_next_tick_callback(lambda: self._load_file_callback(selected_path))
-
-    def _load_file_callback(self, selected_path: Path):
-        controller = sharkadm_controller.get_polars_controller_with_data(selected_path)
 
         self._reset_validation_logs()
         self._apply_transformers(controller)
         self._run_validators(controller)
-        validation = self._collect_validation_logs()
+        validation_log = self._collect_validation_logs()
         print("Data loaded")
         data = controller.export(
             exporters.PolarsDataFrame(header_as="PhysicalChemical", float_columns=True)
         )
+        data = self._match_sea_basins(data)
+        data = prepare_data(data)
+        self._set_data(data, file_path)
+        self._validation_log_model.set_validation_log(validation_log)
 
-        self._file_name = selected_path.name
-        self._file_loaded()
-        self._external_load_file_callback(data, validation)
-        self._external_automatic_qc_callback()
+    def _new_file(self):
+        self.file_view._file_load_completed()
 
-        self._load_indicator.visible = False
+    def _load_aborted(self):
+        self.file_view._file_load_completed()
+
+    def _reset_validation_logs(self):
+        adm_logger.reset_log()
 
     def _apply_transformers(self, controller):
         print("Running SHARKadm transformers...")
@@ -220,8 +180,47 @@ class FileHandler(BaseView):
         t1 = time.perf_counter()
         print(f"SHARKadm validators finished ({t1 - t0:.3f} s.)")
 
-    def _reset_validation_logs(self):
-        adm_logger.reset_log()
+    def _match_sea_basins(self, data):
+        if self._geo_info is None:
+            return data
+
+        print("Matching sea basins...")
+        t0 = time.perf_counter()
+        # Step 1: Extract unique positions and create decimal degree columns
+        positions_dd_pl = data.select(
+            ["sample_longitude_dd", "sample_latitude_dd"]
+        ).unique()
+
+        # Step 2: Call the bulk function
+        positions_dd = [
+            (lon, lat)
+            for lon, lat in positions_dd_pl.select(
+                ["sample_longitude_dd", "sample_latitude_dd"]
+            ).to_numpy()
+        ]
+        basins_dict = regions.sea_basins_for_positions(
+            positions_dd, geo_info=self._geo_info
+        )
+        basins_pl = pl.DataFrame(basins_dict).rename(
+            {"LONGI_DD": "sample_longitude_dd", "LATIT_DD": "sample_latitude_dd"}
+        )
+
+        # Step 3: Join the sea_basins back to the unique positions, drop DD columns
+        positions_with_basins = positions_dd_pl.join(
+            basins_pl, on=["sample_longitude_dd", "sample_latitude_dd"], how="left"
+        )
+
+        # Step 4: Join back to the original data
+        data = data.join(
+            positions_with_basins,
+            on=["sample_longitude_dd", "sample_latitude_dd"],
+            how="left",
+        )
+
+        t1 = time.perf_counter()
+        print(f"Matching sea basins finished ({t1 - t0:.3f} s.)")
+
+        return data
 
     def _collect_validation_logs(self):
         validation_remarks = defaultdict(
@@ -280,46 +279,46 @@ class FileHandler(BaseView):
     def _automatic_qc_callback(self, event):
         self._external_automatic_qc_callback()
 
-    def _file_loaded(self):
-        if self._file_name:
-            file_info = f"<p>{self._file_name}</p>"
-        else:
-            file_info = "<p>No file loaded</p>"
-        self._loaded_file_label.text = file_info
-
-    def _save_file_as_callback(self, save_file_callback, file_type: str = "txt"):
-        try:
-            root = tkinter.Tk()
-            root.iconify()
-            if file_type == "txt":
-                filetypes = [("Text Files", "*.txt"), ("All Files", "*.*")]
-                default_extension = ".txt"
-            elif file_type == "xlsx":
-                filetypes = [("Excel Files", "*.xlsx"), ("All Files", "*.*")]
-                default_extension = ".xlsx"
-            else:
-                filetypes = [("All Files", "*.*")]
-                default_extension = ""
-            selected_path = tkinter.filedialog.asksaveasfilename(
-                defaultextension=default_extension,
-                filetypes=filetypes,
+    def _set_data(self, data: pl.DataFrame, file_path: Path):
+        """Ensure QC columns always reflect quality_flag_long."""
+        if not data.is_empty():
+            split = (
+                pl.col("quality_flag_long")
+                .str.split_exact("_", 3)
+                .struct.rename_fields(["INCOMING_QC", "AUTO_QC", "MANUAL_QC", "TOTAL_QC"])
+                .alias("split_qc_fields")
             )
-            root.destroy()
-        except tkinter.TclError:
-            selected_path = None
 
-        if not selected_path:
-            return
-        selected_path = Path(selected_path)
-        save_file_callback(selected_path)
+            # Drop existing QC columns to avoid duplicates
+            qc_cols = ["INCOMING_QC", "AUTO_QC", "MANUAL_QC", "TOTAL_QC"]
+            data = data.drop([c for c in qc_cols if c in data.columns])
 
-    @property
-    def layout(self):
-        return Column(
-            self._load_header,
-            self._file_button,
-            self._loaded_file_label,
-            self._save_as_button,
-            self._save_changes_as_button,
-            self._load_indicator,
+            self._file_model.add_data(
+                data.with_columns(split).unnest("split_qc_fields"), file_path
+            )
+        else:
+            self._file_model.add_data(data, file_path)
+
+        # self._set_stations(stations)
+        # self._station_navigator.load_stations(self._stations)
+        # self._parameter_handler.reset_selection()
+        # self.set_station(station or station_visit[0])
+
+
+def _load_ocean_shapefile():
+    if _config_dir := _get_config_dir():
+        shapefile = (
+            _config_dir / "sharkweb_shapefiles" / "Havsomr_SVAR_2016_3c_CP1252.shp"
         )
+        if shapefile.exists():
+            return geopandas.read_file(shapefile)
+    return geopandas.GeoDataFrame()
+
+
+def _get_config_dir() -> Path | None:
+    if config_dir := os.getenv(CONFIG_ENV):
+        return Path(config_dir)
+    for config_dir in OTHER_CONFIG_SOURCES:
+        if config_dir.exists():
+            return config_dir
+    return None
