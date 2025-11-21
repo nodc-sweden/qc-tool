@@ -16,8 +16,8 @@ from bokeh.plotting import figure
 from ocean_data_qc.fyskem.qc_flag import QC_FLAG_CSS_COLORS, QcFlag
 from ocean_data_qc.fyskem.qc_flags import QcFlags
 
-from qc_tool.layoutable import Layoutable
-from qc_tool.station import Station
+from qc_tool.models.visits_model import VisitsModel
+from qc_tool.views.base_view import BaseView
 
 PARAMETER_ABBREVIATIONS = {
     "ALKY": "Alkalinity",
@@ -54,17 +54,19 @@ def expand_abbreviation(abbreviation: str) -> str:
     return PARAMETER_ABBREVIATIONS.get(abbreviation, abbreviation)
 
 
-class ScatterSlot(Layoutable):
+class ScatterSlot(BaseView):
     def __init__(
         self,
+        visits_model: VisitsModel,
         x_parameter: str = "",
         y_parameter: str = "",
     ):
+        self._visits_model = visits_model
+
         self._width = 475
         self._height = 475
         self._x_parameter = x_parameter
         self._y_parameter = y_parameter
-        self._station = None
         self._source = ColumnDataSource(
             data={"x": [], "y": [], "colors": [], "line_colors": []}
         )
@@ -158,12 +160,14 @@ class ScatterSlot(Layoutable):
         self._load_parameters()
 
     def _load_parameters(self):
-        if {self._x_parameter, self._y_parameter} <= set(self._station.parameters):
-            x_data = self._station.data.filter(
+        if {self._x_parameter, self._y_parameter} <= set(
+            self._visits_model.selected_visit.parameters
+        ):
+            x_data = self._visits_model.selected_visit.data.filter(
                 pl.col("parameter") == self._x_parameter
             ).sort("DEPH")
 
-            y_data = self._station.data.filter(
+            y_data = self._visits_model.selected_visit.data.filter(
                 pl.col("parameter") == self._y_parameter
             ).sort("DEPH")
 
@@ -228,15 +232,14 @@ class ScatterSlot(Layoutable):
             self._source.data = {"x": [], "y": [], "colors": [], "line_colors": []}
             self._no_data_label.visible = True
 
-    def update_station(self, station: Station):
-        self._station = station
+    def update_station(self):
         self._x_parameter_dropdown.menu = [
             (expand_abbreviation(parameter), parameter)
-            for parameter in self._station.parameters
+            for parameter in self._visits_model.selected_visit.parameters
         ]
         self._y_parameter_dropdown.menu = [
             (expand_abbreviation(parameter), parameter)
-            for parameter in self._station.parameters
+            for parameter in self._visits_model.selected_visit.parameters
         ]
         self._load_parameters()
 

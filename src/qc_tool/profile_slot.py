@@ -19,7 +19,8 @@ from bokeh.models import (
 from bokeh.plotting import figure
 from ocean_data_qc.fyskem.parameter import Parameter
 
-from qc_tool.layoutable import Layoutable
+from qc_tool.models.manual_qc_model import ManualQcModel
+from qc_tool.views.base_view import BaseView
 
 PARAMETER_ABBREVIATIONS = {
     "ALKY": "Alkalinity",
@@ -63,7 +64,7 @@ class ProfileData:
         self.water_depth = 50
 
 
-class NewProfileSlot(Layoutable):
+class ProfileSlot(BaseView):
     _width = 300
     _height = 400
 
@@ -92,18 +93,19 @@ class NewProfileSlot(Layoutable):
 
     def __init__(
         self,
+        manual_qc_model: ManualQcModel,
         title: str = "",
         linked_plot: Self | None = None,
-        value_selected_callback=None,
     ):
         self._title = title
+        self._manual_qc_model = manual_qc_model
+
         self._station = None
         self._data = None
         self._parameter_data = []
         self._show_lines = True
         self._show_bounds = True
         self._clear_called = False
-        self._value_selected_callback = value_selected_callback or (lambda *args: None)
 
         self._sources = [
             ColumnDataSource(data={key: [] for key in self.source_fields}),
@@ -179,16 +181,16 @@ class NewProfileSlot(Layoutable):
         ]
 
         self._sources[0].selected.on_change(
-            "indices", partial(self._value_selected, index=0)
+            "indices", partial(self._on_value_selected, index=0)
         )
         self._sources[1].selected.on_change(
-            "indices", partial(self._value_selected, index=1)
+            "indices", partial(self._on_value_selected, index=1)
         )
         self._sources[2].selected.on_change(
-            "indices", partial(self._value_selected, index=2)
+            "indices", partial(self._on_value_selected, index=2)
         )
         self._sources[3].selected.on_change(
-            "indices", partial(self._value_selected, index=3)
+            "indices", partial(self._on_value_selected, index=3)
         )
 
         hover.renderers = self._values
@@ -318,6 +320,7 @@ class NewProfileSlot(Layoutable):
             data, self._sources, self._values
         ):
             if parameter_data is None:
+                self._parameter_data.append(None)
                 continue
             source.data = parameter_data
             values.name = expand_abbreviation(paramter_name)
@@ -344,13 +347,16 @@ class NewProfileSlot(Layoutable):
             source.selected.indices = []
         self._clear_called = False
 
-    def _value_selected(self, attr, old, new, index):
+    def select_values(self, index, rows):
         selected_values = [
-            Parameter(self._parameter_data[index].row(n, named=True)) for n in new
+            (n, Parameter(self._parameter_data[index].row(n, named=True))) for n in rows
         ]
         self._statistics_source.selected.indices = []
         if not self._clear_called:
-            self._value_selected_callback(selected_values, self)
+            self._manual_qc_model.set_selected_values(index, selected_values, self)
+
+    def _on_value_selected(self, attr, old, new, index):
+        self.select_values(index, new)
 
     def update_statistics(self, parameter_statistics, water_depth):
         if parameter_statistics is None:

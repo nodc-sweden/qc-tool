@@ -1,8 +1,8 @@
 import jinja2
 from bokeh.models import Column, Div, ImportedStyleSheet
 
-from qc_tool.layoutable import Layoutable
-from qc_tool.station import Station
+from qc_tool.views.base_view import BaseView
+from qc_tool.visit import Visit
 
 _log_template = jinja2.Template("""
 {% if qc_log %}
@@ -21,7 +21,7 @@ _log_template = jinja2.Template("""
 """)
 
 
-class MetadataQcHandler(Layoutable):
+class MetadataQcHandler(BaseView):
     def __init__(self):
         self._station = None
         self._manual_qc_header = Div(width=500, text="<h3>Results of metadata QC</h3>")
@@ -31,14 +31,14 @@ class MetadataQcHandler(Layoutable):
         )
         self.update()
 
-    def set_station(self, station: Station):
+    def set_station(self, station: Visit):
         self._station = station
         self.update()
 
     def update(self):
-        if self._station and self._station._visit.qc_log:
+        if self._station and self._station._metadata_visit.qc_log:
             self._log_table.text = _log_template.render(
-                qc_log=self._station._visit.qc_log
+                qc_log=self._station._metadata_visit.qc_log
             )
         else:
             self._log_table.text = _log_template.render(qc_log=None)
