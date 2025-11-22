@@ -15,14 +15,14 @@ class MainView(BaseView):
         self._controller.main_view = self
 
         # Create child views
-        self._filter_view = FilterView()
+        self._filter_view = FilterView(self._controller.filter_controller, state.filter)
 
         self._visits_browser_view = VisitsBrowserView(
-            self._controller.profiles_controller,
+            self._controller.visits_browser_controller,
             state,
-            self._controller.profiles_controller.map_controller,
-            self._controller.profiles_controller.visit_selector_controller,
-            self._controller.profiles_controller.profile_grid_controller,
+            self._controller.visits_browser_controller.map_controller,
+            self._controller.visits_browser_controller.visit_selector_controller,
+            self._controller.visits_browser_controller.profile_grid_controller,
         )
 
         self._summary_view = SummaryView(
@@ -39,7 +39,7 @@ class MainView(BaseView):
         self._filter = Row(children=[self._filter_view.layout])
         self._tabs = Tabs(
             tabs=[
-                TabPanel(child=self._summary_view.layout, title="Details"),
+                TabPanel(child=self._summary_view.layout, title="Summary"),
                 TabPanel(child=self._visits_browser_view.layout, title="Visits browser"),
                 TabPanel(child=self._help_view.layout, title="Help"),
             ]

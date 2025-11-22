@@ -6,6 +6,7 @@ import pandas as pd
 from pyproj import Transformer
 
 from qc_tool.app_state import AppState
+from qc_tool.controllers.filter_controller import FilterController
 from qc_tool.controllers.summary_controller import SummaryController
 from qc_tool.controllers.visits_browser_controller import VisitsBrowserController
 from qc_tool.controllers.visits_controller import VisitsController
@@ -28,13 +29,17 @@ class MainController:
         )
 
         self._transformer = Transformer.from_crs("EPSG:4326", "EPSG:3857")
+
+        self.filter_controller = FilterController(self._state.visits, self._state.filter)
+
         self.summary_controller = SummaryController(
             file_model=self._state.file,
             visits_model=self._state.visits,
             map_model=self._state.map,
             validation_log_model=self._state.validation_log,
         )
-        self.profiles_controller = VisitsBrowserController(self._state)
+        self.visits_browser_controller = VisitsBrowserController(self._state)
+
 
     def save_file_callback(self, filename: Path):
         self._data.write_csv(filename, separator="\t")

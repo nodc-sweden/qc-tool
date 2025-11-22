@@ -1,3 +1,9 @@
+import typing
+
+from qc_tool.models.filter_model import FilterModel
+
+if typing.TYPE_CHECKING:
+    from qc_tool.controllers.filter_controller import FilterController
 from bokeh.models import Button, MultiChoice, Row
 
 from qc_tool.views.base_view import BaseView
@@ -21,7 +27,12 @@ MONTHS = [
 class FilterView(BaseView):
     HEIGHT = 150
 
-    def __init__(self):
+    def __init__(self, controller: "FilterController", filter_model: FilterModel):
+        self._controller = controller
+        self._controller.filter_view = self
+
+        self._filter_model = filter_model
+
         common_config = {
             "min_width": 200,
         }
@@ -70,3 +81,9 @@ class FilterView(BaseView):
     @property
     def layout(self):
         return self._layout
+
+    def update_filter_options(self):
+        self._year_filter.options = self._filter_model.years
+        self._month_filter.options = self._filter_model.months
+        self._cruise_filter.options = self._filter_model.cruises
+        self._station_filter.options = self._filter_model.stations

@@ -67,17 +67,17 @@ class Visit:
         )
 
     @property
-    def country_ship_cruise(self):
+    def country_ship_cruise(self) -> str:
         return "-".join(
             [str(self._common.get(key)) for key in ("CTRYID", "SHIPC", "CRUISE_NO")]
         )
 
     @property
-    def visit_key(self):
+    def visit_key(self) -> str:
         return self._visit_key
 
     @property
-    def common(self):
+    def common(self) -> dict:
         compound_values = {
             "SDATE+STIME": self.datetime,
             "CTRYID+SHIPC+CRUISE_NO+VISITKEY": self.country_ship_cruise_visit_key,
@@ -86,19 +86,27 @@ class Visit:
         return self._common | compound_values
 
     @property
-    def water_depth(self):
+    def station_name(self) -> str:
+        return self._common.get("STATN")
+
+    @property
+    def cruise_number(self) -> str:
+        return self._common.get("CRUISE_NO")
+
+    @property
+    def water_depth(self) -> float:
         return self._common.get("WADEP")
 
     @property
-    def longitude(self):
+    def longitude(self) -> float:
         degrees, remainder = divmod(self._common.get("LONGI"), 100)
         return degrees + remainder / 60
 
     @property
-    def latitude(self):
+    def latitude(self) -> float:
         degrees, remainder = divmod(self._common.get("LATIT"), 100)
         return degrees + remainder / 60
 
     @property
-    def metadata(self):
+    def metadata(self) -> MetadataVisit:
         return self._metadata_visit

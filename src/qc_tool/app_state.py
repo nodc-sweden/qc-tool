@@ -1,5 +1,6 @@
 from qc_tool.callback_queue import CallbackQueue
 from qc_tool.models.file_model import FileModel
+from qc_tool.models.filter_model import FilterModel
 from qc_tool.models.manual_qc_model import ManualQcModel
 from qc_tool.models.map_model import MapModel
 from qc_tool.models.parameters_model import ParametersModel
@@ -13,6 +14,7 @@ class AppState:
         self._message_queue = CallbackQueue()
         self.file = FileModel(self._message_queue)
         self.visits = VisitsModel(self._message_queue)
+        self.filter = FilterModel(self._message_queue)
         self.map = MapModel(self._message_queue)
         self.validation_log = ValidationLogModel(self._message_queue)
         self.parameters = ParametersModel(self._message_queue)
