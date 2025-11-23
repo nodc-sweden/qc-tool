@@ -108,8 +108,8 @@ class VisitsBrowserView(BaseView):
         self._state = state
 
         self._map_view = MapView(map_controller, state.map, 400, 300)
-        self._station_navigator = VisitSelectorView(
-            visit_selector_controller, state.visits
+        self._visit_selector_view = VisitSelectorView(
+            visit_selector_controller, state.visits, state.filter
         )
 
         self._station_info = VisitInfoView(
@@ -131,7 +131,7 @@ class VisitsBrowserView(BaseView):
 
         # Top row
         navigation_column = Column(
-            self._station_navigator.layout,
+            self._visit_selector_view.layout,
             self._map_view.layout,
             sizing_mode="stretch_both",
             width=400,
@@ -248,7 +248,7 @@ class VisitsBrowserView(BaseView):
         self._set_data(self._data, self._selected_station.visit_key)
 
     def set_station(self, station_visit: str):
-        self._station_navigator.set_visit(station_visit)
+        self._visit_selector_view.set_visit(station_visit)
         self._selected_station = self._stations[station_visit]
         # self._station_info.set_station(self._selected_station)
         self._map_view.set_station(self._selected_station.visit_key)
@@ -334,7 +334,7 @@ class VisitsBrowserView(BaseView):
             )
             for visit_key in station_visit
         }
-        self._station_navigator.load_stations(self._stations)
+        self._visit_selector_view.load_stations(self._stations)
         self._map_view.load_stations(self._stations)
         # self._parameter_handler.reset_selection()
         self.set_station(station or station_visit[0])

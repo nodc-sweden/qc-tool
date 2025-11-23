@@ -56,6 +56,22 @@ class FileController:
 
     def load_file(self, file_path):
         print(f"Loading data from {file_path}...")
+        data = pl.read_csv(
+            file_path,
+            separator="\t",
+            dtypes={
+                "sea_basin": pl.Utf8,
+                "LONGI_NOM": pl.Utf8,
+                "LATIT_NOM": pl.Utf8,
+                "datetime": pl.Datetime,
+            },
+        )
+        self._set_data(data, file_path)
+        #self._validation_log_model.set_validation_log(validation_log)
+
+
+    def load_file_2(self, file_path):
+        print(f"Loading data from {file_path}...")
         try:
             controller = sharkadm_controller.get_polars_controller_with_data(file_path)
         except Exception:  # noqa: BLE001

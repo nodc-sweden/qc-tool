@@ -17,7 +17,7 @@ class VisitsBrowserController:
         )
 
         self.map_controller = MapController(self._state.visits, self._state.map)
-        self.visit_selector_controller = VisitSelectorController(self._state.visits)
+        self.visit_selector_controller = VisitSelectorController(self._state.visits, self._state.filter)
         self.visit_info_controller = VisitInfoController(self._state.visits)
         self.parameter_selector_controller = ParameterSelectorController(
             self._state.visits,

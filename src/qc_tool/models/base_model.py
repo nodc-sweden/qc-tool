@@ -12,4 +12,5 @@ class BaseModel:
         self._listeners[event_name].append(callback)
 
     def _notify_listeners(self, event_name: str):
+        print(f"Notifying listeners of '{event_name}'")
         self._message_queue.add_callbacks(self._listeners.get(event_name, []))

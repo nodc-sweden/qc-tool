@@ -200,7 +200,7 @@ class ProfileGridView(BaseView):
                     "data": parameter_data,
                 }
 
-            if None in (self._visits_model.selected_visit.sea_basin, source_data):
+            if True:#None in (self._visits_model.selected_visit.sea_basin, source_data):
                 parameter_statistics = None
             else:
                 # TODO

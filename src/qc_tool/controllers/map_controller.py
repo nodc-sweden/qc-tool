@@ -19,6 +19,8 @@ class MapController:
             VisitsModel.VISIT_SELECTED, self._visit_selected
         )
 
+
+
         self._map_model = map_model
         self._transformer = Transformer.from_crs("EPSG:4326", "EPSG:3857")
         self.map_view: MapView = None
