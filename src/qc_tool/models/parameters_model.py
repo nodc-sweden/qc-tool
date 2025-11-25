@@ -15,21 +15,27 @@ class ParametersModel(BaseModel):
         ("AMON", "NTRA", "NTRI"),
         ("AMON", "NTRZ", "NTRI"),
         ("PTOT", "PHOS", "SIO3-SI"),
+        ("PTOT", "PHOS"),
         ("NTOT", "NTRA", "AMON"),
         ("NTOT", "NTRZ", "AMON"),
         ("PHOS", "AMON", "DOXY_BTL"),
         ("ALK", "PH-TOT"),
         ("CPHL", "CHLFL", "DOXY_BTL"),
         ("CHLFL", "DOXY_CTD"),
+        ("CPHL", "CHLFL"),
     )
 
     _default_parameters = DEFAULT_PARAMETERS = (
-        "SALT_CTD + SALT_BTL + TEMP_CTD + TEMP_BTL",
-        "DOXY_CTD + DOXY_BTL + H2S",
+        "SALT_CTD + SALT_BTL",
+        "TEMP_CTD + TEMP_BTL",
+        "DOXY_CTD + DOXY_BTL",
         "NTOT + NTRZ + AMON",
         "PTOT + PHOS + SIO3-SI",
         "ALK + PH-TOT",
-        "CPHL + CHLFL + DOXY_BTL",
+        "CPHL + CHLFL",
+        "DOXY_CTD + DOXY_BTL + H2S",
+        "AMON",
+        "PHOS",
     )
 
     def __init__(self, *args, **kwargs):
