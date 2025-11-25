@@ -39,8 +39,10 @@ def changes_report(data: pl.DataFrame) -> pl.DataFrame:
     # Find all automatic QC columns dynamically
     auto_qc_columns = [c for c in data.columns if "total_automatic" in c]
 
-    # Columns to include in the report
+    # Columns to include in the feedback file
+    # visit_key is needed to be able to merge feedback file later on
     report_columns = [
+        "visit_key",
         "LATIT",
         "LONGI",
         "STATN",
@@ -65,5 +67,5 @@ def changes_report(data: pl.DataFrame) -> pl.DataFrame:
 
     report_columns = [col for col in report_columns if col in data.columns]
 
-    # Filter rows where incoming != total and select the report columns
+    # Filter rows where incoming != total and select the feedback file columns
     return data.filter(incoming != total).select(report_columns)
