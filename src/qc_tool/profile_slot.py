@@ -316,14 +316,14 @@ class ProfileSlot(BaseView):
         self._statistics_source.data = {key: [] for key in self.statistics_source_fields}
 
         self._figure.title.text = expand_abbreviation(title)
-        for (paramter_name, parameter_data), source, values in zip(
+        for (parameter_name, parameter_data), source, values in zip(
             data, self._sources, self._values
         ):
             if parameter_data is None:
                 self._parameter_data.append(None)
                 continue
             source.data = parameter_data
-            values.name = expand_abbreviation(paramter_name)
+            values.name = expand_abbreviation(parameter_name)
             self._parameter_data.append(parameter_data["data"])
 
         self._sync_profile_options()

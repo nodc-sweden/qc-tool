@@ -32,13 +32,16 @@ class FileView(BaseView):
         self._load_button = Button(label="Select data...")
         self._load_button.on_click(self._on_load_button_clicked)
 
+        self._load_feedback_button = Button(label="Select feedbackfile...", disabled=True)
+        self._load_feedback_button.on_click(self._on_load_feedback_button_clicked)
+
         self._save_as_button = Button(label="Save as...", disabled=True)
         self._save_as_button.on_click(self._on_save_button_clicked)
 
-        self._save_changes_as_button = Button(
-            label="Save only changed rows as...", disabled=True
+        self._save_feedback_as_button = Button(
+            label="Save feedbackfile...", disabled=True
         )
-        self._save_changes_as_button.on_click(self._on_save_changes_button_clicked)
+        self._save_feedback_as_button.on_click(self._on_save_feedback_button_clicked)
 
         self._load_indicator = Div(
             width=50,
@@ -53,8 +56,9 @@ class FileView(BaseView):
             self._loaded_file_label,
             self._load_indicator,
             self._load_button,
+            self._load_feedback_button,
             self._save_as_button,
-            self._save_changes_as_button,
+            self._save_feedback_as_button,
         )
 
     def _on_save_button_clicked(self, event):
@@ -90,7 +94,27 @@ class FileView(BaseView):
         self._loaded_file_label.text = "Loading..."
         curdoc().add_next_tick_callback(lambda: self._controller.load_file(selected_path))
 
-    def _on_save_changes_button_clicked(self, event):
+    def _on_load_feedback_button_clicked(self, event):
+        try:
+            root = tkinter.Tk()
+            root.iconify()
+            selected_path = tkinter.filedialog.askopenfilename()
+            root.destroy()
+        except tkinter.TclError:
+            selected_path = None
+
+        if not selected_path:
+            return
+        selected_path = Path(selected_path)
+        self._load_indicator.visible = True
+        self._loaded_file_label.text = "Loading..."
+        curdoc().add_next_tick_callback(
+            lambda: self._controller.load_feedbackfile(
+                selected_path, self._file_model.data
+            )
+        )
+
+    def _on_save_feedback_button_clicked(self, event):
         try:
             root = tkinter.Tk()
             root.iconify()
@@ -113,8 +137,9 @@ class FileView(BaseView):
 
     def file_load_completed(self):
         self._load_indicator.visible = False
+        self._load_feedback_button.disabled = False
         self._save_as_button.disabled = False
-        self._save_changes_as_button.disabled = False
+        self._save_feedback_as_button.disabled = False
 
         if self._file_model.file_path:
             file_info = (
@@ -126,3 +151,6 @@ class FileView(BaseView):
                 "<label>File:</label><p style='font-style: italic;'>No file loaded</p>"
             )
         self._loaded_file_label.text = file_info
+
+    def feedback_load_completed(self):
+        self._load_indicator.visible = False

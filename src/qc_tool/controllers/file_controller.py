@@ -8,7 +8,8 @@ import nodc_station
 import pandas as pd
 import polars as pl
 from nodc_statistics import regions
-from ocean_data_qc.fyskemqc import FysKemQc
+from ocean_data_qc.fyskem.qc_flag import QcFlag
+from ocean_data_qc.fyskemqc import FysKemQc, QcFlags
 from sharkadm import (
     adm_logger,
     exporters,
@@ -54,6 +55,7 @@ class FileController:
         self._file_model = file_model
         self._file_model.register_listener(FileModel.NEW_DATA, self._on_new_data)
         self._file_model.register_listener(FileModel.LOAD_ABORTED, self._on_load_aborted)
+        self._file_model.register_listener(FileModel.UPDATED_DATA, self._on_feedback_load)
 
         self._validation_log_model = validation_log_model
 
@@ -95,6 +97,15 @@ class FileController:
         self._file_model.add_data(data, file_path)
         self._validation_log_model.set_validation_log(validation_log)
 
+    def load_feedbackfile(self, path, raw_data: pl.DataFrame):
+        selected_path = Path(path)
+        feedback_data = pl.read_excel(selected_path)
+        feedback_data = feedback_data.cast({"DEPH": pl.Float64})
+        joined_data = self.apply_feedback_file(
+            raw_data=raw_data, feedback_data=feedback_data
+        )
+        self._file_model.data_flags_update(joined_data)
+
     def save_data(self, file_path: Path):
         self._file_model.data.write_csv(file_path, separator="\t")
 
@@ -117,6 +128,9 @@ class FileController:
 
     def _on_load_aborted(self):
         self.file_view.file_load_completed()
+
+    def _on_feedback_load(self):
+        self.file_view.feedback_load_completed()
 
     def _on_qc_performed(self):
         t0 = time.perf_counter()
@@ -289,7 +303,6 @@ class FileController:
         description_for_validator = {
             validator.get_display_name(): validator.get_validator_description()
             for validator in (
-                validators.ValidateCommonValuesByVisit,
                 validators.ValidateCoordinatesDm,
                 validators.ValidateDateAndTime,
                 validators.ValidateNameInMaster,
@@ -388,6 +401,53 @@ class FileController:
 
         t1 = time.perf_counter()
         print(f"Extracting basins from geopackage file finished ({t1 - t0:.3f} s.)")
+
+    @staticmethod
+    def _apply_manual_flag(qflag_str: str, manual_flag: str) -> str:
+        if manual_flag is None:  # <-- skip nulls
+            return qflag_str  # just return the original string
+        q = QcFlags.from_string(qflag_str)
+        try:
+            int(manual_flag)
+        except ValueError:
+            return qflag_str
+
+        q.manual = QcFlag(int(manual_flag))
+
+        return str(q)
+
+    def apply_feedback_file(self, raw_data: pl.DataFrame, feedback_data: pl.DataFrame):
+        print("applying manual flags from feedback file....")
+        join_columns = ["visit_key", "DEPH", "parameter"]
+        # Join feedback into raw data
+        joined_data = raw_data.join(
+            feedback_data, on=join_columns, how="left", suffix="_feedback"
+        )
+        joined_data = joined_data.with_columns(
+            pl.when(
+                (pl.col("MANUAL_QC") != pl.col("MANUAL_QC_feedback"))
+                & pl.col("MANUAL_QC_feedback").is_not_null()
+            )
+            .then(
+                pl.struct(["quality_flag_long", "MANUAL_QC_feedback"]).map_elements(
+                    lambda row: self._apply_manual_flag(
+                        row["quality_flag_long"], row["MANUAL_QC_feedback"]
+                    ),
+                    return_dtype=pl.Utf8,
+                )
+            )
+            .otherwise(pl.col("quality_flag_long"))
+            .alias("quality_flag_long"),
+            pl.when(
+                (pl.col("MANUAL_QC") != pl.col("MANUAL_QC_feedback"))
+                & pl.col("MANUAL_QC_feedback").is_not_null()
+            )
+            .then(pl.col("MANUAL_QC_feedback"))
+            .otherwise(pl.col("MANUAL_QC"))
+            .alias("MANUAL_QC"),
+        )
+        print("data updated with manual flags from feedback file")
+        return joined_data
 
 
 def _load_ocean_shapefile():
