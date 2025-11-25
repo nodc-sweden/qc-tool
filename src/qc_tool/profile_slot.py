@@ -13,6 +13,7 @@ from bokeh.models import (
     HoverTool,
     Label,
     LassoSelectTool,
+    SaveTool,
     Span,
     WheelZoomTool,
 )
@@ -121,6 +122,7 @@ class ProfileSlot(BaseView):
         wheel_zoom = WheelZoomTool()
         hover = HoverTool()
         select = LassoSelectTool()
+        save = SaveTool()
 
         if linked_plot:
             self._crosshair_line = linked_plot._crosshair_line
@@ -133,7 +135,7 @@ class ProfileSlot(BaseView):
             "height": self._height,
             "width": self._width,
             "toolbar_location": "below",
-            "tools": ["reset", "pan", wheel_zoom, hover, crosshair, select],
+            "tools": ["reset", "pan", wheel_zoom, hover, crosshair, select, save],
             "output_backend": "webgl",
             "tooltips": [
                 ("Parameter", "$name"),
@@ -156,7 +158,6 @@ class ProfileSlot(BaseView):
         }
 
         self._figure = figure(**self._figure_config)
-        self._figure.toolbar.active_scroll = wheel_zoom
 
         self._init_background()
         self._init_statistics_plot()
