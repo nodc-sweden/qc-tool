@@ -7,11 +7,12 @@ from pathlib import Path
 
 import geopandas as gp
 import nodc_station
-from bokeh.models import Button, Column, Div, FileInput
+from bokeh.io import curdoc
+from bokeh.models import Button, Column, Div, FileInput, ImportedStyleSheet
 from sharkadm import adm_logger, exporters, multi_transformers, transformers, validators
 from sharkadm import controller as sharkadm_controller
 
-from qc_tool.layoutable import Layoutable
+from qc_tool.views.base_view import BaseView
 
 CONFIG_ENV = "NODC_CONFIG"
 
@@ -43,7 +44,7 @@ def _load_ocean_shapefile():
     return gp.GeoDataFrame()
 
 
-class FileHandler(Layoutable):
+class FileHandler(BaseView):
     def __init__(
         self,
         external_load_file_callback,
@@ -60,6 +61,7 @@ class FileHandler(Layoutable):
 
         self._load_header = Div(width=500, text="<h3>Load and save</h3>")
         self._loaded_file_label = Div(width=500)
+
         self._file_input = FileInput(
             title="Select file:", accept=".txt,.csv", max_width=500
         )
@@ -79,6 +81,14 @@ class FileHandler(Layoutable):
             )
         )
 
+        self._load_indicator = Div(
+            width=120,
+            height=120,
+            text='<div class="loader"></div>',
+            stylesheets=[ImportedStyleSheet(url="qc_tool/static/css/style.css")],
+        )
+        self._load_indicator.visible = False
+
         self._file_loaded()
 
     def _load_file(self, event):
@@ -94,6 +104,10 @@ class FileHandler(Layoutable):
             return
         selected_path = Path(selected_path)
         print(f"Load data from {selected_path}...")
+        self._load_indicator.visible = True
+        curdoc().add_next_tick_callback(lambda: self._load_file_callback(selected_path))
+
+    def _load_file_callback(self, selected_path: Path):
         controller = sharkadm_controller.get_polars_controller_with_data(selected_path)
 
         self._reset_validation_logs()
@@ -109,6 +123,8 @@ class FileHandler(Layoutable):
         self._file_loaded()
         self._external_load_file_callback(data, validation)
         self._external_automatic_qc_callback()
+
+        self._load_indicator.visible = False
 
     def _apply_transformers(self, controller):
         print("Running SHARKadm transformers...")
@@ -305,4 +321,5 @@ class FileHandler(Layoutable):
             self._loaded_file_label,
             self._save_as_button,
             self._save_changes_as_button,
+            self._load_indicator,
         )

@@ -1,9 +1,15 @@
+import typing
+
+if typing.TYPE_CHECKING:
+    from qc_tool.controllers.manual_qc_controller import ManualQcController
+
 import jinja2
 from bokeh.models import Column, Div, ImportedStyleSheet, RadioButtonGroup, Row
 from ocean_data_qc.fyskem.qc_flag import QC_FLAG_CSS_COLORS, QcFlag
 from ocean_data_qc.fyskem.qc_flag_tuple import QcField
 
-from qc_tool.layoutable import Layoutable
+from qc_tool.models.manual_qc_model import ManualQcModel
+from qc_tool.views.base_view import BaseView
 
 _flag_info_template = jinja2.Template("""
 {% if values %}
@@ -36,12 +42,23 @@ _flag_info_template = jinja2.Template("""
 """)  # noqa: E501
 
 
-class ManualQcHandler(Layoutable):
-    def __init__(self, values_changed_callback=None):
+class ManualQcView(BaseView):
+    def __init__(
+        self,
+        controller: "ManualQcController",
+        manual_qc_model: ManualQcModel,
+    ):
+        self._controller = controller
+        self._controller.manual_qc_view = self
+
+        self._manual_qc_model = manual_qc_model
+        self._manual_qc_model.register_listener(
+            ManualQcModel.VALUES_SELECTED, self._on_values_selected
+        )
+
         self._manual_qc_header = Div(width=500, text="<h3>Perfom manual QC</h3>")
         self._manual_qc_info = Div(width=500, text="Select samples with the lasso tool")
-        self._values = []
-        self._values_changed_callback = values_changed_callback
+
         self._value_table = Div(
             text=_flag_info_template.render(values=[]),
             stylesheets=[ImportedStyleSheet(url="qc_tool/static/css/style.css")],
@@ -53,9 +70,13 @@ class ManualQcHandler(Layoutable):
             orientation="vertical",
             active=None,
         )
-        self._updating_qc_flag = False
-        self._qc_buttons.on_change("active", self._qc_flag_changed)
 
+        self._qc_buttons.on_event("button_click", self._on_qc_buttons_clicked)
+
+        self._update()
+
+    def _on_values_selected(self):
+        self._values = self._manual_qc_model.selected_values
         self._update()
 
     def select_values(self, values=None):
@@ -64,13 +85,15 @@ class ManualQcHandler(Layoutable):
         self._update()
 
     def _update(self):
-        qc_values = {value.qc.total for value in self._values}
+        qc_values = {value.qc.total for value in self._manual_qc_model.selected_values}
         current_value = qc_values.pop() if len(qc_values) == 1 else None
 
         self._value_table.text = _flag_info_template.render(
-            values=self._values, qc_colors=QC_FLAG_CSS_COLORS, QcField=QcField
+            values=self._manual_qc_model.selected_values,
+            qc_colors=QC_FLAG_CSS_COLORS,
+            QcField=QcField,
         )
-        self._qc_buttons.visible = bool(self._values)
+        self._qc_buttons.visible = bool(self._manual_qc_model.selected_values)
         self._update_flag_button(current_value)
 
     def _update_flag_button(self, value):
@@ -86,9 +109,6 @@ class ManualQcHandler(Layoutable):
             Row(self._value_table, self._qc_buttons),
         )
 
-    def _qc_flag_changed(self, attr, old, new):
-        if not self._updating_qc_flag:
-            new_flag = QcFlag(new)
-            for value in self._values:
-                value.qc.manual = new_flag
-            self._values_changed_callback(self._values)
+    def _on_qc_buttons_clicked(self, event):
+        new_flag = QcFlag(event.model.active)
+        self._manual_qc_model.set_flag(new_flag)
