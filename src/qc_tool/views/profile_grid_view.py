@@ -198,7 +198,7 @@ class ProfileGridView(BaseView):
             if None in (self._visits_model.selected_visit.sea_basin, source_data):
                 parameter_statistics = None
             else:
-                statistics_parameter = self.statistics_parameter_for_parameter(parameter)
+                statistics_parameter = parameter
 
                 parameter_statistics = (
                     statistic.get_profile_statistics_for_parameter_and_sea_basin(
@@ -224,13 +224,3 @@ class ProfileGridView(BaseView):
             )
 
         return self._parameters_model.parameter_data.get(parameter, (None, None))
-
-    def statistics_parameter_for_parameter(self, parameter):
-        if parameter.startswith("SALT_"):
-            return "SALT_CTD"
-        elif parameter.startswith("TEMP_"):
-            return "TEMP_CTD"
-        elif parameter.startswith("DOXY_"):
-            return "DOXY_BTL"
-        else:
-            return parameter
