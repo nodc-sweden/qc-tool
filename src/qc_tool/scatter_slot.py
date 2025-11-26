@@ -36,6 +36,7 @@ PARAMETER_ABBREVIATIONS = {
     "NTRZ": "Nitrate + Nitrite",
     "PH": "pH",
     "PHOS": "Phosphate",
+    "PH_TOT": "Spectrofotometric pH",
     "PH_LAB": "pH Laboratory",
     "PH_LAB_TEMP": "Temperature pH Laboratory",
     "PTOT": "Total phosphorus",
