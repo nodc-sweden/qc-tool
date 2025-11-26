@@ -36,6 +36,7 @@ PARAMETER_ABBREVIATIONS = {
     "NTRZ": "Nitrate + Nitrite",
     "PH": "pH",
     "PHOS": "Phosphate",
+    "PH_TOT": "Spectrofotometric pH",
     "PH_LAB": "pH Laboratory",
     "PH_LAB_TEMP": "Temperature pH Laboratory",
     "PTOT": "Total phosphorus",
@@ -48,6 +49,7 @@ PARAMETER_ABBREVIATIONS = {
     "TEMP_CTD": "Temperature (CTD)",
     "TEMP_CTD_2": "Temperature (CTD) 2",
 }
+
 
 
 def expand_abbreviation(abbreviation: str) -> str:
