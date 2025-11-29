@@ -158,18 +158,19 @@ class FileController:
         print("Running SHARKadm transformers...")
         t0 = time.perf_counter()
         for transformer, args, kwargs in (
+            (transformers.AddCtdKust, (), {}),
             (transformers.PolarsRemoveNonDataLines, (), {}),
             (transformers.PolarsReplaceCommaWithDot, (), {}),
             (multi_transformers.DateTimePolars, (), {}),
             (multi_transformers.PositionPolars, (), {}),
             (transformers.PolarsAddVisitKey, (), {}),
+            (transformers.PolarsAddPressure, (), {}),
+            (transformers.PolarsAddDensityWide, (), {}),
+            (transformers.PolarsAddOxygenSaturationWide, (), {}),
             (transformers.PolarsWideToLong, (), {}),
             (transformers.PolarsMoveLessThanFlagRowFormat, (), {}),
             (transformers.PolarsMoveLargerThanFlagRowFormat, (), {}),
             (transformers.PolarsConvertFlagsToSDN, (), {}),
-            (transformers.PolarsAddPressure, (), {}),
-            (transformers.PolarsAddDensity, (), {}),
-            (transformers.PolarsAddOxygenSaturation, (), {}),
             (transformers.PolarsAddAnalyseInfo, (), {}),
             (transformers.PolarsAddLmqnt, (), {}),
             (transformers.PolarsAddUncertainty, (), {}),
