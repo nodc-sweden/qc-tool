@@ -85,6 +85,7 @@ class FileController:
         self._reset_validation_logs()
         self._apply_transformers(controller)
         self._run_validators(controller)
+        self._apply_post_transformers(controller)
         validation_log = self._collect_validation_logs()
         print("Data loaded")
         data = controller.export(
@@ -248,6 +249,27 @@ class FileController:
 
         t1 = time.perf_counter()
         print(f"SHARKadm validators finished ({t1 - t0:.3f} s.)")
+
+    def _apply_post_transformers(self, controller):
+        print("Running SHARKadm post transformers...")
+        reported_cols = (
+            "water_depth_m",
+            "air_temperature_degc",
+            "sample_depth_m",
+        )
+        float_cols = ["water_depth_m", "air_temperature_degc", "sample_depth_m", "value"]
+        t0 = time.perf_counter()
+        for transformer, args, kwargs in (
+            (transformers.AddColumnsWithPrefix, (reported_cols, "reported"), {}),
+            (transformers.PolarsAddFloatColumns, (float_cols, float_cols), {}),
+        ):
+            tn_0 = time.perf_counter()
+            controller.transform(transformer(*args, **kwargs))
+            tn_1 = time.perf_counter()
+            print(f"\t{transformer.__name__}: {tn_1 - tn_0:.3f} s.")
+
+        t1 = time.perf_counter()
+        print(f"SHARKadm post transformers finished ({t1 - t0:.3f} s.)")
 
     def _match_sea_basins(self, data):
         if self._geo_info_model.geo_info is None:
