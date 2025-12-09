@@ -807,7 +807,7 @@ wheels = [
 [[package]]
 name = "ocean-data-qc"
 version = "2025.1.4"
-source = { git = "https://github.com/nodc-sweden/ocean-data-qc?rev=v2025.1.4#d3e4062998d617331addba4628e3c9b0a71a83b0" }
+source = { git = "https://github.com/nodc-sweden/ocean-data-qc?rev=main#2d9648e5a483de37a688069f8beb996a6535a8ce" }
 dependencies = [
     { name = "jinja2" },
     { name = "pandas" },
@@ -980,11 +980,11 @@ wheels = [
 
 [[package]]
 name = "platformdirs"
-version = "4.5.0"
+version = "4.5.1"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/61/33/9611380c2bdb1225fdef633e2a9610622310fed35ab11dac9620972ee088/platformdirs-4.5.0.tar.gz", hash = "sha256:70ddccdd7c99fc5942e9fc25636a8b34d04c24b335100223152c2803e4063312", size = 21632 }
+sdist = { url = "https://files.pythonhosted.org/packages/cf/86/0248f086a84f01b37aaec0fa567b397df1a119f73c16f6c7a9aac73ea309/platformdirs-4.5.1.tar.gz", hash = "sha256:61d5cdcc6065745cdd94f0f878977f8de9437be93de97c1c12f853c9c0cdcbda", size = 21715 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/73/cb/ac7874b3e5d58441674fb70742e6c374b28b0c7cb988d37d991cde47166c/platformdirs-4.5.0-py3-none-any.whl", hash = "sha256:e578a81bb873cbb89a41fcc904c7ef523cc18284b7e3b3ccf06aca1403b7ebd3", size = 18651 },
+    { url = "https://files.pythonhosted.org/packages/cb/28/3bfe2fa5a7b9c46fe7e13c97bda14c895fb10fa2ebf1d0abb90e0cea7ee1/platformdirs-4.5.1-py3-none-any.whl", hash = "sha256:d03afa3963c806a9bed9d5125c8f4cb2fdaf74a55ab60e5d59b3fde758104d31", size = 18731 },
 ]
 
 [[package]]
@@ -1310,7 +1310,7 @@ requires-dist = [
     { name = "jinja2", specifier = "==3.1.6" },
     { name = "nodc-codes", git = "https://github.com/nodc-sweden/nodc-codes?rev=v0.3.0" },
     { name = "nodc-statistics", git = "https://github.com/nodc-sweden/nodc-statistics?rev=v2025.1.1" },
-    { name = "ocean-data-qc", git = "https://github.com/nodc-sweden/ocean-data-qc?rev=v2025.1.4" },
+    { name = "ocean-data-qc", git = "https://github.com/nodc-sweden/ocean-data-qc?rev=main" },
     { name = "pandas", specifier = "==2.3.3" },
     { name = "pyproj", specifier = "==3.7.1" },
     { name = "sharkadm", git = "https://github.com/nodc-sweden/SHARKadm?rev=main" },
@@ -1523,7 +1523,7 @@ wheels = [
 [[package]]
 name = "sharkadm"
 version = "3.3.2"
-source = { git = "https://github.com/nodc-sweden/SHARKadm?rev=main#7ff240b5a08d1047776e13018397a27576b01f27" }
+source = { git = "https://github.com/nodc-sweden/SHARKadm?rev=main#09488c39a86efad4a27385d686ed0fb1c9e17616" }
 dependencies = [
     { name = "fastexcel" },
     { name = "geopandas" },
@@ -1613,11 +1613,11 @@ wheels = [
 
 [[package]]
 name = "urllib3"
-version = "2.5.0"
+version = "2.6.1"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/15/22/9ee70a2574a4f4599c47dd506532914ce044817c7752a79b6a51286319bc/urllib3-2.5.0.tar.gz", hash = "sha256:3fc47733c7e419d4bc3f6b3dc2b4f890bb743906a30d56ba4a5bfa4bbff92760", size = 393185 }
+sdist = { url = "https://files.pythonhosted.org/packages/5e/1d/0f3a93cca1ac5e8287842ed4eebbd0f7a991315089b1a0b01c7788aa7b63/urllib3-2.6.1.tar.gz", hash = "sha256:5379eb6e1aba4088bae84f8242960017ec8d8e3decf30480b3a1abdaa9671a3f", size = 432678 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/a7/c2/fe1e52489ae3122415c51f387e221dd0773709bad6c6cdaa599e8a2c5185/urllib3-2.5.0-py3-none-any.whl", hash = "sha256:e6b01673c0fa6a13e374b50871808eb3bf7046c4b125b216f6bf1cc604cff0dc", size = 129795 },
+    { url = "https://files.pythonhosted.org/packages/bc/56/190ceb8cb10511b730b564fb1e0293fa468363dbad26145c34928a60cb0c/urllib3-2.6.1-py3-none-any.whl", hash = "sha256:e67d06fe947c36a7ca39f4994b08d73922d40e6cca949907be05efa6fd75110b", size = 131138 },
 ]
 
 [[package]]
