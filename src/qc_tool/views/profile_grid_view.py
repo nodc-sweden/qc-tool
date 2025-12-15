@@ -155,13 +155,6 @@ class ProfileGridView(BaseView):
                     )
                 )
 
-            # parameter_data = parameter_data.with_columns(
-            #     quality_flag=pl.struct("quality_flag_long").map_elements(
-            #         lambda row: QcFlags.from_string(row["quality_flag_long"]).total,
-            #         return_dtype=pl.Int8,
-            #     )
-            # )
-
             parameter_data = parameter_data.with_columns(
                 quality_flag=pl.struct("quality_flag_long").map_elements(
                     lambda row: QcFlags.from_string(row["quality_flag_long"]).total.value,
@@ -171,9 +164,10 @@ class ProfileGridView(BaseView):
 
             qc_flags = list(map(QcFlags.from_string, parameter_data["quality_flag_long"]))
 
-            colors = list(
-                map(QC_FLAG_CSS_COLORS.get, list(parameter_data["quality_flag"]))
-            )
+            colors = [
+                QC_FLAG_CSS_COLORS.get(QcFlag.parse(flag))
+                for flag in parameter_data["quality_flag"]
+            ]
 
             line_colors = [
                 "black" if flags.incoming.value != flags.total.value else "none"

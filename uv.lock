@@ -807,7 +807,7 @@ wheels = [
 [[package]]
 name = "ocean-data-qc"
 version = "2025.1.4"
-source = { git = "https://github.com/nodc-sweden/ocean-data-qc?rev=90-lmqnt-test#6ed0dcf96ece26d44d912c8ec149fc0a984393dc" }
+source = { git = "https://github.com/nodc-sweden/ocean-data-qc?rev=90-lmqnt-test#75312c55da026501141488d33288a501791199eb" }
 dependencies = [
     { name = "jinja2" },
     { name = "pandas" },
@@ -1523,7 +1523,7 @@ wheels = [
 [[package]]
 name = "sharkadm"
 version = "3.3.2"
-source = { git = "https://github.com/nodc-sweden/SHARKadm?rev=main#09488c39a86efad4a27385d686ed0fb1c9e17616" }
+source = { git = "https://github.com/nodc-sweden/SHARKadm?rev=main#e8bd3b32ea55352208a3f5a55162691961d1537d" }
 dependencies = [
     { name = "fastexcel" },
     { name = "geopandas" },
