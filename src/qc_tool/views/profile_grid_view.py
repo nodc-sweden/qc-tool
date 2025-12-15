@@ -155,10 +155,17 @@ class ProfileGridView(BaseView):
                     )
                 )
 
+            # parameter_data = parameter_data.with_columns(
+            #     quality_flag=pl.struct("quality_flag_long").map_elements(
+            #         lambda row: QcFlags.from_string(row["quality_flag_long"]).total,
+            #         return_dtype=pl.Int8,
+            #     )
+            # )
+
             parameter_data = parameter_data.with_columns(
                 quality_flag=pl.struct("quality_flag_long").map_elements(
-                    lambda row: QcFlags.from_string(row["quality_flag_long"]).total,
-                    return_dtype=pl.Int8,
+                    lambda row: QcFlags.from_string(row["quality_flag_long"]).total.value,
+                    return_dtype=pl.Utf8,
                 )
             )
 

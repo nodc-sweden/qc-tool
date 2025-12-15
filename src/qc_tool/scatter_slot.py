@@ -174,15 +174,30 @@ class ScatterSlot(BaseView):
 
             merged_data = x_data.join(y_data, on="DEPH", suffix="_y")
 
+            # merged_data = merged_data.with_columns(
+            #     quality_flag_x=[
+            #         flags.total
+            #         for flags in map(
+            #             QcFlags.from_string, list(merged_data["quality_flag_long"])
+            #         )
+            #     ],
+            #     quality_flag_y=[
+            #         flags.total
+            #         for flags in map(
+            #             QcFlags.from_string, list(merged_data["quality_flag_long_y"])
+            #         )
+            #     ],
+            # )
+
             merged_data = merged_data.with_columns(
                 quality_flag_x=[
-                    flags.total
+                    flags.total.value
                     for flags in map(
                         QcFlags.from_string, list(merged_data["quality_flag_long"])
                     )
                 ],
                 quality_flag_y=[
-                    flags.total
+                    flags.total.value
                     for flags in map(
                         QcFlags.from_string, list(merged_data["quality_flag_long_y"])
                     )
