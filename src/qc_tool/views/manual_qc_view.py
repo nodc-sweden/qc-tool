@@ -27,10 +27,18 @@ _flag_info_template = jinja2.Template("""
     <tbody>
     {% for value in values %}
         <tr>
-            <td><font color="{{ qc_colors[value.qc.total.value]}}">●</font> {{ value.qc.total }}</td>
-            <td><font color="{{ qc_colors[value.qc.incoming.value]}}" title="{{ value.qc.incoming }}">●</font></td>
             <td>
-                {% for flag in value.qc.automatic %}<font color="{{ qc_colors[flag.value]}}" title="{{ QcField(loop.index0).name }}: {{ flag }}">●</font>{% endfor %}
+              <font color="{{ qc_colors[value.qc.total] }}">●</font> {{ value.qc.total }}
+            </td>
+            <td>
+              <font color="{{ qc_colors[value.qc.incoming] }}"
+                    title="{{ value.qc.incoming }}">●</font>
+            </td>
+            <td>
+            {% for flag in value.qc.automatic %}
+              <font color="{{ qc_colors[flag] }}"
+                    title="{{ QcField(loop.index0).name }}: {{ flag }}">●</font>
+            {% endfor %}
             </td>
             <td>{{value._data["DEPH"]}} m</td>
             <td>{{value._data["value"]}}</td>
@@ -39,7 +47,7 @@ _flag_info_template = jinja2.Template("""
     </tbody>
 </table>
 {% endif %}
-""")  # noqa: E501
+""")
 
 
 class ManualQcView(BaseView):
@@ -63,10 +71,20 @@ class ManualQcView(BaseView):
             text=_flag_info_template.render(values=[]),
             stylesheets=[ImportedStyleSheet(url="qc_tool/static/css/style.css")],
         )
+        # self._qc_buttons = RadioButtonGroup(
+        #     labels=[
+        #         str(flag) for flag in QcFlag if not QC_FLAG_CSS_COLORS[flag] == "gray"
+        #     ],
+        #     orientation="vertical",
+        #     active=None,
+        # )
+
+        self._qc_flag_buttons = [
+            flag for flag in QcFlag if QC_FLAG_CSS_COLORS[flag] != "gray"
+        ]
+
         self._qc_buttons = RadioButtonGroup(
-            labels=[
-                str(flag) for flag in QcFlag if not QC_FLAG_CSS_COLORS[flag] == "gray"
-            ],
+            labels=[str(flag) for flag in self._qc_flag_buttons],
             orientation="vertical",
             active=None,
         )
@@ -96,9 +114,19 @@ class ManualQcView(BaseView):
         self._qc_buttons.visible = bool(self._manual_qc_model.selected_values)
         self._update_flag_button(current_value)
 
-    def _update_flag_button(self, value):
+    # def _update_flag_button(self, value):
+    #     self._updating_qc_flag = True
+    #     self._qc_buttons.active = value
+    #     self._updating_qc_flag = False
+
+    def _update_flag_button(self, value: QcFlag | None):
         self._updating_qc_flag = True
-        self._qc_buttons.active = value
+
+        if value is None:
+            self._qc_buttons.active = None
+        else:
+            self._qc_buttons.active = self._qc_flag_buttons.index(value)
+
         self._updating_qc_flag = False
 
     @property
@@ -109,6 +137,17 @@ class ManualQcView(BaseView):
             Row(self._value_table, self._qc_buttons),
         )
 
+    # def _on_qc_buttons_clicked(self, event):
+    #     new_flag = QcFlag(event.model.active)
+    #     self._manual_qc_model.set_flag(new_flag)
+
     def _on_qc_buttons_clicked(self, event):
-        new_flag = QcFlag(event.model.active)
+        if self._updating_qc_flag:
+            return
+
+        index = event.model.active
+        if index is None:
+            return
+
+        new_flag = self._qc_flag_buttons[index]
         self._manual_qc_model.set_flag(new_flag)
