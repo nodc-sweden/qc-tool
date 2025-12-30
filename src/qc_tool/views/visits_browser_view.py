@@ -167,13 +167,6 @@ class VisitsBrowserView(BaseView):
             filename,
             header_format={"bold": True, "border": 2},
             freeze_panes=(1, 0),
-            column_formats={
-                "LATIT": "0.00",
-                "LONGI": "0.00",
-                "value": "0.00",
-                "DEPH": "0.00",
-                "WADEP": "0.00",
-            },
         )
 
     def parameter_handler_callback(self, *, columns, rows):
