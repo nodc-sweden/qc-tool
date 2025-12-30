@@ -115,13 +115,6 @@ class FileController:
             file_path,
             header_format={"bold": True, "border": 2},
             freeze_panes=(1, 0),
-            column_formats={
-                "LATIT": "0.00",
-                "LONGI": "0.00",
-                "value": "0.00",
-                "DEPH": "0.00",
-                "WADEP": "0.00",
-            },
         )
 
     def _on_new_data(self):
