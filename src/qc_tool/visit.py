@@ -13,6 +13,8 @@ class Visit:
             "DEPH",
             "LATIT",
             "LONGI",
+            "sample_latitude_dd",
+            "sample_longitude_dd",
             "SDATE",
             "SHIPC",
             "STATN",
@@ -99,13 +101,11 @@ class Visit:
 
     @property
     def longitude(self) -> float:
-        degrees, remainder = divmod(self._common.get("LONGI"), 100)
-        return degrees + remainder / 60
+        return self._common.get("sample_longitude_dd")
 
     @property
     def latitude(self) -> float:
-        degrees, remainder = divmod(self._common.get("LATIT"), 100)
-        return degrees + remainder / 60
+        return self._common.get("sample_latitude_dd")
 
     @property
     def metadata(self) -> MetadataVisit:

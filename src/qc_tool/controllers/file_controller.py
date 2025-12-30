@@ -89,7 +89,7 @@ class FileController:
         validation_log = self._collect_validation_logs()
         print("Data loaded")
         data = controller.export(
-            exporters.PolarsDataFrame(header_as="PhysicalChemical", float_columns=True)
+            exporters.PolarsDataFrame(header_as="PhysicalChemical", float_columns=False)
         )
         data = self._match_sea_basins(data)
         data = prepare_data(data)
@@ -256,10 +256,21 @@ class FileController:
         print("Running SHARKadm post transformers...")
         reported_cols = (
             "water_depth_m",
+            "wind_speed_ms",
             "air_temperature_degc",
+            "air_pressure_hpa",
             "sample_depth_m",
         )
-        float_cols = ["water_depth_m", "air_temperature_degc", "sample_depth_m", "value"]
+        float_cols = [
+            "sample_latitude_dd",
+            "sample_longitude_dd",
+            "water_depth_m",
+            "wind_speed_ms",
+            "air_temperature_degc",
+            "air_pressure_hpa",
+            "sample_depth_m",
+            "value",
+        ]
         t0 = time.perf_counter()
         for transformer, args, kwargs in (
             (transformers.AddColumnsWithPrefix, (reported_cols, "reported"), {}),
