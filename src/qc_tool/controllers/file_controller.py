@@ -100,7 +100,11 @@ class FileController:
 
     def load_feedbackfile(self, path, raw_data: pl.DataFrame):
         selected_path = Path(path)
-        feedback_data = pl.read_excel(selected_path)
+        feedback_data = pl.read_excel(
+            selected_path,
+            columns=["visit_key", "DEPH", "parameter", "MANUAL_QC"],
+            schema_overrides={"MANUAL_QC": pl.Utf8},
+        )
         feedback_data = feedback_data.cast({"DEPH": pl.Float64})
         joined_data = self.apply_feedback_file(
             raw_data=raw_data, feedback_data=feedback_data
@@ -437,12 +441,9 @@ class FileController:
             return qflag_str  # just return the original string
         q = QcFlags.from_string(qflag_str)
         try:
-            int(manual_flag)
+            q.manual = QcFlag.parse(manual_flag)
         except ValueError:
             return qflag_str
-
-        q.manual = QcFlag(int(manual_flag))
-
         return str(q)
 
     def apply_feedback_file(self, raw_data: pl.DataFrame, feedback_data: pl.DataFrame):
@@ -475,6 +476,7 @@ class FileController:
             .otherwise(pl.col("MANUAL_QC"))
             .alias("MANUAL_QC"),
         )
+        joined_data = joined_data.drop("MANUAL_QC_feedback")
         print("data updated with manual flags from feedback file")
         return joined_data
 
