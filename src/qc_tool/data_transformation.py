@@ -43,18 +43,11 @@ def changes_report(data: pl.DataFrame) -> pl.DataFrame:
     # visit_key is needed to be able to merge feedback file later on
     report_columns = [
         "reported_visit_date",
-        "reported_sample_time",
-        "SHIPC",
+        "visit_key",
         "STATN",
-        "reported_latitude",
-        "reported_longitude",
-        "SERNO",
-        "CRUISE_NO",
-        "reported_water_depth_m",
         "reported_sample_depth_m",
         "reported_parameter",
         "reported_value",
-        "reported_unit",
         "INCOMING_QC",
         "AUTO_QC",
         "MANUAL_QC",
@@ -66,14 +59,9 @@ def changes_report(data: pl.DataFrame) -> pl.DataFrame:
 
     rename_map = {
         "reported_visit_date": "SDATE",
-        "reported_sample_time": "STIME",
-        "reported_latitude": "LATIT",
-        "reported_longitude": "LONGI",
-        "reported_water_depth_m": "WADEP",
         "reported_sample_depth_m": "DEPH",
-        "reported_parameter": "Parameter",
-        "reported_value": "Value",
-        "reported_unit": "Unit",
+        "reported_parameter": "parameter",
+        "reported_value": "value",
     }
 
     # Filter rows where incoming != total and select the feedback file columns
