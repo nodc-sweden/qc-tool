@@ -46,7 +46,7 @@ def changes_report(data: pl.DataFrame) -> pl.DataFrame:
         "visit_key",
         "STATN",
         "reported_sample_depth_m",
-        "reported_parameter",
+        "parameter",
         "reported_value",
         "INCOMING_QC",
         "AUTO_QC",
@@ -60,7 +60,6 @@ def changes_report(data: pl.DataFrame) -> pl.DataFrame:
     rename_map = {
         "reported_visit_date": "SDATE",
         "reported_sample_depth_m": "DEPH",
-        "reported_parameter": "parameter",
         "reported_value": "value",
     }
 
