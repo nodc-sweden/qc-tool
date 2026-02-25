@@ -11,11 +11,10 @@ from qc_tool.views.base_view import BaseView
 
 _metadata_template = jinja2.Template("""
 <table>
-    {% for key, value, class in metadata %}
-    <tr class="{{ class }}">
+    {% for key, value in metadata %}
+    <tr>
         <th>{{ key }}</th>
         <td class="metadata-value">{{ value }}</td>
-        <td class="metadata-status"></td>
     </tr>
     {% endfor %}
 </table>
