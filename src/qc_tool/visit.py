@@ -1,5 +1,4 @@
 import polars as pl
-from ocean_data_qc.metadata.visit import Visit as MetadataVisit
 
 
 class Visit:
@@ -43,7 +42,7 @@ class Visit:
         else:
             self._sea_basin = None
 
-        self._metadata_visit = MetadataVisit(self.data)
+        # self._metadata_visit = MetadataVisit(self.data)
 
     @property
     def parameters(self) -> list[str]:
@@ -106,7 +105,3 @@ class Visit:
     @property
     def latitude(self) -> float:
         return self._common.get("sample_latitude_dd")
-
-    @property
-    def metadata(self) -> MetadataVisit:
-        return self._metadata_visit
