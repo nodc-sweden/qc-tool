@@ -5,14 +5,19 @@ import pandas as pd
 from bokeh.colors import RGB
 from bokeh.core import enums
 from bokeh.core.property.primitive import Bool
+from bokeh.layouts import column
 from bokeh.model import DataModel
 from bokeh.models import (
     BoxAnnotation,
+    Button,
     ColumnDataSource,
     CrosshairTool,
+    CustomJS,
     HoverTool,
     Label,
     LassoSelectTool,
+    LinearAxis,
+    Range1d,
     SaveTool,
     Span,
     WheelZoomTool,
@@ -62,7 +67,7 @@ def expand_abbreviation(abbreviation: str) -> str:
 class ProfileData:
     def __init__(self):
         self.title = ""
-        self.water_depth = 50
+        self.water_depth = 250
 
 
 class ProfileSlot(BaseView):
@@ -71,6 +76,7 @@ class ProfileSlot(BaseView):
 
     source_fields = (
         "x",
+        "unit",
         "y",
         "color",
         "line_color",
@@ -135,11 +141,12 @@ class ProfileSlot(BaseView):
             "height": self._height,
             "width": self._width,
             "toolbar_location": "below",
-            "tools": ["reset", "pan", wheel_zoom, hover, crosshair, select, save],
+            "tools": ["pan", wheel_zoom, hover, crosshair, select, save],
             "output_backend": "webgl",
             "tooltips": [
                 ("Parameter", "$name"),
                 ("Value", "@x"),
+                ("Unit", "@unit"),
                 ("Depth", "@y"),
                 ("QC", "@qc"),
                 ("Incoming QC", "@qc_incoming"),
@@ -158,7 +165,29 @@ class ProfileSlot(BaseView):
         }
 
         self._figure = figure(**self._figure_config)
-
+        self._figure.xaxis.visible = False
+        # add xaxis to possible parameters
+        self._extra_axes = []
+        max_number_of_parameters = len(self._sources)
+        for i in range(max_number_of_parameters):
+            range_name = f"x{i + 1}"
+            self._figure.extra_x_ranges[range_name] = Range1d(start=0, end=1)
+            extra_axis = LinearAxis(x_range_name=range_name, visible=False)
+            self._figure.add_layout(extra_axis, "above")
+            self._extra_axes.append(extra_axis)
+        # set axes ranges
+        self._axes_range_sources = [
+            ColumnDataSource(
+                data={
+                    "range_name": [],
+                    "x_min": [],
+                    "x_max": [],
+                    "y_min": [],
+                    "y_max": [],
+                }
+            )
+            for _ in range(max_number_of_parameters)
+        ]
         self._init_background()
         self._init_statistics_plot()
 
@@ -213,6 +242,31 @@ class ProfileSlot(BaseView):
             text_font_style="bold",
         )
         self._figure.add_layout(self._no_data_label)
+
+        # add dynamic reset button to all axes
+        self._reset_button = Button(label="Reset", width=80)
+        self._reset_button.js_on_click(
+            CustomJS(
+                args=dict(
+                    figure=self._figure,
+                    axes_ranges=self._axes_range_sources,
+                    station=self._station,
+                ),
+                code="""
+                    for (let i = 0; i < axes_ranges.length; i++) {
+                        let src = axes_ranges[i];
+                        if (!src.data['range_name'].length) continue;
+
+                        let name = src.data['range_name'][0];
+                        figure.extra_x_ranges[name].start = src.data['x_min'][0];
+                        figure.extra_x_ranges[name].end   = src.data['x_max'][0];
+
+                        figure.y_range.end = src.data['y_min'][0];
+                        figure.y_range.start = src.data['y_max'][0];
+                    }
+                    """,
+            )
+        )
 
     def _init_background(self):
         # Add sea level and sky
@@ -307,6 +361,7 @@ class ProfileSlot(BaseView):
         data: list[tuple[str, dict]] | None = None,
         station=None,
     ):
+        # clear previous content
         self.clear_selection()
         self._station = station
         self._parameter_data = []
@@ -314,18 +369,40 @@ class ProfileSlot(BaseView):
         for source in self._sources:
             source.data = {key: [] for key in self.source_fields}
 
+        for source in self._axes_range_sources:
+            source.data = {
+                key: [] for key in ["range_name", "x_min", "x_max", "y_min", "y_max"]
+            }
+
         self._statistics_source.data = {key: [] for key in self.statistics_source_fields}
 
+        self._reset_x_axes()
+
         self._figure.title.text = expand_abbreviation(title)
-        for (parameter_name, parameter_data), source, values in zip(
-            data, self._sources, self._values
+
+        # get data, units, and ranges
+        unit_to_range = {}
+        axis_index = 0
+        for i, ((parameter_name, parameter_data), source, values) in enumerate(
+            zip(data, self._sources, self._values)
         ):
             if parameter_data is None:
                 self._parameter_data.append(None)
                 continue
+
             source.data = parameter_data
             values.name = expand_abbreviation(parameter_name)
             self._parameter_data.append(parameter_data["data"])
+
+            unit = parameter_data["unit"][0] if parameter_data["unit"] else ""
+            x_values = [v for v in parameter_data["x"] if v is not None]
+
+            if not x_values:
+                continue
+
+            axis_index = self._sync_axes(
+                unit, parameter_name, x_values, i, unit_to_range, axis_index
+            )
 
         self._sync_profile_options()
 
@@ -341,6 +418,91 @@ class ProfileSlot(BaseView):
         self._sky.visible = self._show_bounds and has_data
         if self._station is not None:
             self._ocean_floor.top = self._station.water_depth
+
+    def _sync_axes(
+        self, unit, parameter_name, x_values, renderer_index, unit_to_range, axis_index
+    ):
+        # set yaxis range
+        y_min = -5
+        y_max = self._station.water_depth + 5
+        self._figure.y_range.start = y_max
+        self._figure.y_range.end = y_min
+
+        # get xaxis range
+        x_min = min(x_values)
+        x_max = max(x_values)
+        padding = 0.05 * (x_max - x_min)
+        x_min_padded = x_min - padding
+        x_max_padded = x_max + padding
+
+        if unit in unit_to_range:
+            range_name = unit_to_range[unit]
+            rng = self._figure.extra_x_ranges[range_name]
+            # set xaxis range
+            rng.start = min(rng.start, x_min_padded)
+            rng.end = max(rng.end, x_max_padded)
+            # add info to reset button
+            for src in self._axes_range_sources:
+                if src.data["range_name"] and src.data["range_name"][0] == range_name:
+                    src.data = {
+                        "range_name": [range_name],
+                        "x_min": [rng.start],
+                        "x_max": [rng.end],
+                        "y_min": [y_min],
+                        "y_max": [y_max],
+                    }
+                    break
+        else:
+            axis_index += 1
+            range_name = f"x{axis_index}"
+            rng = self._figure.extra_x_ranges[range_name]
+            # set xaxis range
+            rng.start = x_min_padded
+            rng.end = x_max_padded
+            # set unit to axis
+            axis_label = unit if unit else expand_abbreviation(parameter_name)
+            self._extra_axes[axis_index - 1].axis_label = axis_label
+            self._extra_axes[axis_index - 1].visible = True
+            unit_to_range[unit] = range_name
+            # add info to reset button
+            self._axes_range_sources[axis_index - 1].data = {
+                "range_name": [range_name],
+                "x_min": [x_min_padded],
+                "x_max": [x_max_padded],
+                "y_min": [y_min],
+                "y_max": [y_max],
+            }
+
+        self._values[renderer_index].x_range_name = range_name
+        self._lines[renderer_index].x_range_name = range_name
+
+        # plot statistics against the same xaxis
+        if renderer_index == 0:
+            self._median_values_line.x_range_name = range_name
+            self._median_values_dash.x_range_name = range_name
+            self._limits_area.x_range_name = range_name
+            self._flag3_lower_limits_area.x_range_name = range_name
+            self._flag3_upper_limits_area.x_range_name = range_name
+            self._min_line.x_range_name = range_name
+            self._max_line.x_range_name = range_name
+
+        return axis_index
+
+    def _reset_x_axes(self):
+        for i, ax in enumerate(self._extra_axes):
+            ax.visible = False
+            ax.axis_label = ""
+        for val_renderer, line_renderer in zip(self._values, self._lines):
+            val_renderer.x_range_name = "default"
+            line_renderer.x_range_name = "default"
+
+        self._median_values_line.x_range_name = "default"
+        self._median_values_dash.x_range_name = "default"
+        self._limits_area.x_range_name = "default"
+        self._flag3_lower_limits_area.x_range_name = "default"
+        self._flag3_upper_limits_area.x_range_name = "default"
+        self._min_line.x_range_name = "default"
+        self._max_line.x_range_name = "default"
 
     def clear_selection(self):
         self._clear_called = True
@@ -388,7 +550,7 @@ class ProfileSlot(BaseView):
 
     @property
     def layout(self):
-        return self._figure
+        return column(self._figure, self._reset_button)
 
     @property
     def y_range(self):
