@@ -122,7 +122,7 @@ class ProfileGridView(BaseView):
                 profile.set_data(
                     parameter,
                     data,
-                    station=self._visits_model.selected_visit,
+                    visit=self._visits_model.selected_visit,
                 )
             else:
                 parameter_data, parameter_statistics = self._load_parameter(parameter)
@@ -131,11 +131,17 @@ class ProfileGridView(BaseView):
                     [(parameter, parameter_data)] if parameter else [],
                     self._visits_model.selected_visit,
                 )
+                if self._visits_model.selected_visit:
+                    water_depth = (
+                        self._visits_model.selected_visit.water_depth
+                        if self._visits_model.selected_visit.water_depth is not None
+                        else self._visits_model.selected_visit.max_depth
+                    )
+                else:
+                    water_depth = None
                 profile.update_statistics(
                     parameter_statistics=parameter_statistics,
-                    water_depth=self._visits_model.selected_visit.water_depth
-                    if self._visits_model.selected_visit
-                    else None,
+                    water_depth=water_depth,
                 )
 
     def _load_parameter(self, parameter):
