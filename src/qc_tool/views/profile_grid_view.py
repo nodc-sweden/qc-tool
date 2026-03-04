@@ -179,6 +179,7 @@ class ProfileGridView(BaseView):
             else:
                 source_data = {
                     "x": list(parameter_data["value"]),
+                    "unit": list(parameter_data["unit"]),
                     "y": list(parameter_data["DEPH"]),
                     "color": colors,
                     "line_color": line_colors,
