@@ -9,7 +9,6 @@ class Visit:
             "COMNT_VISIT",
             "CRUISE_NO",
             "CTRYID",
-            "DEPH",
             "LATIT",
             "LONGI",
             "sample_latitude_dd",
@@ -41,6 +40,8 @@ class Visit:
             self._sea_basin = self._data["sea_basin"].unique().to_list()[0]
         else:
             self._sea_basin = None
+
+        self._max_depth = self._data["DEPH"].max()
 
         # self._metadata_visit = MetadataVisit(self.data)
 
@@ -97,6 +98,10 @@ class Visit:
     @property
     def water_depth(self) -> float:
         return self._common.get("WADEP")
+
+    @property
+    def max_depth(self) -> float:
+        return self._max_depth
 
     @property
     def longitude(self) -> float:

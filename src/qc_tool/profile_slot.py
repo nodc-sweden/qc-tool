@@ -107,7 +107,7 @@ class ProfileSlot(BaseView):
         self._title = title
         self._manual_qc_model = manual_qc_model
 
-        self._station = None
+        self._visit = None
         self._data = None
         self._parameter_data = []
         self._show_lines = True
@@ -250,7 +250,6 @@ class ProfileSlot(BaseView):
                 args=dict(
                     figure=self._figure,
                     axes_ranges=self._axes_range_sources,
-                    station=self._station,
                 ),
                 code="""
                     for (let i = 0; i < axes_ranges.length; i++) {
@@ -359,11 +358,11 @@ class ProfileSlot(BaseView):
         self,
         title: str = "",
         data: list[tuple[str, dict]] | None = None,
-        station=None,
+        visit=None,
     ):
         # clear previous content
         self.clear_selection()
-        self._station = station
+        self._visit = visit
         self._parameter_data = []
 
         for source in self._sources:
@@ -416,15 +415,26 @@ class ProfileSlot(BaseView):
         self._no_data_label.visible = not has_data
         self._sea_level.visible = self._show_bounds and has_data
         self._sky.visible = self._show_bounds and has_data
-        if self._station is not None:
-            self._ocean_floor.top = self._station.water_depth
+        if self._visit is not None:
+            self._ocean_floor.top = max(
+                d
+                for d in [self._visit.water_depth, self._visit.max_depth, 0]
+                if d is not None
+            )
 
     def _sync_axes(
         self, unit, parameter_name, x_values, renderer_index, unit_to_range, axis_index
     ):
         # set yaxis range
         y_min = -5
-        y_max = self._station.water_depth + 5
+        y_max = (
+            max(
+                d
+                for d in [self._visit.water_depth, self._visit.max_depth, 0]
+                if d is not None
+            )
+            + 5
+        )
         self._figure.y_range.start = y_max
         self._figure.y_range.end = y_min
 
