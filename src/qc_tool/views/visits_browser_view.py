@@ -128,9 +128,9 @@ class VisitsBrowserView(BaseView):
         top_row = Row(
             navigation_column,
             self._station_info.layout,
-            self._parameter_handler.layout,
+            # self._parameter_handler.layout,
             self._manual_qc_view.layout,
-            sizing_mode="stretch_width",
+            # sizing_mode="stretch_width",
         )
 
         self._profile_tab_handler = ProfileGridView(
@@ -141,10 +141,22 @@ class VisitsBrowserView(BaseView):
             state.manual_qc,
         )
 
+        profile_layout = Column(
+            self._parameter_handler.layout,
+            self._profile_tab_handler.layout,
+            height=800,
+            sizing_mode="stretch_width",
+            styles={"overflow-y": "auto"},
+        )
+
         self._profile_tab = TabPanel(
-            child=self._profile_tab_handler.layout,
+            child=profile_layout,
             title="Profiles",
         )
+        # self._profile_tab = TabPanel(
+        #     child=self._profile_tab_handler.layout,
+        #     title="Profiles",
+        # )
 
         # Tab for scatter plots
         scatter_tab = TabPanel(
