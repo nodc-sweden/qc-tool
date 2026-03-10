@@ -23,6 +23,7 @@ class MainView(BaseView):
             self._controller.visits_browser_controller.map_controller,
             self._controller.visits_browser_controller.visit_selector_controller,
             self._controller.visits_browser_controller.profile_grid_controller,
+            self._controller.visits_browser_controller.filtered_profiles_controller,
             self._controller.visits_browser_controller.manual_qc_controller,
         )
 
