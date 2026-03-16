@@ -1,4 +1,5 @@
 from qc_tool.app_state import AppState
+from qc_tool.controllers.filtered_profiles_controller import FilteredProfilesController
 from qc_tool.controllers.manual_qc_controller import ManualQcController
 from qc_tool.controllers.map_controller import MapController
 from qc_tool.controllers.parameter_selector_controller import ParameterSelectorController
@@ -33,6 +34,12 @@ class VisitsBrowserController:
         )
         self.profile_grid_controller = ProfileGridController(
             self._state.visits, self._state.profile_grid, self._state.parameters
+        )
+        self.filtered_profiles_controller = FilteredProfilesController(
+            self._state.file,
+            self._state.visits,
+            self._state.filter,
+            self._state.filtered_profiles,
         )
 
         self.manual_qc_controller = ManualQcController(self._state.manual_qc)

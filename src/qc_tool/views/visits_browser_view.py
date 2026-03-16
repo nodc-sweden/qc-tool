@@ -12,6 +12,7 @@ from qc_tool.app_state import AppState
 from qc_tool.data_transformation import changes_report
 from qc_tool.scatter_slot import ScatterSlot
 from qc_tool.views.base_view import BaseView
+from qc_tool.views.filtered_profiles_view import FilteredProfilesView
 from qc_tool.views.manual_qc_view import ManualQcView
 from qc_tool.views.map_view import MapView
 from qc_tool.views.parameter_selector_view import ParameterSelectorView
@@ -84,6 +85,7 @@ class VisitsBrowserView(BaseView):
         map_controller,
         visit_selector_controller,
         profile_grid_controller,
+        filtered_profiles_controller,
         manual_qc_controller,
     ):
         self._controller = controller
@@ -128,9 +130,9 @@ class VisitsBrowserView(BaseView):
         top_row = Row(
             navigation_column,
             self._station_info.layout,
-            self._parameter_handler.layout,
+            # self._parameter_handler.layout,
             self._manual_qc_view.layout,
-            sizing_mode="stretch_width",
+            # sizing_mode="stretch_width",
         )
 
         self._profile_tab_handler = ProfileGridView(
@@ -141,20 +143,49 @@ class VisitsBrowserView(BaseView):
             state.manual_qc,
         )
 
-        self._profile_tab = TabPanel(
-            child=self._profile_tab_handler.layout,
-            title="Profiles",
+        profile_layout = Column(
+            self._parameter_handler.layout,
+            self._profile_tab_handler.layout,
+            height=800,
+            sizing_mode="stretch_width",
+            styles={"overflow-y": "auto"},
         )
 
+        self._profile_tab = TabPanel(
+            child=profile_layout,
+            title="Profile - single station",
+        )
+
+        self._filtered_profiles_tab_handler = FilteredProfilesView(
+            filtered_profiles_controller,
+            state.filtered_profiles,
+            state.filter,
+            state.visits,
+            state.manual_qc,
+        )
+
+        filtered_profiles_layout = Column(
+            self._filtered_profiles_tab_handler.layout,
+            height=800,
+            sizing_mode="stretch_width",
+            styles={"overflow-y": "auto"},
+        )
+
+        self._filtered_profiles_tab = TabPanel(
+            child=filtered_profiles_layout,
+            title="Profile Collection",
+        )
         # Tab for scatter plots
         scatter_tab = TabPanel(
             child=Row(
                 children=[parameter.layout for parameter in self._scatter_parameters]
             ),
-            title="Scatter",
+            title="Parameter-parameter",
         )
 
-        bottom_row = Tabs(tabs=[self._profile_tab, scatter_tab])
+        bottom_row = Tabs(
+            tabs=[self._profile_tab, self._filtered_profiles_tab, scatter_tab]
+        )
 
         # Full layout
         self._layout = Column(top_row, bottom_row)

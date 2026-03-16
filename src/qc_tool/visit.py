@@ -8,7 +8,6 @@ class Visit:
             "AIRTEMP",
             "COMNT_VISIT",
             "CRUISE_NO",
-            "CTRYID",
             "LATIT",
             "LONGI",
             "sample_latitude_dd",

@@ -252,6 +252,7 @@ class FileController:
     def _apply_post_transformers(self, controller):
         print("Running SHARKadm post transformers...")
         reported_cols = (
+            "visit_year",
             "water_depth_m",
             "wind_speed_ms",
             "air_temperature_degc",
@@ -268,10 +269,15 @@ class FileController:
             "sample_depth_m",
             "value",
         ]
+        int_cols = [
+            "visit_year",
+            "visit_month",
+        ]
         t0 = time.perf_counter()
         for transformer, args, kwargs in (
             (transformers.AddColumnsWithPrefix, (reported_cols, "reported"), {}),
             (transformers.PolarsAddFloatColumns, (float_cols, float_cols), {}),
+            (transformers.PolarsAddIntColumns, (int_cols, int_cols), {}),
         ):
             tn_0 = time.perf_counter()
             controller.transform(transformer(*args, **kwargs))
