@@ -1,6 +1,5 @@
 import os
 import time
-from collections import defaultdict
 from pathlib import Path
 
 import geopandas
@@ -67,10 +66,18 @@ class FileController:
         self._geo_info_model = geo_info_model
 
         self.file_view = None
+        shapefile_t0 = time.perf_counter()
+        self._ocean_shapefile = _load_ocean_shapefile()
+        shapefile_t1 = time.perf_counter()
+        print(f"\tOpening ocean shapefile: {shapefile_t1 - shapefile_t0:.3f} s.")
 
     @property
     def file_model(self):
         return self._file_model
+
+    @property
+    def ocean_shapefile(self):
+        return self._ocean_shapefile
 
     def load_file(self, file_path):
         print(f"Loading data from {file_path}...")
@@ -86,7 +93,6 @@ class FileController:
         self._apply_transformers(controller)
         self._run_validators(controller)
         self._apply_post_transformers(controller)
-        validation_log = self._collect_validation_logs()
         print("Data loaded")
         data = controller.export(
             exporters.PolarsDataFrame(header_as="PhysicalChemical", float_columns=False)
@@ -96,7 +102,8 @@ class FileController:
         data = self._run_automatic_qc(data)
         data = self._expand_quality_flag_long(data)
         self._file_model.add_data(data, file_path)
-        self._validation_log_model.set_validation_log(validation_log)
+        adm_logger.filter(log_types=[adm_logger.VALIDATION], level=">warning")
+        self._validation_log_model.set_validation_log(adm_logger.data)
 
     def load_working_file(self, path, raw_data: pl.DataFrame):
         selected_path = Path(path)
@@ -215,15 +222,7 @@ class FileController:
         t1 = time.perf_counter()
         print(f"SHARKadm transformers finished ({t1 - t0:.3f} s.)")
 
-    def _run_validators(self, controller):
-        print("Running SHARKadm validators...")
-        t0 = time.perf_counter()
-
-        shapefile_t0 = time.perf_counter()
-        ocean_shapefile = _load_ocean_shapefile()
-        shapefile_t1 = time.perf_counter()
-        print(f"\tOpening ocean shapefile: {shapefile_t1 - shapefile_t0:.3f} s.")
-
+    def _define_validators_and_parameters(self):
         validators_and_parameters = (
             (validators.ValidateCommonValuesByVisit, {}),
             (
@@ -237,7 +236,7 @@ class FileController:
             (
                 validators.ValidatePositionInOcean,
                 {
-                    "ocean_shapefile": ocean_shapefile,
+                    "ocean_shapefile": self.ocean_shapefile,
                     "station_name_key": "reported_station_name",
                     "latitude_key": "sample_sweref99tm_y",
                     "longitude_key": "sample_sweref99tm_x",
@@ -266,9 +265,15 @@ class FileController:
             (validators.ValidateWaves, {}),
             (validators.ValidateIceob, {}),
         )
-        for validator, parameters in validators_and_parameters:
+
+        return validators_and_parameters
+
+    def _run_validators(self, controller):
+        print("Running SHARKadm validators...")
+        t0 = time.perf_counter()
+        for validator, parameters in self._define_validators_and_parameters():
             tn_0 = time.perf_counter()
-            validator(**parameters).validate(controller.data_holder)
+            controller.validate(validator(**parameters))
             tn_1 = time.perf_counter()
             print(f"\t{validator(**parameters).name}: {tn_1 - tn_0:.3f} s.")
 
@@ -354,59 +359,6 @@ class FileController:
         print(f"Matching sea basins finished ({t1 - t0:.3f} s.)")
 
         return data
-
-    def _collect_validation_logs(self):
-        validation_remarks = defaultdict(
-            lambda: {
-                "fail": defaultdict(list),
-                "success": defaultdict(list),
-            }
-        )
-
-        adm_logger.filter(log_types=[adm_logger.VALIDATION])
-
-        description_for_validator = {
-            validator.get_display_name(): validator.get_validator_description()
-            for validator in (
-                validators.ValidateCoordinatesDm,
-                validators.ValidateDateAndTime,
-                validators.ValidateNameInMaster,
-                validators.ValidatePositionInOcean,
-                validators.ValidatePositionWithinStationRadius,
-                validators.ValidatePositiveValues,
-                validators.ValidateSampleDepth,
-                validators.ValidateSecchiDepth,
-                validators.ValidateSerialNumber,
-                validators.ValidateSpeed,
-                validators.ValidateStationIdentity,
-                validators.ValidateSynonymsInMaster,
-                validators.ValidateWindir,
-                validators.ValidateWinsp,
-            )
-        }
-
-        for row in adm_logger.data:
-            validator_name = row["validator"]
-            if row.get("validation_success"):
-                validation_remarks[validator_name]["success"][
-                    row.get("column") or "General"
-                ].append(row["msg"])
-            else:
-                validation_remarks[validator_name]["fail"][
-                    row.get("column") or "General"
-                ].append(row["msg"])
-
-        for validator, remarks in validation_remarks.items():
-            remarks["success_count"] = sum(
-                len(column) for column in remarks["success"].values()
-            )
-            remarks["fail_count"] = sum(
-                len(column) for column in remarks["fail"].values()
-            )
-
-            remarks["description"] = description_for_validator.get(validator, "")
-
-        return validation_remarks
 
     @staticmethod
     def _expand_quality_flag_long(data):

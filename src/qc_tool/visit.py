@@ -34,6 +34,7 @@ class Visit:
         }
 
         self._parameters = sorted(self._data["parameter"].unique().to_list())
+        self._row_numbers = sorted(self._data["row_number"].unique().to_list())
 
         if "sea_basin" in self._data.columns:
             self._sea_basin = self._data["sea_basin"].unique().to_list()[0]
@@ -42,11 +43,15 @@ class Visit:
 
         self._max_depth = self._data["DEPH"].max()
 
-        # self._metadata_visit = MetadataVisit(self.data)
+        self.validation_logs = []
 
     @property
     def parameters(self) -> list[str]:
         return self._parameters
+
+    @property
+    def row_numbers(self) -> list[str]:
+        return self._row_numbers
 
     @property
     def sea_basin(self):
