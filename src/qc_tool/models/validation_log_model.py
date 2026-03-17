@@ -1,3 +1,6 @@
+from collections import defaultdict
+
+from qc_tool.data_transformation import collect_log_messages
 from qc_tool.models.base_model import BaseModel
 
 
@@ -6,12 +9,23 @@ class ValidationLogModel(BaseModel):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._validation_log = None
+        self._validation_log = []
+        self._validation_remarks = defaultdict(
+            lambda: {
+                "fail": defaultdict(list),
+                "success": defaultdict(list),
+            }
+        )
 
     def set_validation_log(self, validation_log):
         self._validation_log = validation_log
+        self._validation_remarks = collect_log_messages(validation_log)
         self._notify_listeners(self.NEW_VALIDATION_LOG)
 
     @property
     def validation_log(self):
         return self._validation_log
+
+    @property
+    def validation_remarks(self):
+        return self._validation_remarks

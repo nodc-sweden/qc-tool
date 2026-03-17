@@ -22,6 +22,7 @@ class MainController:
             self._state.file,
             self._state.visits,
             self._state.filter,
+            self._state.validation_log,
         )
 
         self._transformer = Transformer.from_crs("EPSG:4326", "EPSG:3857")

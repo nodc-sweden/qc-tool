@@ -11,4 +11,5 @@ class ValidationLogController:
         self.validation_log_view = None
 
     def _on_new_validation_log(self):
-        self.validation_log_view.update(self._validation_log_model.validation_log)
+        self._validation_log = self._validation_log_model.validation_log
+        self.validation_log_view.update(self._validation_log_model.validation_remarks)
