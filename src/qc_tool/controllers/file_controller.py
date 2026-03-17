@@ -102,7 +102,14 @@ class FileController:
         selected_path = Path(path)
         feedback_data = pl.read_excel(
             selected_path,
-            columns=["visit_key", "DEPH", "parameter", "MANUAL_QC"],
+            columns=[
+                "visit_key",
+                "DEPH",
+                "parameter",
+                "MANUAL_QC",
+                "MANUAL_QC_CATEGORY",
+                "MANUAL_QC_COMMENT",
+            ],
             schema_overrides={"MANUAL_QC": pl.Utf8},
         )
         feedback_data = feedback_data.cast({"DEPH": pl.Float64})
@@ -144,6 +151,30 @@ class FileController:
                 .otherwise(pl.col("quality_flag_long"))
                 .alias("quality_flag_long")
             )
+
+        category = self._mannual_qc_model.comment_category
+        comment = self._mannual_qc_model.comment
+        if category:
+            for value in self._mannual_qc_model.selected_values:
+                for col_name, col_value in [
+                    ("MANUAL_QC_CATEGORY", category),
+                    ("MANUAL_QC_COMMENT", comment),
+                ]:
+                    if col_name not in data.columns:
+                        data = data.with_columns(
+                            pl.lit(None).cast(pl.Utf8).alias(col_name)
+                        )
+                    data = data.with_columns(
+                        pl.when(
+                            (pl.col("SERNO") == value._data["SERNO"])
+                            & (pl.col("parameter") == value._data["parameter"])
+                            & (pl.col("DEPH") == value._data["DEPH"])
+                        )
+                        .then(pl.lit(col_value))
+                        .otherwise(pl.col(col_name))
+                        .alias(col_name)
+                    )
+
         data = self._expand_quality_flag_long(data)
         self._file_model.data_flags_update(data)
         t1 = time.perf_counter()

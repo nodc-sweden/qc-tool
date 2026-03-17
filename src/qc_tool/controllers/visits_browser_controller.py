@@ -1,4 +1,5 @@
 from qc_tool.app_state import AppState
+from qc_tool.controllers.comment_dialog_controller import CommentDialogController
 from qc_tool.controllers.filtered_profiles_controller import FilteredProfilesController
 from qc_tool.controllers.manual_qc_controller import ManualQcController
 from qc_tool.controllers.map_controller import MapController
@@ -43,6 +44,7 @@ class VisitsBrowserController:
         )
 
         self.manual_qc_controller = ManualQcController(self._state.manual_qc)
+        self.comment_dialog_controller = CommentDialogController(self._state.manual_qc)
 
         self.visits_browser_view: VisitsBrowserView = None
 

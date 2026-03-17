@@ -1,8 +1,5 @@
 import typing
 
-if typing.TYPE_CHECKING:
-    from qc_tool.controllers.manual_qc_controller import ManualQcController
-
 import jinja2
 from bokeh.models import Column, Div, ImportedStyleSheet, RadioButtonGroup, Row
 from ocean_data_qc.fyskem.qc_flag import QC_FLAG_CSS_COLORS, QcFlag
@@ -10,6 +7,10 @@ from ocean_data_qc.fyskem.qc_flag_tuple import QcField
 
 from qc_tool.models.manual_qc_model import ManualQcModel
 from qc_tool.views.base_view import BaseView
+
+if typing.TYPE_CHECKING:
+    from qc_tool.controllers.manual_qc_controller import ManualQcController
+    from qc_tool.views.comment_dialog_view import CommentDialogView
 
 _flag_info_template = jinja2.Template("""
 {% if values %}
@@ -22,6 +23,8 @@ _flag_info_template = jinja2.Template("""
             <th>A</th>
             <th>Depth</th>
             <th>Value</th>
+            <th>Category</th>
+            <th>Comment</th>
         </tr>
     </thead>
     <tbody>
@@ -42,6 +45,8 @@ _flag_info_template = jinja2.Template("""
             </td>
             <td>{{value._data["DEPH"]}} m</td>
             <td>{{value._data["value"]}}</td>
+            <td>{{value.manual_category}}</td>
+            <td>{{value.manual_comment}}</td>
         </tr>
     {% endfor %}
     </tbody>
@@ -63,21 +68,19 @@ class ManualQcView(BaseView):
         self._manual_qc_model.register_listener(
             ManualQcModel.VALUES_SELECTED, self._on_values_selected
         )
+        self._manual_qc_model.register_listener(
+            ManualQcModel.FLAG_CANCELLED, self._on_flag_cancelled
+        )
 
-        self._manual_qc_header = Div(width=500, text="<h3>Perfom manual QC</h3>")
-        self._manual_qc_info = Div(width=500, text="Select samples with the lasso tool")
+        self.comment_dialog_view: "CommentDialogView | None" = None
+
+        self._manual_qc_header = Div(text="<h3>Perform manual QC</h3>")
+        self._manual_qc_info = Div(text="Select samples with the lasso tool")
 
         self._value_table = Div(
             text=_flag_info_template.render(values=[]),
             stylesheets=[ImportedStyleSheet(url="qc_tool/static/css/style.css")],
         )
-        # self._qc_buttons = RadioButtonGroup(
-        #     labels=[
-        #         str(flag) for flag in QcFlag if not QC_FLAG_CSS_COLORS[flag] == "gray"
-        #     ],
-        #     orientation="vertical",
-        #     active=None,
-        # )
 
         self._qc_flag_buttons = [
             flag for flag in QcFlag if QC_FLAG_CSS_COLORS[flag] != "gray"
@@ -90,11 +93,14 @@ class ManualQcView(BaseView):
         )
 
         self._qc_buttons.on_event("button_click", self._on_qc_buttons_clicked)
-
+        self._updating_qc_flag = False
         self._update()
 
     def _on_values_selected(self):
         self._values = self._manual_qc_model.selected_values
+        self._update()
+
+    def _on_flag_cancelled(self):
         self._update()
 
     def select_values(self, values=None):
@@ -114,40 +120,27 @@ class ManualQcView(BaseView):
         self._qc_buttons.visible = bool(self._manual_qc_model.selected_values)
         self._update_flag_button(current_value)
 
-    # def _update_flag_button(self, value):
-    #     self._updating_qc_flag = True
-    #     self._qc_buttons.active = value
-    #     self._updating_qc_flag = False
-
     def _update_flag_button(self, value: QcFlag | None):
         self._updating_qc_flag = True
-
         if value is None:
             self._qc_buttons.active = None
         else:
             self._qc_buttons.active = self._qc_flag_buttons.index(value)
-
         self._updating_qc_flag = False
 
     @property
     def layout(self):
-        return Column(
-            self._manual_qc_header,
-            self._manual_qc_info,
-            Row(self._value_table, self._qc_buttons),
+        return Row(
+            Column(self._manual_qc_header, self._manual_qc_info, self._value_table),
+            self._qc_buttons,
+            self.comment_dialog_view.layout,
         )
-
-    # def _on_qc_buttons_clicked(self, event):
-    #     new_flag = QcFlag(event.model.active)
-    #     self._manual_qc_model.set_flag(new_flag)
 
     def _on_qc_buttons_clicked(self, event):
         if self._updating_qc_flag:
             return
-
         index = event.model.active
         if index is None:
             return
-
         new_flag = self._qc_flag_buttons[index]
-        self._manual_qc_model.set_flag(new_flag)
+        self._controller.set_flag(new_flag)
