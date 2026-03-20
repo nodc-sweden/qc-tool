@@ -12,6 +12,7 @@ from qc_tool.app_state import AppState
 from qc_tool.data_transformation import changes_report
 from qc_tool.scatter_slot import ScatterSlot
 from qc_tool.views.base_view import BaseView
+from qc_tool.views.comment_dialog_view import CommentDialogView
 from qc_tool.views.filtered_profiles_view import FilteredProfilesView
 from qc_tool.views.manual_qc_view import ManualQcView
 from qc_tool.views.map_view import MapView
@@ -87,6 +88,7 @@ class VisitsBrowserView(BaseView):
         profile_grid_controller,
         filtered_profiles_controller,
         manual_qc_controller,
+        comment_dialog_controller,
     ):
         self._controller = controller
         self._controller.visits_browser_view = self
@@ -103,6 +105,8 @@ class VisitsBrowserView(BaseView):
         )
 
         self._manual_qc_view = ManualQcView(manual_qc_controller, self._state.manual_qc)
+        self._comment_dialog_view = CommentDialogView(comment_dialog_controller)
+        self._manual_qc_view.comment_dialog_view = self._comment_dialog_view
 
         self._scatter_parameters = [
             ScatterSlot(
@@ -146,8 +150,8 @@ class VisitsBrowserView(BaseView):
         profile_layout = Column(
             self._parameter_handler.layout,
             self._profile_tab_handler.layout,
-            height=800,
-            sizing_mode="stretch_width",
+            min_height=600,
+            sizing_mode="stretch_both",
             styles={"overflow-y": "auto"},
         )
 
@@ -184,11 +188,12 @@ class VisitsBrowserView(BaseView):
         )
 
         bottom_row = Tabs(
-            tabs=[self._profile_tab, self._filtered_profiles_tab, scatter_tab]
+            tabs=[self._profile_tab, self._filtered_profiles_tab, scatter_tab],
+            sizing_mode="stretch_both",
         )
 
         # Full layout
-        self._layout = Column(top_row, bottom_row)
+        self._layout = Column(top_row, bottom_row, sizing_mode="stretch_both")
 
     def save_file_callback(self, filename: Path):
         self._data.write_csv(filename, separator="\t")

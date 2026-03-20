@@ -51,6 +51,8 @@ def changes_report(data: pl.DataFrame) -> pl.DataFrame:
         "INCOMING_QC",
         "AUTO_QC",
         "MANUAL_QC",
+        "MANUAL_QC_CATEGORY",
+        "MANUAL_QC_COMMENT",
         "TOTAL_QC",
         *auto_qc_columns,
     ]
