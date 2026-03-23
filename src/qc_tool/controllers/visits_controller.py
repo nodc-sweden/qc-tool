@@ -38,14 +38,19 @@ class VisitsController:
         self._validation_log_model.register_listener(
             validation_log_model.NEW_VALIDATION_LOG, self._on_new_validation_log
         )
+        self._visits_model.register_listener(
+            VisitsModel.UPDATED_VISITS, self._build_feedback_service
+        )
 
     def _on_new_data(self):
         visits = self._create_visits()
         self._visits_model.set_visits(visits)
+        self._build_feedback_service()
 
     def _on_updated_data(self):
         visits = self._create_visits()
         self._visits_model.update_visits(visits)
+        self._build_feedback_service()
 
     def _create_visits(self):
         # Extract list of all station visits
@@ -76,12 +81,6 @@ class VisitsController:
             visits_model=self._visits_model,
         )
 
-    def _build_feedback_service(self):
-        self._feedback_service = FeedbackService(
-            validation_log=self._validation_log_model.validation_log,
-            visits_model=self._visits_model,
-        )
-
         self._attach_logs_to_visits()
 
     def _attach_logs_to_visits(self):
@@ -91,4 +90,4 @@ class VisitsController:
         for visit in self._visits_model.visits.values():
             visit.validation_logs = self._feedback_service.get_logs_for_visit(visit)
 
-        self._visits_model._notify_listeners(VisitsModel.UPDATED_VISITS)
+        self._visits_model._notify_listeners(VisitsModel.FEEDBACK_READY)

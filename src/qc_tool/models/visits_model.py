@@ -8,6 +8,7 @@ class VisitsModel(BaseModel):
     UPDATED_VISITS = "UPDATED_VISITS"
     VISIT_SELECTED = "VISIT_SELECTED"
     FILTER_APPLIED = "FILTER_APPLIED"
+    FEEDBACK_READY = "FEEDBACK_READY"
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
