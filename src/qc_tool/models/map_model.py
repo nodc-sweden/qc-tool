@@ -7,7 +7,13 @@ class MapModel(BaseModel):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._data_source = ColumnDataSource(
-            data={"latitudes": [], "longitudes": [], "visit_keys": []},
+            data={
+                "latitudes": [],
+                "longitudes": [],
+                "visit_keys": [],
+                "color": [],
+                "status": [],
+            },
         )
 
     def set_points(self, points):

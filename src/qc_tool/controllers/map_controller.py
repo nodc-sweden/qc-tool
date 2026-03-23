@@ -16,7 +16,10 @@ class MapController:
     ):
         self._visits_model = visits_model
         self._visits_model.register_listener(
-            (self._visits_model.NEW_VISITS, self._visits_model.UPDATED_VISITS),
+            (
+                self._visits_model.NEW_VISITS,
+                self._visits_model.UPDATED_VISITS,
+            ),
             self._on_new_visits,
         )
 
@@ -25,6 +28,10 @@ class MapController:
         )
         self._visits_model.register_listener(
             VisitsModel.FILTER_APPLIED, self._on_new_visits
+        )
+
+        self._visits_model.register_listener(
+            VisitsModel.FEEDBACK_READY, self._on_new_visits
         )
 
         self._map_model = map_model
@@ -47,10 +54,24 @@ class MapController:
         station_names, longitudes, latitudes = zip(*all_stations)
         longitudes, latitudes = self._convert_projection(longitudes, latitudes)
 
+        colors = []
+        status = []
+        for visit in self._visits_model.visits.values():
+            logs = getattr(visit, "validation_logs", [])
+
+            has_issue = any(
+                log.get("level") in ("warning", "error", "critical") for log in logs
+            )
+
+            colors.append("red" if has_issue else "blue")
+            status.append("metadata error" if has_issue else "blue")
+
         visit_points = {
             "longitudes": longitudes,
             "latitudes": latitudes,
             "visit_keys": station_names,
+            "color": colors,
+            "status": status,
         }
         self._map_model.set_points(visit_points)
         self._zoom_to_points()

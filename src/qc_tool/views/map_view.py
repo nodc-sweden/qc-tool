@@ -3,12 +3,14 @@ import typing
 if typing.TYPE_CHECKING:
     from qc_tool.controllers.map_controller import MapController
 
+import numpy as np
 from bokeh.models import (
     PanTool,
     ResetTool,
     TapTool,
     WheelZoomTool,
 )
+from bokeh.models.sources import ColumnDataSource
 from bokeh.plotting import figure
 
 from qc_tool.models.map_model import MapModel
@@ -44,6 +46,15 @@ class MapView(BaseView):
         self._map.toolbar.active_scroll = wheel_zoom
         self._map.add_tile("Esri.OceanBasemap")
 
+        empty_source = ColumnDataSource(data=dict(x=[np.nan], y=[np.nan]))
+        self._map.scatter(
+            x="x",
+            y="y",
+            source=empty_source,
+            size=7,
+            fill_color="black",
+            legend_label="selected",
+        )
         self._map.scatter(
             x="longitudes",
             y="latitudes",
@@ -52,15 +63,20 @@ class MapView(BaseView):
             fill_alpha=0.7,
             nonselection_fill_alpha=0.7,
             selection_fill_alpha=0.7,
-            size=9,
-            fill_color="blue",
-            nonselection_fill_color="blue",
-            selection_fill_color="orange",
+            size=7,
+            fill_color="color",
+            nonselection_fill_color="color",
+            selection_fill_color="black",
+            legend_field="status",
         )
 
         self._map_model.unselected.selected.on_change(
             "indices", self._station_selected_callback
         )
+
+        self._map.legend.title = "Visit status"
+        self._map.legend.location = "top_right"
+        self._map.legend.visible = False
 
     @property
     def height(self):
