@@ -9,19 +9,20 @@ class CommentDialogController:
 
     COMMENT_CATEGORIES = (
         (NO_COMMENT, {}),
-        ("INSTABILT", {QcFlag.BAD_VALUE, QcFlag.PROBABLY_BAD_VALUE}),
-        ("H2S", {QcFlag.BAD_VALUE}),
-        ("HOMOGENT, OFÖRKLARLIGT VÄRDE", {QcFlag.BAD_VALUE, QcFlag.PROBABLY_BAD_VALUE}),
-        ("OMKASTADE djup", {QcFlag.BAD_VALUE}),
-        ("PROVTAGET i gränsskikt", {QcFlag.BAD_VALUE, QcFlag.PROBABLY_BAD_VALUE}),
+        ("Instabil", {QcFlag.BAD_VALUE, QcFlag.PROBABLY_BAD_VALUE}),
+        ("Svavelväte förekommer", {QcFlag.BAD_VALUE}),
+        ("Homogent, oförklarigt värde", {QcFlag.BAD_VALUE, QcFlag.PROBABLY_BAD_VALUE}),
+        ("Omkastade djup", {QcFlag.BAD_VALUE}),
+        ("Provtaget i gränsskikt", {QcFlag.BAD_VALUE, QcFlag.PROBABLY_BAD_VALUE}),
         (
-            "DÅLIG ÖVERRENSSTÄMMELSE MED BTL DATA",
+            "Stämmer ej med flaskdata",
             {QcFlag.BAD_VALUE, QcFlag.PROBABLY_BAD_VALUE},
         ),
-        ("ANALYSEN MISSLYCKADES", {QcFlag.BAD_VALUE}),
-        ("PROVTAGNINGEN MISSLYCKADES", {QcFlag.BAD_VALUE}),
-        ("Flaska STÄNGT PÅ FEL DJUP", {QcFlag.BAD_VALUE}),
-        ("FÖRVÄXLADE PROVER", {QcFlag.BAD_VALUE}),
+        ("Analysen misslyckades", {QcFlag.BAD_VALUE}),
+        ("Provtagning misslyckades", {QcFlag.BAD_VALUE}),
+        ("Flaska stängt på fel djup", {QcFlag.BAD_VALUE}),
+        ("Förväxlade prover", {QcFlag.BAD_VALUE}),
+        ("Auto qc fel", {}),
         ("Annat/fritext", {}),
     )
 
