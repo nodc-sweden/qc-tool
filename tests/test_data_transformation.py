@@ -2,6 +2,7 @@ import polars as pl
 import pytest
 
 from qc_tool import data_transformation
+from qc_tool.controllers.file_controller import FileController
 
 
 @pytest.mark.parametrize(
@@ -85,3 +86,50 @@ def test_prepare_data_adds_quality_flag_long_column_with_input_from_quality_flag
     # And the value ends with the value from 'quality_flag'
     quality_flag_long = all_quality_flag_long[-1]
     assert quality_flag_long.endswith(f"_{given_quality_flag}")
+
+
+def test_change_report_filters_rows_with_manual_qc():
+    # Given a polars dataset which both include rows with and without manual qc flags.
+    given_data = pl.DataFrame(
+        {
+            "quality_flag_long": [
+                "1_000000000_Q_Q",  # Manual QC
+                "1_000000000_0_1",
+                "2_000000000_B_B",  # Manual QC
+                "2_000000000_0_2",
+                "3_000000000_A_A",  # Manual QC
+                "3_000000000_0_3",
+                "4_000000000_9_9",  # Manual QC
+                "4_000000000_0_4",
+                "5_000000000_8_8",  # Manual QC
+                "5_000000000_0_5",
+                "6_000000000_7_7",  # Manual QC
+                "6_000000000_0_6",
+                "7_000000000_6_6",  # Manual QC
+                "7_000000000_0_7",
+                "8_000000000_5_5",  # Manual QC
+                "8_000000000_0_8",
+                "9_000000000_4_4",  # Manual QC
+                "9_000000000_0_9",
+                "Q_000000000_3_3",  # Manual QC
+                "Q_000000000_0_Q",
+                "B_000000000_2_2",  # Manual QC
+                "B_000000000_0_B",
+                "A_000000000_1_1",  # Manual QC
+                "A_000000000_0_A",
+            ],
+            "visit_key": [f"visit_{n}" for n in range(24)],
+            "reported_visit_date": ["2024-01-01"] * 24,
+            "reported_sample_depth_m": [10.0] * 24,
+            "reported_value": [1.0] * 24,
+        }
+    )
+    given_data = FileController._expand_quality_flag_long(given_data)
+
+    # When calling change_report
+    report = data_transformation.changes_report(given_data)
+
+    # Then only the rows with manual qc are returned
+    assert len(report) < len(given_data)
+    assert len(report) == 12
+    assert all(value != "0" for value in report["MANUAL_QC"])

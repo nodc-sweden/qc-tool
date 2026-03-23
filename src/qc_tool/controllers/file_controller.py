@@ -98,21 +98,16 @@ class FileController:
         self._file_model.add_data(data, file_path)
         self._validation_log_model.set_validation_log(validation_log)
 
-    def load_feedbackfile(self, path, raw_data: pl.DataFrame):
+    def load_working_file(self, path, raw_data: pl.DataFrame):
         selected_path = Path(path)
-        feedback_data = pl.read_excel(
+        feedback_data = pl.read_csv(
             selected_path,
-            columns=[
-                "visit_key",
-                "DEPH",
-                "parameter",
-                "MANUAL_QC",
-                "MANUAL_QC_CATEGORY",
-                "MANUAL_QC_COMMENT",
-            ],
-            schema_overrides={"MANUAL_QC": pl.Utf8},
+            schema_overrides={"DEPH": pl.Float64},
+            separator="\t",
+            has_header=True,
+            infer_schema_length=0,
+            encoding="utf8",
         )
-        feedback_data = feedback_data.cast({"DEPH": pl.Float64})
         joined_data = self.apply_feedback_file(
             raw_data=raw_data, feedback_data=feedback_data
         )
