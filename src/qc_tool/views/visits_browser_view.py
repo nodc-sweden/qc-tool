@@ -9,7 +9,6 @@ import jinja2
 from bokeh.models.layouts import Column, Row, TabPanel, Tabs
 
 from qc_tool.app_state import AppState
-from qc_tool.data_transformation import changes_report
 from qc_tool.scatter_slot import ScatterSlot
 from qc_tool.views.base_view import BaseView
 from qc_tool.views.comment_dialog_view import CommentDialogView
@@ -197,13 +196,6 @@ class VisitsBrowserView(BaseView):
 
     def save_file_callback(self, filename: Path):
         self._data.write_csv(filename, separator="\t")
-
-    def save_diff_file_callback(self, filename: Path):
-        changes_report(self._data).write_excel(
-            filename,
-            header_format={"bold": True, "border": 2},
-            freeze_panes=(1, 0),
-        )
 
     def parameter_handler_callback(self, *, columns, rows):
         self._profile_tab_handler.sync_profiles(columns=columns, rows=rows)

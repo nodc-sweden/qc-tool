@@ -7,7 +7,15 @@ import tkinter.filedialog
 from pathlib import Path
 
 from bokeh.io import curdoc
-from bokeh.models import Button, Column, Div, FileInput, ImportedStyleSheet
+from bokeh.models import (
+    Button,
+    Column,
+    Div,
+    FileInput,
+    ImportedStyleSheet,
+    Row,
+    TablerIcon,
+)
 
 from qc_tool.controllers.file_controller import FileController
 from qc_tool.models.file_model import FileModel
@@ -29,19 +37,47 @@ class FileView(BaseView):
         self._file_input = FileInput(
             title="Select file:", accept=".txt,.csv", max_width=500
         )
-        self._load_button = Button(label="Select data...")
-        self._load_button.on_click(self._on_load_button_clicked)
-
-        self._load_feedback_button = Button(label="Select feedbackfile...", disabled=True)
-        self._load_feedback_button.on_click(self._on_load_feedback_button_clicked)
-
-        self._save_as_button = Button(label="Save as...", disabled=True)
-        self._save_as_button.on_click(self._on_save_button_clicked)
-
-        self._save_feedback_as_button = Button(
-            label="Save feedbackfile...", disabled=True
+        self._select_data_button = Button(
+            label="Select data...",
+            icon=TablerIcon(icon_name="file-import", size="1.2em"),
+            styles={"margin-top": "20px"},
         )
-        self._save_feedback_as_button.on_click(self._on_save_feedback_button_clicked)
+        self._select_data_button.on_click(self._on_select_data_button_clicked)
+
+        self._save_working_file_button = Button(
+            label="Save working file...",
+            icon=TablerIcon(icon_name="device-floppy", size="1.2em"),
+            disabled=True,
+        )
+        self._save_working_file_button.on_click(self._on_save_working_file_button_clicked)
+
+        self._load_working_file_button = Button(
+            label="Load working file...",
+            icon=TablerIcon(icon_name="folder-open", size="1.2em"),
+            disabled=True,
+        )
+        self._load_working_file_button.on_click(self._on_load_working_file_button_clicked)
+
+        self._working_state_section = Column(
+            Div(text="<i>Save or load you current working state:</i>"),
+            Row(self._save_working_file_button, self._load_working_file_button),
+            styles={
+                "border": "1px solid #ccc",
+                "padding": "5px",
+                "border-radius": "4px",
+                "margin-top": "20px",
+            },
+        )
+
+        self._export_feedback_file_button = Button(
+            label="Export feedback file...",
+            icon=TablerIcon(icon_name="file-export", size="1.2em"),
+            disabled=True,
+            styles={"margin-top": "20px"},
+        )
+        self._export_feedback_file_button.on_click(
+            self._on_export_feedback_button_clicked
+        )
 
         self._load_indicator = Div(
             width=50,
@@ -55,13 +91,12 @@ class FileView(BaseView):
             self._load_header,
             self._loaded_file_label,
             self._load_indicator,
-            self._load_button,
-            self._load_feedback_button,
-            self._save_as_button,
-            self._save_feedback_as_button,
+            self._select_data_button,
+            self._working_state_section,
+            self._export_feedback_file_button,
         )
 
-    def _on_save_button_clicked(self, event):
+    def _on_save_working_file_button_clicked(self, event):
         try:
             root = tkinter.Tk()
             root.iconify()
@@ -78,7 +113,7 @@ class FileView(BaseView):
         selected_path = Path(selected_path)
         self._controller.save_data(selected_path)
 
-    def _on_load_button_clicked(self, event):
+    def _on_select_data_button_clicked(self, event):
         try:
             root = tkinter.Tk()
             root.iconify()
@@ -94,7 +129,7 @@ class FileView(BaseView):
         self._loaded_file_label.text = "Loading..."
         curdoc().add_next_tick_callback(lambda: self._controller.load_file(selected_path))
 
-    def _on_load_feedback_button_clicked(self, event):
+    def _on_load_working_file_button_clicked(self, event):
         try:
             root = tkinter.Tk()
             root.iconify()
@@ -109,12 +144,12 @@ class FileView(BaseView):
         self._load_indicator.visible = True
         self._loaded_file_label.text = "Loading..."
         curdoc().add_next_tick_callback(
-            lambda: self._controller.load_feedbackfile(
+            lambda: self._controller.load_working_file(
                 selected_path, self._file_model.data
             )
         )
 
-    def _on_save_feedback_button_clicked(self, event):
+    def _on_export_feedback_button_clicked(self, event):
         try:
             root = tkinter.Tk()
             root.iconify()
@@ -137,9 +172,9 @@ class FileView(BaseView):
 
     def file_load_completed(self):
         self._load_indicator.visible = False
-        self._load_feedback_button.disabled = False
-        self._save_as_button.disabled = False
-        self._save_feedback_as_button.disabled = False
+        self._load_working_file_button.disabled = self._file_model.data is None
+        self._save_working_file_button.disabled = self._file_model.data is None
+        self._export_feedback_file_button.disabled = self._file_model.data is None
 
         if self._file_model.file_path:
             file_info = (

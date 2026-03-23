@@ -1,5 +1,3 @@
-from pathlib import Path
-
 from pyproj import Transformer
 
 from qc_tool.app_state import AppState
@@ -7,7 +5,6 @@ from qc_tool.controllers.filter_controller import FilterController
 from qc_tool.controllers.summary_controller import SummaryController
 from qc_tool.controllers.visits_browser_controller import VisitsBrowserController
 from qc_tool.controllers.visits_controller import VisitsController
-from qc_tool.data_transformation import changes_report
 
 GEOLAYERS_AREATAG = {
     "SVAR2022_typomrkust_lagad": "TYPOMRKUST",
@@ -40,13 +37,6 @@ class MainController:
             self._state.geo_info,
         )
         self.visits_browser_controller = VisitsBrowserController(self._state)
-
-    def save_diff_file_callback(self, filename: Path):
-        changes_report(self._data).write_excel(
-            filename,
-            header_format={"bold": True, "border": 2},
-            freeze_panes=(1, 0),
-        )
 
     def _set_validation(self, validation: dict):
         self._validation = validation
