@@ -42,6 +42,7 @@ def changes_report(data: pl.DataFrame) -> pl.DataFrame:
     # Columns to include in the feedback file
     # visit_key is needed to be able to merge feedback file later on
     report_columns = [
+        "SERNO",
         "reported_visit_date",
         "visit_key",
         "STATN",
@@ -66,4 +67,10 @@ def changes_report(data: pl.DataFrame) -> pl.DataFrame:
     }
 
     # Filter rows where incoming != total and select the feedback file columns
-    return data.filter(incoming != total).select(report_columns).rename(rename_map)
+    return (
+        data.filter(
+            (incoming != total) & (pl.col("total_automatic") != "Probably good value")
+        )
+        .select(report_columns)
+        .rename(rename_map)
+    )

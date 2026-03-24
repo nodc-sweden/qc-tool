@@ -100,7 +100,7 @@ class FileController:
 
     def load_working_file(self, path, raw_data: pl.DataFrame):
         selected_path = Path(path)
-        feedback_data = pl.read_csv(
+        working_data = pl.read_csv(
             selected_path,
             schema_overrides={"DEPH": pl.Float64},
             separator="\t",
@@ -108,8 +108,8 @@ class FileController:
             infer_schema_length=0,
             encoding="utf8",
         )
-        joined_data = self.apply_feedback_file(
-            raw_data=raw_data, feedback_data=feedback_data
+        joined_data = self.apply_working_file(
+            raw_data=raw_data, working_data=working_data
         )
         self._file_model.data_flags_update(joined_data)
 
@@ -478,12 +478,12 @@ class FileController:
             return qflag_str
         return str(q)
 
-    def apply_feedback_file(self, raw_data: pl.DataFrame, feedback_data: pl.DataFrame):
-        print("applying manual flags from feedback file....")
+    def apply_working_file(self, raw_data: pl.DataFrame, working_data: pl.DataFrame):
+        print("applying manual flags from working file....")
         join_columns = ["visit_key", "DEPH", "parameter"]
         # Join feedback into raw data
         joined_data = raw_data.join(
-            feedback_data, on=join_columns, how="left", suffix="_feedback"
+            working_data, on=join_columns, how="left", suffix="_feedback"
         )
         joined_data = joined_data.with_columns(
             pl.when(
