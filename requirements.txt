@@ -527,9 +527,9 @@ mdurl==0.1.2 \
     --hash=sha256:84008a41e51615a49fc9966191ff91509e3c40b939176e643fd50a5c2196b8f8 \
     --hash=sha256:bb413d29f5eea38f31dd4754dd7377d4465116fb207585f97bf925588687c1ba
     # via markdown-it-py
-narwhals==2.18.0 \
-    --hash=sha256:1de5cee338bc17c338c6278df2c38c0dd4290499fcf70d75e0a51d5f22a6e960 \
-    --hash=sha256:68378155ee706ac9c5b25868ef62ecddd62947b6df7801a0a156bc0a615d2d0d
+narwhals==2.18.1 \
+    --hash=sha256:652a1fcc9d432bbf114846688884c215f17eb118aa640b7419295d2f910d2a8b \
+    --hash=sha256:a0a8bb80205323851338888ba3a12b4f65d352362c8a94be591244faf36504ad
     # via bokeh
 nodc-calculations @ git+https://github.com/nodc-sweden/nodc-calculations@7fc845ecb690ec5c1dae6b37cae4cb1c473495c8
     # via nodc-statistics
