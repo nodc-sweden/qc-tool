@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import polars as pl
 import pytest
 
@@ -133,3 +135,81 @@ def test_change_report_filters_rows_with_manual_qc():
     assert len(report) < len(given_data)
     assert len(report) == 12
     assert all(value != "0" for value in report["MANUAL_QC"])
+
+
+@pytest.mark.parametrize(
+    "given_paths, expected_path_mapping",
+    (
+        ([], {}),
+        ([Path("file.txt")], {Path("file.txt"): "1. file.txt"}),
+        ([Path("dir_a/file_a.txt")], {Path("dir_a/file_a.txt"): "1. file_a.txt"}),
+        (
+            [Path("dir_a/file_a.txt"), Path("dir_b/file_b.txt")],
+            {
+                Path("dir_a/file_a.txt"): "1. file_a.txt",
+                Path("dir_b/file_b.txt"): "2. file_b.txt",
+            },
+        ),
+        (
+            [Path("dir_a/file.txt"), Path("dir_b/file.txt")],
+            {
+                Path("dir_a/file.txt"): "1. dir_a/file.txt",
+                Path("dir_b/file.txt"): "2. dir_b/file.txt",
+            },
+        ),
+        (
+            [Path("dir_a/file_a.txt"), Path("dir_b/file.txt"), Path("dir_c/file.txt")],
+            {
+                Path("dir_a/file_a.txt"): "1. file_a.txt",
+                Path("dir_b/file.txt"): "2. dir_b/file.txt",
+                Path("dir_c/file.txt"): "3. dir_c/file.txt",
+            },
+        ),
+        (
+            [
+                Path("root/a/dir/file.txt"),
+                Path("root/subdir/b/dir/file.txt"),
+                Path("root/subdir/c/dir/file.txt"),
+            ],
+            {
+                Path("root/a/dir/file.txt"): "1. a/dir/file.txt",
+                Path("root/subdir/b/dir/file.txt"): "2. b/dir/file.txt",
+                Path("root/subdir/c/dir/file.txt"): "3. c/dir/file.txt",
+            },
+        ),
+    ),
+)
+def test_shortest_unique_paths(given_paths, expected_path_mapping):
+    # Given a list of paths
+    # When calling shortest_unique_suffixes
+    path_mapping = data_transformation.shortest_unique_paths(given_paths)
+
+    # Then the returned mapping is as expected
+    assert path_mapping == expected_path_mapping
+
+
+@pytest.mark.parametrize(
+    "given_path, expected_path_mapping",
+    (
+        (
+            [Path("test/Raw_data/data.txt")],
+            {Path("test/Raw_data/data.txt"): "1. test"},
+        ),
+        (
+            [Path("data/data1/Raw_data/data.txt"), Path("data/data2/Raw_data/data.txt")],
+            {
+                Path("data/data1/Raw_data/data.txt"): "1. data1",
+                Path("data/data2/Raw_data/data.txt"): "2. data2",
+            },
+        ),
+    ),
+)
+def test_shortest_unique_paths_removes_lims_export_structure(
+    given_path, expected_path_mapping
+):
+    # Given a path
+    # When calling shortest_unique_suffixes
+    path_mapping = data_transformation.shortest_unique_paths(given_path)
+
+    # Then the returned mapping is as expected
+    assert path_mapping == expected_path_mapping

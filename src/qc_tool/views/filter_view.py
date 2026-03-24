@@ -5,8 +5,10 @@ from qc_tool.models.filter_model import FilterModel
 
 if typing.TYPE_CHECKING:
     from qc_tool.controllers.filter_controller import FilterController
+
 from bokeh.models import Button, MultiChoice, Row
 
+from qc_tool.data_transformation import shortest_unique_paths
 from qc_tool.views.base_view import BaseView
 
 MONTHS = [
@@ -38,6 +40,12 @@ class FilterView(BaseView):
             "min_width": 200,
         }
 
+        self._file_filter = MultiChoice(
+            title="File",
+            **common_config,
+        )
+        self._file_filter.on_change("value", self._on_file_filter_changed)
+
         self._year_filter = MultiChoice(
             title="Year",
             **common_config,
@@ -50,6 +58,9 @@ class FilterView(BaseView):
         self._cruise_filter = MultiChoice(title="Cruise", **common_config)
         self._cruise_filter.on_change("value", self._on_cruise_filter_changed)
 
+        self._basin_filter = MultiChoice(title="Basin", **common_config)
+        self._basin_filter.on_change("value", self._on_basin_filter_changed)
+
         self._station_filter = MultiChoice(title="Station", **common_config)
         self._station_filter.on_change("value", self._on_station_filter_changed)
 
@@ -61,19 +72,24 @@ class FilterView(BaseView):
         self._layout = Row(
             children=[
                 self._clear_filter_button,
+                self._file_filter,
                 self._year_filter,
                 self._month_filter,
                 self._cruise_filter,
+                self._basin_filter,
                 self._station_filter,
             ],
             max_height=self.HEIGHT,
         )
 
-    def _on_month_filter_changed(self, attr, old, new):
-        self._filter_model.set_month_filter(new)
+    def _on_file_filter_changed(self, attr, old, new):
+        self._filter_model.set_file_filter(new)
 
     def _on_year_filter_changed(self, attr, old, new):
         self._filter_model.set_year_filter(new)
+
+    def _on_month_filter_changed(self, attr, old, new):
+        self._filter_model.set_month_filter(new)
 
     def _on_cruise_filter_changed(self, attr, old, new):
         self._filter_model.set_cruise_filter(new)
@@ -81,10 +97,15 @@ class FilterView(BaseView):
     def _on_station_filter_changed(self, attr, old, new):
         self._filter_model.set_station_filter(new)
 
+    def _on_basin_filter_changed(self, attr, old, new):
+        self._filter_model.set_basin_filter(new)
+
     def clear_filter(self, event):
+        self._file_filter.value = []
         self._year_filter.value = []
         self._month_filter.value = []
         self._cruise_filter.value = []
+        self._basin_filter.value = []
         self._station_filter.value = []
 
     @property
@@ -92,6 +113,12 @@ class FilterView(BaseView):
         return self._layout
 
     def update_filter_options(self):
+        all_paths = self._filter_model.file_paths
+        short_names = shortest_unique_paths(all_paths)
+        available = set(self._filter_model.files)
+        self._file_filter.options = [
+            (str(path), short_names[path]) for path in all_paths if str(path) in available
+        ]
         self._year_filter.options = [str(year) for year in self._filter_model.years]
         self._month_filter.options = [
             (str(month), calendar.month_abbr[month])
@@ -101,3 +128,4 @@ class FilterView(BaseView):
             str(cruise) for cruise in self._filter_model.cruises
         ]
         self._station_filter.options = self._filter_model.stations
+        self._basin_filter.options = self._filter_model.basins
