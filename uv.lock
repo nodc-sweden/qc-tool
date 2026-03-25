@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 2
 requires-python = ">=3.11"
 resolution-markers = [
     "python_full_version >= '3.12'",
@@ -793,8 +793,8 @@ wheels = [
 
 [[package]]
 name = "ocean-data-qc"
-version = "2026.1.0"
-source = { git = "https://github.com/nodc-sweden/ocean-data-qc?rev=v2026.1.0#f8e9e7b00185e34d54c4f07f52ce023de4686a5f" }
+version = "2026.1.1"
+source = { git = "https://github.com/nodc-sweden/ocean-data-qc?rev=v2026.1.1#9330af01f97e9fc0a5782b7aca191753daf2d541" }
 dependencies = [
     { name = "jinja2" },
     { name = "pandas" },
@@ -1310,7 +1310,7 @@ requires-dist = [
     { name = "jinja2", specifier = "==3.1.6" },
     { name = "nodc-codes", git = "https://github.com/nodc-sweden/nodc-codes?rev=v0.3.0" },
     { name = "nodc-statistics", git = "https://github.com/nodc-sweden/nodc-statistics?rev=v2025.1.1" },
-    { name = "ocean-data-qc", git = "https://github.com/nodc-sweden/ocean-data-qc?rev=v2026.1.0" },
+    { name = "ocean-data-qc", git = "https://github.com/nodc-sweden/ocean-data-qc?rev=v2026.1.1" },
     { name = "pandas", specifier = "==2.3.3" },
     { name = "pyproj", specifier = "==3.7.1" },
     { name = "sharkadm", git = "https://github.com/nodc-sweden/SHARKadm?rev=main" },
