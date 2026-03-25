@@ -20,9 +20,11 @@ class ParametersModel(BaseModel):
         ("NTOT", "NTRZ", "AMON"),
         ("PHOS", "AMON", "DOXY_BTL"),
         ("ALKY", "PH_TOT"),
+        ("PH_LAB", "PH_TOT"),
         ("CPHL", "CHLFL", "DOXY_BTL"),
         ("CHLFL", "DOXY_CTD"),
-        ("CPHL", "CHLFL"),
+        ("CHLFL", "CPHL"),
+        ("HUMUS", "CPHL"),
     )
 
     _default_parameters = DEFAULT_PARAMETERS = (
@@ -32,10 +34,12 @@ class ParametersModel(BaseModel):
         "NTOT + NTRZ + AMON",
         "PTOT + PHOS + SIO3-SI",
         "ALKY + PH_TOT",
-        "CPHL + CHLFL",
+        "CHLFL + CPHL",
         "DOXY_CTD + DOXY_BTL + H2S",
         "AMON",
         "PHOS",
+        "HUMUS",
+        "PH_LAB + PH_TOT",
     )
 
     def __init__(self, *args, **kwargs):

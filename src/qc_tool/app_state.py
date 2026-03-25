@@ -24,7 +24,7 @@ class AppState:
         self.map = MapModel(self._message_queue)
         self.validation_log = ValidationLogModel(self._message_queue)
         self.parameters = ParametersModel(self._message_queue)
-        self.profile_grid = ProfileGridModel(2, 5, self._message_queue)
+        self.profile_grid = ProfileGridModel(2, 6, self._message_queue)
         self.filtered_profiles = FilteredProfilesModel(self._message_queue)
         self.manual_qc = ManualQcModel(self._message_queue)
         self.geo_info = GeoInfoModel(self._message_queue)

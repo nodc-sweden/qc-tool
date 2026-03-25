@@ -441,16 +441,25 @@ class ProfileSlot(BaseView):
         # get xaxis range
         x_min = min(x_values)
         x_max = max(x_values)
-        padding = 0.05 * (x_max - x_min)
-        x_min_padded = x_min - padding
+        padding = 0.1 * (x_max - x_min)
+        min_padding = padding
+        if padding == 0:
+            # single point and identical values
+            padding = abs(x_min) * 0.1 if x_min != 0 else 1
+        if 0 < x_min <= 0.2:
+            x_min_padded = -0.05
+            min_padding = 0.1
+        else:
+            x_min_padded = x_min - padding
+
         x_max_padded = x_max + padding
 
         if unit in unit_to_range:
             range_name = unit_to_range[unit]
             rng = self._figure.extra_x_ranges[range_name]
             # set xaxis range
-            rng.start = min(rng.start, x_min_padded)
-            rng.end = max(rng.end, x_max_padded)
+            rng.start = min(rng.start - min_padding, x_min_padded)
+            rng.end = max(rng.end + padding, x_max_padded)
             # add info to reset button
             for src in self._axes_range_sources:
                 if src.data["range_name"] and src.data["range_name"][0] == range_name:

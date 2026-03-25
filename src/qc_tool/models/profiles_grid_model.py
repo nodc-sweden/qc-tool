@@ -4,7 +4,7 @@ from qc_tool.models.base_model import BaseModel
 class ProfileGridModel(BaseModel):
     NEW_GRID_SIZE = "NEW_GRID_SIZE"
 
-    def __init__(self, rows=2, columns=3, *args, **kwargs):
+    def __init__(self, rows=2, columns=6, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._columns = columns
         self._rows = rows
