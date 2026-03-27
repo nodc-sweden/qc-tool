@@ -941,9 +941,9 @@ python-dateutil==2.9.0.post0 \
     # via
     #   matplotlib
     #   pandas
-python-discovery==1.2.0 \
-    --hash=sha256:1e108f1bbe2ed0ef089823d28805d5ad32be8e734b86a5f212bf89b71c266e4a \
-    --hash=sha256:7d33e350704818b09e3da2bd419d37e21e7c30db6e0977bb438916e06b41b5b1
+python-discovery==1.2.1 \
+    --hash=sha256:180c4d114bff1c32462537eac5d6a332b768242b76b69c0259c7d14b1b680c9e \
+    --hash=sha256:b6a957b24c1cd79252484d3566d1b49527581d46e789aaf43181005e56201502
     # via virtualenv
 pytz==2026.1.post1 \
     --hash=sha256:3378dde6a0c3d26719182142c56e60c7f9af7e968076f31aae569d72a0358ee1 \
@@ -1002,9 +1002,9 @@ pyyaml==6.0.3 \
     #   bokeh
     #   pre-commit
     #   sharkadm
-requests==2.32.5 \
-    --hash=sha256:2462f94637a34fd532264295e186976db0f5d453d1cdd31473c85a6a161affb6 \
-    --hash=sha256:dbba0bac56e100853db0ea71b82b4dfd5fe2bf6d3754a8893c3af500cec7d7cf
+requests==2.33.0 \
+    --hash=sha256:3324635456fa185245e24865e810cecec7b4caf933d7eb133dcde67d48cee69b \
+    --hash=sha256:c7ebc5e8b0f21837386ad0e1c8fe8b829fa5f544d8df3b2253bff14ef29d7652
     # via
     #   nodc-codes
     #   sharkadm
@@ -1155,7 +1155,7 @@ shapely==2.1.2 \
     #   geopandas
     #   nodc-statistics
     #   sharkadm
-sharkadm @ git+https://github.com/nodc-sweden/SHARKadm@2caa55354fe6a0460ac0acd759dca915bdf48a8b
+sharkadm @ git+https://github.com/nodc-sweden/SHARKadm@8c83ea91e9584a9c944dae8cfc8c1fd86d7f22e3
     # via qc-tool
 shellingham==1.5.4 \
     --hash=sha256:7ecfff8f2fd72616f7481040475a65b2bf8af90a56c89140852d1120324e8686 \
