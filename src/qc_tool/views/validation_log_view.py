@@ -11,22 +11,26 @@ from qc_tool.views.base_view import BaseView
 
 _validation_log_template = jinja2.Template("""
 {% for key, value in validation.items() %}
-  {% if value.fail %}
+  {% if value.count > 0 %}
   <div class="collapsible-container">
     <input id="collapsible-{{ key }}" class="toggle" type="checkbox">
-    <label for="collapsible-{{ key }}" class="toggle-label errors">{{ key }} ({{ value.success_count }} successes, {{ value.fail_count }} errors)</label>
+    <label for="collapsible-{{ key }}" class="toggle-label">
+      {{ key }} ({{ value.count }} messages)
+    </label>
     <div class="collapsible-content">
       <div class="content-inner">
         <p>{{ value.description }}</p>
         <ul>
-        {% for category, fail_rows in value.fail.items() %}
+        {% for category, messages in value.messages.items() %}
           {% if category != "General" %}
-          <li>{{ category }}</li>
+            <li><strong>{{ category }}</strong></li>
             <ul>
           {% endif %}
-          {% for fail_row in fail_rows %}
-              <li>{{ fail_row }}</li>
+
+          {% for msg in messages %}
+              <li>{{ msg }}</li>
           {% endfor %}
+
           {% if category != "General" %}
             </ul>
           {% endif %}
@@ -37,7 +41,7 @@ _validation_log_template = jinja2.Template("""
   </div>
   {% endif %}
 {% endfor %}
-""")  # noqa: E501
+""")
 
 
 class ValidationLogView(BaseView):
@@ -56,8 +60,8 @@ class ValidationLogView(BaseView):
             stylesheets=[ImportedStyleSheet(url="qc_tool/static/css/style.css")],
         )
 
-    def update(self, validation_log):
-        self._layout.text = _validation_log_template.render(validation=validation_log)
+    def update(self, validation_remarks):
+        self._layout.text = _validation_log_template.render(validation=validation_remarks)
 
     @property
     def layout(self):

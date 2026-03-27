@@ -1,5 +1,56 @@
+from collections import defaultdict
+
 import polars as pl
 from ocean_data_qc.fyskem.qc_flag_tuple import QcField
+from sharkadm import validators
+
+
+def get_validators_in_log(log):
+    validators_map = {}
+
+    for row in log:
+        name = row.get("validator", "no validator")
+        cls_name = row.get("cls")
+
+        if name not in validators_map and cls_name:
+            validators_map[name] = getattr(validators, cls_name)
+
+    return validators_map
+
+
+def collect_log_messages(log: list):
+    log_messages = defaultdict(
+        lambda: {
+            "messages": defaultdict(list),
+        }
+    )
+
+    for row in log:
+        level = row.get("level", "info")
+
+        # Only include relevant levels
+        if level not in ("error", "warning", "critical"):
+            continue
+
+        validator_name = row.get("validator", "no validator")
+        column = row.get("column") or "General"
+
+        log_messages[validator_name]["messages"][column].append(row["msg"])
+
+    available_validators = get_validators_in_log(log)
+
+    for validator_name, data in log_messages.items():
+        # Count ALL messages
+        data["count"] = sum(len(msgs) for msgs in data["messages"].values())
+
+        # Add description
+        validator_cls = available_validators.get(validator_name)
+        if validator_cls:
+            data["description"] = validator_cls.get_validator_description()
+        else:
+            data["description"] = ""
+
+    return log_messages
 
 
 def prepare_data(data: pl.DataFrame):
@@ -67,10 +118,8 @@ def changes_report(data: pl.DataFrame) -> pl.DataFrame:
     }
 
     # Filter rows where incoming != total and select the feedback file columns
-    return (
-        data.filter(
-            (incoming != total) & (pl.col("total_automatic") != "Probably good value")
-        )
-        .select(report_columns)
-        .rename(rename_map)
-    )
+    condition = incoming != total
+    if "total_automatic" in data.columns:
+        condition &= pl.col("total_automatic") != "Probably good value"
+
+    return data.filter(condition).select(report_columns).rename(rename_map)

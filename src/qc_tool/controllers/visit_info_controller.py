@@ -19,8 +19,12 @@ class VisitInfoController:
         ("LONGI", "Longitude"),
     )
 
-    def __init__(self, visits_model: VisitsModel):
+    def __init__(
+        self,
+        visits_model: VisitsModel,
+    ):
         self._visits_model = visits_model
+
         self._visits_model.register_listener(
             VisitsModel.VISIT_SELECTED, self._on_visit_selected
         )
@@ -30,13 +34,13 @@ class VisitInfoController:
     def _on_visit_selected(self):
         if visit := self._visits_model.selected_visit:
             metadata = [
-                (
-                    header,
-                    visit.common.get(key, ""),
-                )
+                (header, visit.common.get(key, ""))
                 for key, header in self.STATION_DATA_FIELDS
             ]
+
+            logs = visit.validation_logs
         else:
             metadata = [(header, "") for _, header in self.STATION_DATA_FIELDS]
+            logs = []
 
-        self.visit_info_view.update(metadata)
+        self.visit_info_view.update(metadata, logs)
