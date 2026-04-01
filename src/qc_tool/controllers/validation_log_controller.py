@@ -1,4 +1,5 @@
 from qc_tool.models.validation_log_model import ValidationLogModel
+from qc_tool.views.validation_log_view import ValidationLogView
 
 
 class ValidationLogController:
@@ -8,7 +9,7 @@ class ValidationLogController:
             ValidationLogModel.NEW_VALIDATION_LOG, self._on_new_validation_log
         )
 
-        self.validation_log_view = None
+        self.validation_log_view: ValidationLogView = None
 
     def _on_new_validation_log(self):
         self._validation_log = self._validation_log_model.validation_log

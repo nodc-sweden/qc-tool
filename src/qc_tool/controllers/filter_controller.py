@@ -21,18 +21,22 @@ class FilterController:
     def _on_new_visits(self):
         self._filter_model.clear_all()
         self._filter_model.set_filter_options(
+            files=self._visits_model.possible_files(self._filter_model),
             years=self._visits_model.possible_years(self._filter_model),
             months=self._visits_model.possible_months(self._filter_model),
             cruises=self._visits_model.possible_cruises(self._filter_model),
             stations=self._visits_model.possible_stations(self._filter_model),
+            basins=self._visits_model.possible_basins(self._filter_model),
         )
 
     def _on_filter_changed(self):
         self._filter_model.set_filter_options(
+            files=self._visits_model.possible_files(self._filter_model),
             years=self._visits_model.possible_years(self._filter_model),
             months=self._visits_model.possible_months(self._filter_model),
             cruises=self._visits_model.possible_cruises(self._filter_model),
             stations=self._visits_model.possible_stations(self._filter_model),
+            basins=self._visits_model.possible_basins(self._filter_model),
         )
 
     def _on_filter_options_changed(self):

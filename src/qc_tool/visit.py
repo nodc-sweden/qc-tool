@@ -58,6 +58,10 @@ class Visit:
         return self._sea_basin
 
     @property
+    def file_path(self):
+        return self._data.select("source").to_series()[0]
+
+    @property
     def data(self) -> pl.DataFrame:
         return self._data
 

@@ -1,4 +1,5 @@
-from collections import defaultdict
+from collections import Counter, defaultdict
+from pathlib import Path
 
 import polars as pl
 from ocean_data_qc.fyskem.qc_flag_tuple import QcField
@@ -51,6 +52,33 @@ def collect_log_messages(log: list):
             data["description"] = ""
 
     return log_messages
+
+
+def remove_lims(parts: tuple[str, ...]) -> tuple[str, ...]:
+    if parts[-2:] == ("Raw_data", "data.txt"):
+        return parts[:-2]
+    return parts
+
+
+def shortest_unique_paths(paths: list[Path]) -> dict[Path, str]:
+    if not paths:
+        return {}
+    effective_parts = {path: remove_lims(path.parts) for path in paths}
+    path_mapping = {path: parts[-1:] for path, parts in effective_parts.items()}
+    collisions = True
+    while collisions:
+        collisions = False
+        collision_counter = Counter(path_mapping.values())
+        duplicat_path, count = max(collision_counter.items(), key=lambda x: x[1])
+        if count > 1:
+            collisions = True
+            for path, parts in path_mapping.items():
+                if parts == duplicat_path:
+                    path_mapping[path] = effective_parts[path][-len(parts) - 1 :]
+    return {
+        path: f"{n}. {Path(*parts)}"
+        for n, (path, parts) in enumerate(path_mapping.items(), start=1)
+    }
 
 
 def prepare_data(data: pl.DataFrame):

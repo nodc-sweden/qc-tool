@@ -92,6 +92,13 @@ class VisitsModel(BaseModel):
     def stations(self) -> set[str]:
         return {visit.station_name for visit in self.visits.values()}
 
+    def possible_files(self, filter_model: FilterModel):
+        return {
+            visit.file_path
+            for visit in self._visits.values()
+            if filter_model.matches(visit, ignore_file=True)
+        }
+
     def possible_years(self, filter_model: FilterModel):
         return {
             visit.datetime.year
@@ -118,4 +125,11 @@ class VisitsModel(BaseModel):
             visit.station_name
             for visit in self._visits.values()
             if filter_model.matches(visit, ignore_station=True)
+        }
+
+    def possible_basins(self, filter_model: FilterModel):
+        return {
+            visit.sea_basin
+            for visit in self._visits.values()
+            if filter_model.matches(visit, ignore_basin=True)
         }

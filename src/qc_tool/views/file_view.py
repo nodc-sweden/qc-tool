@@ -1,5 +1,7 @@
 import typing
 
+from qc_tool.data_transformation import shortest_unique_paths
+
 if typing.TYPE_CHECKING:
     from qc_tool.controllers.file_controller import FileController
 
@@ -10,14 +12,15 @@ from bokeh.io import curdoc
 from bokeh.models import (
     Button,
     Column,
+    Dialog,
     Div,
     FileInput,
     ImportedStyleSheet,
     Row,
+    Switch,
     TablerIcon,
 )
 
-from qc_tool.controllers.file_controller import FileController
 from qc_tool.models.file_model import FileModel
 from qc_tool.views.base_view import BaseView
 
@@ -37,12 +40,17 @@ class FileView(BaseView):
         self._file_input = FileInput(
             title="Select file:", accept=".txt,.csv", max_width=500
         )
+
         self._select_data_button = Button(
             label="Select data...",
             icon=TablerIcon(icon_name="file-import", size="1.2em"),
-            styles={"margin-top": "20px"},
         )
         self._select_data_button.on_click(self._on_select_data_button_clicked)
+
+        self._add_to_existing = Switch(label="Add to loaded data", active=False)
+        self._load_file_section = Column(
+            self._select_data_button, self._add_to_existing, styles={"margin-top": "20px"}
+        )
 
         self._save_working_file_button = Button(
             label="Save working file...",
@@ -87,16 +95,37 @@ class FileView(BaseView):
             visible=False,
         )
 
+        self._save_file_buttons = Column()
+        self._save_selection_dialog = Dialog(
+            title="Save working file",
+            content=self._save_file_buttons,
+            visible=False,
+            closable=True,
+            minimizable=False,
+            maximizable=False,
+            collapsible=False,
+            pinnable=False,
+            styles={"width": "fit-content", "height": "fit-content"},
+        )
+
         self._layout = Column(
             self._load_header,
             self._loaded_file_label,
             self._load_indicator,
-            self._select_data_button,
+            self._load_file_section,
             self._working_state_section,
             self._export_feedback_file_button,
+            self._save_selection_dialog,
         )
 
     def _on_save_working_file_button_clicked(self, event):
+        if len(self._file_model.file_paths) > 1:
+            self._save_selection_dialog.visible = True
+            return
+        self._save_file(self._file_model.file_paths[0])
+
+    def _save_file(self, source_path: Path):
+        self._save_selection_dialog.visible = False
         try:
             root = tkinter.Tk()
             root.iconify()
@@ -110,8 +139,7 @@ class FileView(BaseView):
 
         if not selected_path:
             return
-        selected_path = Path(selected_path)
-        self._controller.save_data(selected_path)
+        self._controller.save_data_for_source(source_path, Path(selected_path))
 
     def _on_select_data_button_clicked(self, event):
         try:
@@ -127,7 +155,11 @@ class FileView(BaseView):
         selected_path = Path(selected_path)
         self._load_indicator.visible = True
         self._loaded_file_label.text = "Loading..."
-        curdoc().add_next_tick_callback(lambda: self._controller.load_file(selected_path))
+        curdoc().add_next_tick_callback(
+            lambda: self._controller.load_file(
+                selected_path, self._add_to_existing.active
+            )
+        )
 
     def _on_load_working_file_button_clicked(self, event):
         try:
@@ -176,11 +208,28 @@ class FileView(BaseView):
         self._save_working_file_button.disabled = self._file_model.data is None
         self._export_feedback_file_button.disabled = self._file_model.data is None
 
-        if self._file_model.file_path:
-            file_info = (
-                f"<label>File:</label>"
-                f"<p style='font-style: italic;'>{self._file_model.file_path}</p>"
+        file_paths = self._file_model.file_paths
+        short_names = shortest_unique_paths(file_paths)
+
+        buttons = []
+        for path in file_paths:
+            button = Button(
+                label=short_names[path],
+                icon=TablerIcon(icon_name="device-floppy", size="1.2em"),
             )
+            button.on_click(lambda event, p=path: self._save_file(p))
+            buttons.append(button)
+        self._save_file_buttons.children = buttons
+
+        if file_paths:
+            lines = "\n".join(
+                f"<span style='font-style: italic; display: block; line-height: 1.2;'"
+                f" onmouseover=\"this.style.background='#e0e0e0'\""
+                f" onmouseout=\"this.style.background=''\""
+                f" title='{path}'>{short_names[path]}</span>"
+                for path in file_paths
+            )
+            file_info = f"<label>Files:</label>{lines}"
         else:
             file_info = (
                 "<label>File:</label><p style='font-style: italic;'>No file loaded</p>"

@@ -25,6 +25,7 @@ from qc_tool.models.file_model import FileModel
 from qc_tool.models.geo_info_model import GeoInfoModel
 from qc_tool.models.manual_qc_model import ManualQcModel
 from qc_tool.models.validation_log_model import ValidationLogModel
+from qc_tool.views.file_view import FileView
 
 CONFIG_ENV = "NODC_CONFIG"
 
@@ -65,7 +66,7 @@ class FileController:
 
         self._geo_info_model = geo_info_model
 
-        self.file_view = None
+        self.file_view: FileView = None
         shapefile_t0 = time.perf_counter()
         self._ocean_shapefile = _load_ocean_shapefile()
         shapefile_t1 = time.perf_counter()
@@ -79,7 +80,11 @@ class FileController:
     def ocean_shapefile(self):
         return self._ocean_shapefile
 
-    def load_file(self, file_path):
+    def load_file(self, file_path, add_to_existing: bool = False):
+        if add_to_existing and file_path in self._file_model.file_paths:
+            self.file_model.no_new_data()
+            return
+
         print(f"Loading data from {file_path}...")
         try:
             controller = sharkadm_controller.get_polars_controller_with_data(file_path)
@@ -101,9 +106,15 @@ class FileController:
         data = prepare_data(data)
         data = self._run_automatic_qc(data)
         data = self._expand_quality_flag_long(data)
-        self._file_model.add_data(data, file_path)
+        if add_to_existing and self._file_model.data is not None:
+            existing_keys = set(self._file_model.data["visit_key"].unique())
+            new_keys = set(data["visit_key"].unique())
+            overlap = existing_keys & new_keys
+            if overlap:
+                print(f"WARNING: {len(overlap)} visit_key(s) already loaded: {overlap}")
+        self._file_model.add_data(data, file_path, add_to_existing)
         adm_logger.filter(log_types=[adm_logger.VALIDATION], level=">warning")
-        self._validation_log_model.set_validation_log(adm_logger.data)
+        self._validation_log_model.set_validation_log(adm_logger.data, add_to_existing)
 
     def load_working_file(self, path, raw_data: pl.DataFrame):
         selected_path = Path(path)
@@ -120,8 +131,10 @@ class FileController:
         )
         self._file_model.data_flags_update(joined_data)
 
-    def save_data(self, file_path: Path):
-        self._file_model.data.write_csv(file_path, separator="\t")
+    def save_data_for_source(self, source_path: Path, file_path: Path):
+        self._file_model.data.filter(pl.col("source") == str(source_path)).write_csv(
+            file_path, separator="\t"
+        )
 
     def save_changed_data(self, file_path: Path):
         changes_report(self._file_model.data).write_excel(
@@ -433,35 +446,55 @@ class FileController:
     def apply_working_file(self, raw_data: pl.DataFrame, working_data: pl.DataFrame):
         print("applying manual flags from working file....")
         join_columns = ["visit_key", "DEPH", "parameter"]
-        # Join feedback into raw data
+        value_columns = ["MANUAL_QC", "MANUAL_QC_CATEGORY", "MANUAL_QC_COMMENT"]
+
+        for col in ["MANUAL_QC_CATEGORY", "MANUAL_QC_COMMENT"]:
+            if col not in raw_data.columns:
+                raw_data = raw_data.with_columns(pl.lit(None).cast(pl.Utf8).alias(col))
+
+        working_data = working_data.select(
+            [c for c in [*join_columns, *value_columns] if c in working_data.columns]
+        ).unique(subset=join_columns, keep="last")
+
         joined_data = raw_data.join(
-            working_data, on=join_columns, how="left", suffix="_feedback"
+            working_data, on=join_columns, how="left", suffix="_working_file"
         )
+
+        has_manual_qc_change = (
+            pl.col("MANUAL_QC") != pl.col("MANUAL_QC_working_file")
+        ) & pl.col("MANUAL_QC_working_file").is_not_null()
+
         joined_data = joined_data.with_columns(
-            pl.when(
-                (pl.col("MANUAL_QC") != pl.col("MANUAL_QC_feedback"))
-                & pl.col("MANUAL_QC_feedback").is_not_null()
-            )
+            pl.when(has_manual_qc_change)
             .then(
-                pl.struct(["quality_flag_long", "MANUAL_QC_feedback"]).map_elements(
+                pl.struct(["quality_flag_long", "MANUAL_QC_working_file"]).map_elements(
                     lambda row: self._apply_manual_flag(
-                        row["quality_flag_long"], row["MANUAL_QC_feedback"]
+                        row["quality_flag_long"], row["MANUAL_QC_working_file"]
                     ),
                     return_dtype=pl.Utf8,
                 )
             )
             .otherwise(pl.col("quality_flag_long"))
             .alias("quality_flag_long"),
-            pl.when(
-                (pl.col("MANUAL_QC") != pl.col("MANUAL_QC_feedback"))
-                & pl.col("MANUAL_QC_feedback").is_not_null()
-            )
-            .then(pl.col("MANUAL_QC_feedback"))
+            pl.when(has_manual_qc_change)
+            .then(pl.col("MANUAL_QC_working_file"))
             .otherwise(pl.col("MANUAL_QC"))
             .alias("MANUAL_QC"),
         )
-        joined_data = joined_data.drop("MANUAL_QC_feedback")
-        print("data updated with manual flags from feedback file")
+        joined_data = joined_data.drop("MANUAL_QC_working_file")
+
+        for col in ["MANUAL_QC_CATEGORY", "MANUAL_QC_COMMENT"]:
+            feedback_col = f"{col}_working_file"
+            if feedback_col in joined_data.columns:
+                joined_data = joined_data.with_columns(
+                    pl.when(pl.col(feedback_col).is_not_null())
+                    .then(pl.col(feedback_col))
+                    .otherwise(pl.col(col))
+                    .alias(col)
+                ).drop(feedback_col)
+
+        joined_data = self._expand_quality_flag_long(joined_data)
+        print("data updated with manual flags from working file")
         return joined_data
 
 
