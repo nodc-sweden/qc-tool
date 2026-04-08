@@ -7,6 +7,7 @@ from qc_tool.controllers.parameter_selector_controller import ParameterSelectorC
 from qc_tool.controllers.profile_grid_controller import ProfileGridController
 from qc_tool.controllers.visit_info_controller import VisitInfoController
 from qc_tool.controllers.visit_selector_controller import VisitSelectorController
+from qc_tool.models.manual_qc_model import ManualQcModel
 from qc_tool.models.visits_model import VisitsModel
 from qc_tool.views.visits_browser_view import VisitsBrowserView
 
@@ -18,7 +19,13 @@ class VisitsBrowserController:
         # TODO: This should be moved to a controller for scatter plots
         self._visits_model = state.visits
         self._visits_model.register_listener(
-            VisitsModel.VISIT_SELECTED, self._on_visit_selected
+            (VisitsModel.VISIT_SELECTED, VisitsModel.UPDATED_VISITS),
+            self._on_visit_selected,
+        )
+
+        self._manual_qc_model = state.manual_qc
+        self._manual_qc_model.register_listener(
+            ManualQcModel.QC_PERFORMED, self._on_qc_performed
         )
 
         self.map_controller = MapController(self._state.visits, self._state.map)
@@ -34,19 +41,39 @@ class VisitsBrowserController:
             self._state.file,
         )
         self.profile_grid_controller = ProfileGridController(
-            self._state.visits, self._state.profile_grid, self._state.parameters
+            self._state.visits,
+            self._state.profile_grid,
+            self._state.parameters,
+            self._state.manual_qc,
         )
         self.filtered_profiles_controller = FilteredProfilesController(
             self._state.file,
             self._state.visits,
             self._state.filter,
             self._state.filtered_profiles,
+            self._state.manual_qc,
         )
 
-        self.manual_qc_controller = ManualQcController(self._state.manual_qc)
+        self.manual_qc_controller = ManualQcController(
+            self._state.manual_qc, self._state.visits
+        )
         self.comment_dialog_controller = CommentDialogController(self._state.manual_qc)
 
+        self._skip_next_update = False
         self.visits_browser_view: VisitsBrowserView = None
 
     def _on_visit_selected(self):
+        if self.visits_browser_view is None:
+            return
+        if self._skip_next_update:
+            self._skip_next_update = False
+            return
         self.visits_browser_view.update_scatter_plots()
+
+    def _on_qc_performed(self):
+        if self.visits_browser_view is None:
+            return
+        self._skip_next_update = True
+        self.visits_browser_view.update_scatter_colors(
+            self._manual_qc_model.selected_values
+        )

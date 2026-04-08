@@ -75,6 +75,10 @@ class FilteredProfilesView(BaseView):
             row = Row(children=[profile.layout for profile in self._profiles[start:end]])
             self._column.children.append(row)
 
+    def update_colors(self, updated_values):
+        for profile in self._profiles:
+            profile.update_colors(updated_values)
+
     def update_grid_content(self, flag: str):
         if self._visits_model.selected_visit is None:
             return

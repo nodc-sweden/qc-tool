@@ -24,6 +24,7 @@ from bokeh.models import (
 )
 from bokeh.plotting import figure
 from ocean_data_qc.fyskem.parameter import Parameter
+from ocean_data_qc.fyskem.qc_flag import QC_FLAG_CSS_COLORS
 
 from qc_tool.models.manual_qc_model import ManualQcModel
 from qc_tool.views.base_view import BaseView
@@ -106,6 +107,9 @@ class ProfileSlot(BaseView):
     ):
         self._title = title
         self._manual_qc_model = manual_qc_model
+        self._manual_qc_model.register_listener(
+            ManualQcModel.VALUES_SELECTED, self._on_values_selected
+        )
 
         self._visit = None
         self._data = None
@@ -113,6 +117,7 @@ class ProfileSlot(BaseView):
         self._show_lines = True
         self._show_bounds = True
         self._clear_called = False
+        self._applying_highlight = False
 
         self._sources = [
             ColumnDataSource(data={key: [] for key in self.source_fields}),
@@ -537,8 +542,51 @@ class ProfileSlot(BaseView):
         if not self._clear_called:
             self._manual_qc_model.set_selected_values(index, selected_values, self)
 
+    def update_colors(self, updated_values: list[Parameter]):
+        updated_map = {
+            (
+                value._data["SERNO"],
+                value._data["parameter"],
+                value._data["DEPH"],
+            ): QC_FLAG_CSS_COLORS.get(value.qc.total)
+            for value in updated_values
+        }
+        for source, parameter_data in zip(self._sources, self._parameter_data):
+            if parameter_data is None:
+                continue
+            patches = [
+                (i, updated_map[(row["SERNO"], row["parameter"], row["DEPH"])])
+                for i, row in enumerate(parameter_data.iter_rows(named=True))
+                if (row["SERNO"], row["parameter"], row["DEPH"]) in updated_map
+            ]
+            if patches:
+                source.patch({"color": patches})
+
+    def _on_values_selected(self):
+        self._applying_highlight = True
+        for index, (source, parameter_data) in enumerate(
+            zip(self._sources, self._parameter_data)
+        ):
+            if parameter_data is None:
+                source.selected.indices = []
+                continue
+            selected = self._manual_qc_model.selected_values
+            indices = [
+                i
+                for i, row in enumerate(parameter_data.iter_rows(named=True))
+                if any(
+                    row["SERNO"] == value._data["SERNO"]
+                    and row["parameter"] == value._data["parameter"]
+                    and row["DEPH"] == value._data["DEPH"]
+                    for value in selected
+                )
+            ]
+            source.selected.indices = indices
+        self._applying_highlight = False
+
     def _on_value_selected(self, attr, old, new, index):
-        self.select_values(index, new)
+        if not self._applying_highlight:
+            self.select_values(index, new)
 
     def update_statistics(self, parameter_statistics, water_depth):
         if parameter_statistics is None:

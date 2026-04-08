@@ -109,11 +109,29 @@ class VisitsBrowserView(BaseView):
 
         self._scatter_parameters = [
             ScatterSlot(
-                self._state.visits, x_parameter="DOXY_BTL", y_parameter="DOXY_CTD"
+                self._state.visits,
+                self._state.manual_qc,
+                x_parameter="DOXY_BTL",
+                y_parameter="DOXY_CTD",
             ),
-            ScatterSlot(self._state.visits, x_parameter="ALKY", y_parameter="SALT_CTD"),
-            ScatterSlot(self._state.visits, x_parameter="PHOS", y_parameter="NTRZ"),
-            ScatterSlot(self._state.visits, x_parameter="NTRZ", y_parameter="H2S"),
+            ScatterSlot(
+                self._state.visits,
+                self._state.manual_qc,
+                x_parameter="ALKY",
+                y_parameter="SALT_CTD",
+            ),
+            ScatterSlot(
+                self._state.visits,
+                self._state.manual_qc,
+                x_parameter="PHOS",
+                y_parameter="NTRZ",
+            ),
+            ScatterSlot(
+                self._state.visits,
+                self._state.manual_qc,
+                x_parameter="NTRZ",
+                y_parameter="H2S",
+            ),
         ]
 
         # Top row
@@ -215,3 +233,7 @@ class VisitsBrowserView(BaseView):
     def update_scatter_plots(self):
         for plot in self._scatter_parameters:
             plot.update_station()
+
+    def update_scatter_colors(self, updated_values):
+        for plot in self._scatter_parameters:
+            plot.update_colors(updated_values)

@@ -8,14 +8,17 @@ from bokeh.models import (
     Dropdown,
     HoverTool,
     Label,
+    LassoSelectTool,
     Row,
     Span,
     WheelZoomTool,
 )
 from bokeh.plotting import figure
-from ocean_data_qc.fyskem.qc_flag import QC_FLAG_CSS_COLORS, QcFlag
+from ocean_data_qc.fyskem.parameter import Parameter
+from ocean_data_qc.fyskem.qc_flag import QC_FLAG_CSS_COLORS
 from ocean_data_qc.fyskem.qc_flags import QcFlags
 
+from qc_tool.models.manual_qc_model import ManualQcModel
 from qc_tool.models.visits_model import VisitsModel
 from qc_tool.views.base_view import BaseView
 
@@ -59,15 +62,22 @@ class ScatterSlot(BaseView):
     def __init__(
         self,
         visits_model: VisitsModel,
+        manual_qc_model: ManualQcModel,
         x_parameter: str = "",
         y_parameter: str = "",
     ):
         self._visits_model = visits_model
+        self._manual_qc_model = manual_qc_model
+        self._manual_qc_model.register_listener(
+            ManualQcModel.VALUES_SELECTED, self._on_values_selected
+        )
 
         self._width = 475
         self._height = 475
         self._x_parameter = x_parameter
         self._y_parameter = y_parameter
+        self._merged_data = None
+        self._applying_highlight = False
         self._source = ColumnDataSource(
             data={"x": [], "y": [], "colors": [], "line_colors": []}
         )
@@ -77,6 +87,7 @@ class ScatterSlot(BaseView):
     def _initialize_plot(self):
         wheel_zoom = WheelZoomTool()
         self._hover = HoverTool()
+        select = LassoSelectTool()
 
         self._crosshair_width = Span(dimension="width", line_dash="dashed", line_width=1)
         self._crosshair_height = Span(
@@ -88,7 +99,7 @@ class ScatterSlot(BaseView):
             "height": self._height,
             "width": self._width,
             "toolbar_location": "below",
-            "tools": ["reset", "pan", wheel_zoom, self._hover, crosshair],
+            "tools": ["reset", "pan", wheel_zoom, self._hover, crosshair, select],
         }
         self._plot_values_config = {
             "size": 7,
@@ -106,6 +117,7 @@ class ScatterSlot(BaseView):
         self._parameter_values = self._figure.scatter(
             "x", "y", source=self._source, **self._plot_values_config
         )
+        self._source.selected.on_change("indices", self._on_value_selected)
         self._hover.renderers = [self._parameter_values]
 
         # Add label to show when parameter is missing
@@ -189,12 +201,6 @@ class ScatterSlot(BaseView):
                 ],
             )
 
-            colors = list(
-                map(
-                    QC_FLAG_CSS_COLORS.get, map(QcFlag.parse, merged_data["quality_flag"])
-                )
-            )
-
             qc_flags_x = list(
                 map(QcFlags.from_string, list(merged_data["quality_flag_long"]))
             )
@@ -202,6 +208,8 @@ class ScatterSlot(BaseView):
             qc_flags_y = list(
                 map(QcFlags.from_string, list(merged_data["quality_flag_long_y"]))
             )
+
+            colors = [QC_FLAG_CSS_COLORS.get(flags.total) for flags in qc_flags_x]
 
             # Evaluate and store all .value values first
             total_values = [flags.total.value for flags in qc_flags_x]
@@ -211,6 +219,7 @@ class ScatterSlot(BaseView):
                 for inc, tot in zip(incoming_values, total_values)
             ]
 
+            self._merged_data = merged_data
             self._source.data = {
                 "x": list(merged_data["value"]),
                 "y": list(merged_data["value_y"]),
@@ -230,8 +239,69 @@ class ScatterSlot(BaseView):
             ]
             self._no_data_label.visible = False
         else:
+            self._merged_data = None
             self._source.data = {"x": [], "y": [], "colors": [], "line_colors": []}
             self._no_data_label.visible = True
+
+    def update_colors(self, updated_values: list[Parameter]):
+        if self._merged_data is None:
+            return
+        updated_map = {
+            (v._data["parameter"], v._data["DEPH"]): QC_FLAG_CSS_COLORS.get(v.qc.total)
+            for v in updated_values
+        }
+        patches = [
+            (i, updated_map[(self._x_parameter, row["DEPH"])])
+            for i, row in enumerate(self._merged_data.iter_rows(named=True))
+            if (self._x_parameter, row["DEPH"]) in updated_map
+        ]
+        if patches:
+            self._source.patch({"colors": patches})
+
+    def _on_value_selected(self, _attr, _old, new):
+        if self._applying_highlight or self._merged_data is None:
+            return
+        parameters = []
+        for i in new:
+            row = self._merged_data.row(i, named=True)
+            parameters.append(
+                Parameter(
+                    {
+                        **row,
+                        "parameter": self._x_parameter,
+                        "value": row["value"],
+                        "quality_flag_long": row["quality_flag_long"],
+                    }
+                )
+            )
+            parameters.append(
+                Parameter(
+                    {
+                        **row,
+                        "parameter": self._y_parameter,
+                        "value": row["value_y"],
+                        "quality_flag_long": row["quality_flag_long_y"],
+                    }
+                )
+            )
+        self._manual_qc_model.set_values_from_filter(parameters)
+
+    def _on_values_selected(self):
+        self._applying_highlight = True
+        if self._merged_data is None:
+            self._source.selected.indices = []
+        else:
+            selected_set = {
+                (value._data["parameter"], value._data["DEPH"])
+                for value in self._manual_qc_model.selected_values
+            }
+            self._source.selected.indices = [
+                i
+                for i, row in enumerate(self._merged_data.iter_rows(named=True))
+                if (self._x_parameter, row["DEPH"]) in selected_set
+                or (self._y_parameter, row["DEPH"]) in selected_set
+            ]
+        self._applying_highlight = False
 
     def update_station(self):
         self._x_parameter_dropdown.menu = [
