@@ -36,11 +36,10 @@ class CommentDialogController:
     def _on_flag_requested(self):
         if self._comment_dialog_view is None:
             return
-        categories = self._categories_for_flag(self._manual_qc_model.pending_flag)
-        self._comment_dialog_view.open(self._manual_qc_model.pending_flag, categories)
+        self._comment_dialog_view.open()
 
-    def on_ok(self, category: str, comment: str):
-        self._manual_qc_model.confirm_flag(category, comment.strip())
+    def on_ok(self, qc_flag: QcFlag, category: str, comment: str):
+        self._manual_qc_model.confirm_flag(qc_flag, category, comment.strip())
         if self._comment_dialog_view is not None:
             self._comment_dialog_view.close()
 

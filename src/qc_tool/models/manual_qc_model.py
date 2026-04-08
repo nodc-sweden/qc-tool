@@ -16,17 +16,12 @@ class ManualQcModel(BaseModel):
         self._value_index = []
         self._selected_values: list[Parameter] = []
         self._last_sender = None
-        self._pending_flag: QcFlag | None = None
         self._comment_category: str = ""
         self._comment: str = ""
 
     @property
     def selected_values(self) -> list[Parameter]:
         return self._selected_values
-
-    @property
-    def pending_flag(self) -> QcFlag | None:
-        return self._pending_flag
 
     @property
     def comment_category(self) -> str:
@@ -44,21 +39,32 @@ class ManualQcModel(BaseModel):
         self._last_sender = sender
         self._notify_listeners(self.VALUES_SELECTED)
 
-    def request_flag(self, flag: QcFlag):
-        self._pending_flag = flag
+    def set_values_from_filter(self, values: list[Parameter]):
+        self._selected_values = values
+        self._last_sender = None
+        self._notify_listeners(self.VALUES_SELECTED)
+
+    def request_flag(self):
         self._notify_listeners(self.FLAG_REQUESTED)
 
-    def confirm_flag(self, category: str, comment: str):
+    def confirm_flag(self, flag: QcFlag, category: str, comment: str):
         if not self._selected_values:
             return
         self._comment_category = category
         self._comment = comment
         for value in self._selected_values:
-            value.qc.manual = self._pending_flag
+            value.qc.manual = flag
+            value._data["MANUAL_QC_CATEGORY"] = category
+            value._data["MANUAL_QC_COMMENT"] = comment
         self._notify_listeners(self.QC_PERFORMED)
-        self._last_sender.select_values(self._parameter_index, self._value_index)
-        self._pending_flag = None
+        if self._last_sender is not None:
+            self._last_sender.select_values(self._parameter_index, self._value_index)
+
+    def deselect_value(self, index: int):
+        self._selected_values = [
+            v for i, v in enumerate(self._selected_values) if i != index
+        ]
+        self._notify_listeners(self.VALUES_SELECTED)
 
     def cancel_flag(self):
         self._notify_listeners(self.FLAG_CANCELLED)
-        self._pending_flag = None

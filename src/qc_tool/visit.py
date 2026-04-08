@@ -50,6 +50,10 @@ class Visit:
         return self._parameters
 
     @property
+    def depths(self) -> list[float]:
+        return sorted(self._data["DEPH"].unique().to_list())
+
+    @property
     def row_numbers(self) -> list[str]:
         return self._row_numbers
 

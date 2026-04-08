@@ -51,13 +51,19 @@ class ProfileGridView(BaseView):
     def plot_rows(self, rows):
         self._column.children = rows
 
-    def update_grid_size(self):
-        """Syncs layout with the correct rows and columns."""
+    def update_grid_size(self) -> int:
+        """Syncs layout with the correct rows and columns.
+
+        Returns the index of the first newly added profile, or len(_profiles)
+        if no profiles were added.
+        """
         if not self._profiles:
             self._primary_plot = ProfileSlot(
                 manual_qc_model=self._manual_qc_model,
             )
             self._profiles.append(self._primary_plot)
+
+        first_new = len(self._profiles)
 
         if len(self._profiles) < self._profile_grid_model.number_of_profiles:
             # Too few profiles, creating new.
@@ -98,11 +104,17 @@ class ProfileGridView(BaseView):
                 self.plot_rows.remove(extra_row)
             self._profiles = self._profiles[: self._profile_grid_model.rows]
 
+        return first_new
+
     @property
     def layout(self):
         return self._column
 
-    def update_grid_content(self):
+    def update_colors(self, updated_values):
+        for profile in self._profiles:
+            profile.update_colors(updated_values)
+
+    def update_grid_content(self, start_index: int = 0):
         empty_slots = [""] * max(
             self._profile_grid_model.number_of_profiles
             - len(self._parameters_model.selected_parameters),
@@ -111,6 +123,8 @@ class ProfileGridView(BaseView):
         parameters = self._parameters_model.selected_parameters + empty_slots
 
         for n, (profile, parameter) in enumerate(zip(self._profiles, parameters)):
+            if n < start_index:
+                continue
             if "+" in parameter:
                 parameter_components = [
                     component.strip() for component in parameter.split("+")
