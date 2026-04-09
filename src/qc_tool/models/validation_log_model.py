@@ -1,5 +1,6 @@
 from collections import defaultdict
 
+from qc_tool.data_transformation import collect_log_messages
 from qc_tool.models.base_model import BaseModel
 
 
@@ -21,6 +22,7 @@ class ValidationLogModel(BaseModel):
             self._validation_log.extend(validation_log)
         else:
             self._validation_log = validation_log
+        self._validation_remarks = collect_log_messages(self._validation_log)
         self._notify_listeners(self.NEW_VALIDATION_LOG)
 
     @property
