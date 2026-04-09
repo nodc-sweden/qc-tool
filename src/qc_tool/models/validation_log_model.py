@@ -18,7 +18,7 @@ class ValidationLogModel(BaseModel):
 
     def set_validation_log(self, validation_log, add_to_existing: bool = False):
         if add_to_existing and self._validation_log is not None:
-            self._validation_log = validation_log
+            self._validation_log.extend(validation_log)
         else:
             self._validation_log = validation_log
         self._notify_listeners(self.NEW_VALIDATION_LOG)
