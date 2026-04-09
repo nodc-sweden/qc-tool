@@ -4,31 +4,33 @@ from pathlib import Path
 
 
 def main():
-    _ = setup_arguments()
-    start_server()
+    args = setup_arguments()
+    start_server(args)
 
 
 def setup_arguments():
     parser = argparse.ArgumentParser(description="Start QC Tool")
+    parser.add_argument("--file", type=Path, help="Dataset to open on startup")
     return parser.parse_args()
 
 
-def start_server():
+def start_server(args):
     try:
         print("Stop server with Ctrl-C")
         server_root_directory = Path(__file__).parent.parent
-        subprocess.run(
-            [
-                "bokeh",
-                "serve",
-                "--port",
-                "5007",
-                "--show",
-                str(server_root_directory),
-                "--websocket-max-message-size",
-                "1000000000",
-            ]
-        )
+        cmd = [
+            "bokeh",
+            "serve",
+            "--port",
+            "5007",
+            "--show",
+            str(server_root_directory),
+            "--websocket-max-message-size",
+            "1000000000",
+        ]
+        if args.file:
+            cmd += ["--args", "--file", str(args.file)]
+        subprocess.run(cmd)
     except KeyboardInterrupt:
         print("Stopping server")
 
