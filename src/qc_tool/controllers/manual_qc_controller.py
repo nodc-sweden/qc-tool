@@ -20,6 +20,7 @@ class ManualQcController:
     def _on_visit_selected(self):
         if self.manual_qc_view is None:
             return
+        self.manual_qc_model.set_selected_values([])
         visit = self._visits_model.selected_visit
         depths = [str(d) for d in visit.depths] if visit else []
         parameters = visit.parameters if visit else []

@@ -41,7 +41,6 @@ class VisitsBrowserController:
             self._state.file,
         )
         self.profile_grid_controller = ProfileGridController(
-            self._state.visits,
             self._state.profile_grid,
             self._state.parameters,
             self._state.manual_qc,
@@ -59,21 +58,16 @@ class VisitsBrowserController:
         )
         self.comment_dialog_controller = CommentDialogController(self._state.manual_qc)
 
-        self._skip_next_update = False
         self.visits_browser_view: VisitsBrowserView = None
 
     def _on_visit_selected(self):
         if self.visits_browser_view is None:
-            return
-        if self._skip_next_update:
-            self._skip_next_update = False
             return
         self.visits_browser_view.update_scatter_plots()
 
     def _on_qc_performed(self):
         if self.visits_browser_view is None:
             return
-        self._skip_next_update = True
         self.visits_browser_view.update_scatter_colors(
             self._manual_qc_model.selected_values
         )

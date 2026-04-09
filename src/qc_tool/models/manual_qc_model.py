@@ -12,10 +12,7 @@ class ManualQcModel(BaseModel):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._parameter_index = None
-        self._value_index = []
         self._selected_values: list[Parameter] = []
-        self._last_sender = None
         self._comment_category: str = ""
         self._comment: str = ""
 
@@ -31,17 +28,12 @@ class ManualQcModel(BaseModel):
     def comment(self) -> str:
         return self._comment
 
-    def set_selected_values(
-        self, parameter_index, values: list[tuple[int, Parameter]], sender
-    ):
-        self._parameter_index = parameter_index
-        self._value_index, self._selected_values = zip(*values)
-        self._last_sender = sender
+    def set_selected_values(self, values: list[Parameter]):
+        self._selected_values = values
         self._notify_listeners(self.VALUES_SELECTED)
 
     def set_values_from_filter(self, values: list[Parameter]):
         self._selected_values = values
-        self._last_sender = None
         self._notify_listeners(self.VALUES_SELECTED)
 
     def request_flag(self):
@@ -57,13 +49,14 @@ class ManualQcModel(BaseModel):
             value._data["MANUAL_QC_CATEGORY"] = category
             value._data["MANUAL_QC_COMMENT"] = comment
         self._notify_listeners(self.QC_PERFORMED)
-        if self._last_sender is not None:
-            self._last_sender.select_values(self._parameter_index, self._value_index)
 
     def deselect_value(self, index: int):
         self._selected_values = [
             v for i, v in enumerate(self._selected_values) if i != index
         ]
+        self._notify_listeners(self.VALUES_SELECTED)
+
+    def _restore_selection(self):
         self._notify_listeners(self.VALUES_SELECTED)
 
     def cancel_flag(self):
