@@ -9,6 +9,7 @@ class FileModel(BaseModel):
     NEW_DATA = "NEW_DATA"
     LOAD_ABORTED = "LOAD_ABORTED"
     UPDATED_DATA = "UPDATED_DATA"
+    FLAGS_UPDATED = "FLAGS_UPDATED"
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -44,3 +45,7 @@ class FileModel(BaseModel):
     def data_flags_update(self, new_data):
         self._data = new_data
         self._notify_listeners(self.UPDATED_DATA)
+
+    def flags_update(self, new_data):
+        self._data = new_data
+        self._notify_listeners(self.FLAGS_UPDATED)

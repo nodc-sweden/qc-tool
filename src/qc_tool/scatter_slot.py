@@ -256,7 +256,12 @@ class ScatterSlot(BaseView):
             if (self._x_parameter, row["DEPH"]) in updated_map
         ]
         if patches:
+            saved_indices = list(self._source.selected.indices)
+            self._applying_highlight = True
             self._source.patch({"colors": patches})
+            if saved_indices:
+                self._source.selected.indices = saved_indices
+            self._applying_highlight = False
 
     def _on_value_selected(self, _attr, _old, new):
         if self._applying_highlight or self._merged_data is None:

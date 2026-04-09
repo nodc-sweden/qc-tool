@@ -13,12 +13,12 @@ class VisitsModel(BaseModel):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._visits: dict[str, Visit] = {}
-        self._filtered_stations = None
+        self._filtered_visit_keys = None
         self._selected_visit = None
 
     def set_visits(self, visits: dict[str, Visit]):
         self._visits = visits
-        self._filtered_stations = None
+        self._filtered_visit_keys = None
         if self._visits:
             self._notify_listeners(self.NEW_VISITS)
 
@@ -35,7 +35,7 @@ class VisitsModel(BaseModel):
         self.set_visit(self._visits.get(visit_key))
 
     def apply_filter(self, filter_model: FilterModel):
-        self._filtered_stations = {
+        self._filtered_visit_keys = {
             visit.visit_key
             for visit in self._visits.values()
             if filter_model.matches(visit)
@@ -48,12 +48,12 @@ class VisitsModel(BaseModel):
 
     @property
     def visits(self) -> dict[str, Visit]:
-        if self._filtered_stations is None:
+        if self._filtered_visit_keys is None:
             return self._visits
         return {
             key: value
             for key, value in self._visits.items()
-            if key in self._filtered_stations
+            if key in self._filtered_visit_keys
         }
 
     def visit_by_index(self, index: int):
@@ -72,8 +72,8 @@ class VisitsModel(BaseModel):
 
     @property
     def visit_keys(self) -> list[str]:
-        if self._filtered_stations is not None:
-            return [visit for visit in self._visits if visit in self._filtered_stations]
+        if self._filtered_visit_keys is not None:
+            return [visit for visit in self._visits if visit in self._filtered_visit_keys]
         return list(self._visits.keys())
 
     @property

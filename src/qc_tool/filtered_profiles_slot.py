@@ -434,7 +434,12 @@ class FilteredProfilesSlot(BaseView):
             if (row["visit_key"], row["DEPH"]) in updated_map
         ]
         if patches:
+            saved_indices = list(self._source.selected.indices)
+            self._applying_highlight = True
             self._source.patch({"color": patches})
+            if saved_indices:
+                self._source.selected.indices = saved_indices
+            self._applying_highlight = False
 
     def _on_values_selected(self):
         self._applying_highlight = True
@@ -454,17 +459,17 @@ class FilteredProfilesSlot(BaseView):
             ]
         self._applying_highlight = False
 
-    def select_values(self, _parameter_index, rows):
+    def select_values(self, rows):
         selected_values = [
-            (n, Parameter(self._parameter_data.row(n, named=True))) for n in rows
+            Parameter(self._parameter_data.row(n, named=True)) for n in rows
         ]
         self._statistics_source.selected.indices = []
         if not self._clear_called:
-            self._manual_qc_model.set_selected_values(0, selected_values, self)
+            self._manual_qc_model.set_selected_values(selected_values)
 
     def _on_value_selected(self, attr, old, new):
         if not self._applying_highlight:
-            self.select_values(0, new)
+            self.select_values(new)
 
     def update_statistics(self, parameter_statistics, water_depth):
         if parameter_statistics is None:
@@ -473,11 +478,8 @@ class FilteredProfilesSlot(BaseView):
             }
             return
 
-        # Convert the statistical data to a DataFrame for easier filtering
-        stats_df = pd.DataFrame(parameter_statistics)
-
-        # Filter rows where 'depth' is less than or equal to self._station.water_depth
-        filtered_stats = stats_df[stats_df["depth"] <= water_depth * 1.1]
+        statistics = pd.DataFrame(parameter_statistics)
+        filtered_stats = statistics[statistics["depth"] <= water_depth * 1.1]
 
         # Update the Bokeh data source with the filtered statistics
         self._statistics_source.data = {

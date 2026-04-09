@@ -69,11 +69,11 @@ def shortest_unique_paths(paths: list[Path]) -> dict[Path, str]:
     while collisions:
         collisions = False
         collision_counter = Counter(path_mapping.values())
-        duplicat_path, count = max(collision_counter.items(), key=lambda x: x[1])
+        duplicate_path, count = max(collision_counter.items(), key=lambda x: x[1])
         if count > 1:
             collisions = True
             for path, parts in path_mapping.items():
-                if parts == duplicat_path:
+                if parts == duplicate_path:
                     path_mapping[path] = effective_parts[path][-len(parts) - 1 :]
     return {
         path: f"{n}. {Path(*parts)}"

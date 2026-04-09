@@ -59,8 +59,8 @@ class FileController:
 
         self._validation_log_model = validation_log_model
 
-        self._mannual_qc_model = manual_qc_model
-        self._mannual_qc_model.register_listener(
+        self._manual_qc_model = manual_qc_model
+        self._manual_qc_model.register_listener(
             ManualQcModel.QC_PERFORMED, self._on_qc_performed
         )
 
@@ -155,7 +155,7 @@ class FileController:
     def _on_qc_performed(self):
         t0 = time.perf_counter()
         data = self._file_model.data
-        for value in self._mannual_qc_model.selected_values:
+        for value in self._manual_qc_model.selected_values:
             data = data.with_columns(
                 pl.when(
                     (pl.col("visit_key") == value._data["visit_key"])
@@ -167,10 +167,10 @@ class FileController:
                 .alias("quality_flag_long")
             )
 
-        category = self._mannual_qc_model.comment_category
-        comment = self._mannual_qc_model.comment
+        category = self._manual_qc_model.comment_category
+        comment = self._manual_qc_model.comment
         if category:
-            for value in self._mannual_qc_model.selected_values:
+            for value in self._manual_qc_model.selected_values:
                 for col_name, col_value in [
                     ("MANUAL_QC_CATEGORY", category),
                     ("MANUAL_QC_COMMENT", comment),
@@ -191,7 +191,7 @@ class FileController:
                     )
 
         data = self._expand_quality_flag_long(data)
-        self._file_model.data_flags_update(data)
+        self._file_model.flags_update(data)
         t1 = time.perf_counter()
         print(f"Manual QC finished ({t1 - t0:.3f} s.)")
 
@@ -338,27 +338,27 @@ class FileController:
         print("Matching sea basins...")
         t0 = time.perf_counter()
         # Step 1: Extract unique positions and create decimal degree columns
-        positions_dd_pl = data.select(
+        unique_positions = data.select(
             ["sample_longitude_dd", "sample_latitude_dd"]
         ).unique()
 
         # Step 2: Call the bulk function
         positions_dd = [
             (lon, lat)
-            for lon, lat in positions_dd_pl.select(
+            for lon, lat in unique_positions.select(
                 ["sample_longitude_dd", "sample_latitude_dd"]
             ).to_numpy()
         ]
         basins_dict = regions.sea_basins_for_positions(
             positions_dd, geo_info=self._geo_info_model.geo_info
         )
-        basins_pl = pl.DataFrame(basins_dict).rename(
+        basins = pl.DataFrame(basins_dict).rename(
             {"LONGI_DD": "sample_longitude_dd", "LATIT_DD": "sample_latitude_dd"}
         )
 
         # Step 3: Join the sea_basins back to the unique positions, drop DD columns
-        positions_with_basins = positions_dd_pl.join(
-            basins_pl, on=["sample_longitude_dd", "sample_latitude_dd"], how="left"
+        positions_with_basins = unique_positions.join(
+            basins, on=["sample_longitude_dd", "sample_latitude_dd"], how="left"
         )
 
         # Step 4: Join back to the original data

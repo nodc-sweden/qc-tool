@@ -216,16 +216,16 @@ class ManualQcView(BaseView):
             selector.options = range_options
             selector.value = "-"
             selector.on_change("value", self._on_range_changed)
+        self._depth_selector.remove_on_change("value", self._on_depths_changed)
         self._depth_selector.options = depths
-        self._depth_selector.value = [
-            v for v in self._depth_selector.value if v in depths
-        ]
+        self._depth_selector.value = []
+        self._depth_selector.on_change("value", self._on_depths_changed)
 
     def update_parameters(self, parameters: list[str]):
+        self._parameter_selector.remove_on_change("value", self._on_parameters_changed)
         self._parameter_selector.options = parameters
-        self._parameter_selector.value = [
-            value for value in self._parameter_selector.value if value in parameters
-        ]
+        self._parameter_selector.value = []
+        self._parameter_selector.on_change("value", self._on_parameters_changed)
 
     def _on_flag_button_clicked(self, _event):
         self._controller.set_flag()

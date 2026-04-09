@@ -536,11 +536,11 @@ class ProfileSlot(BaseView):
 
     def select_values(self, index, rows):
         selected_values = [
-            (n, Parameter(self._parameter_data[index].row(n, named=True))) for n in rows
+            Parameter(self._parameter_data[index].row(n, named=True)) for n in rows
         ]
         self._statistics_source.selected.indices = []
         if not self._clear_called:
-            self._manual_qc_model.set_selected_values(index, selected_values, self)
+            self._manual_qc_model.set_selected_values(selected_values)
 
     def update_colors(self, updated_values: list[Parameter]):
         updated_map = {
@@ -560,7 +560,12 @@ class ProfileSlot(BaseView):
                 if (row["visit_key"], row["parameter"], row["DEPH"]) in updated_map
             ]
             if patches:
+                saved_indices = list(source.selected.indices)
+                self._applying_highlight = True
                 source.patch({"color": patches})
+                if saved_indices:
+                    source.selected.indices = saved_indices
+                self._applying_highlight = False
 
     def _on_values_selected(self):
         self._applying_highlight = True
@@ -595,11 +600,8 @@ class ProfileSlot(BaseView):
             }
             return
 
-        # Convert the statistical data to a DataFrame for easier filtering
-        stats_df = pd.DataFrame(parameter_statistics)
-
-        # Filter rows where 'depth' is less than or equal to self._station.water_depth
-        filtered_stats = stats_df[stats_df["depth"] <= water_depth * 1.1]
+        statistics = pd.DataFrame(parameter_statistics)
+        filtered_stats = statistics[statistics["depth"] <= water_depth * 1.1]
 
         # Update the Bokeh data source with the filtered statistics
         self._statistics_source.data = {

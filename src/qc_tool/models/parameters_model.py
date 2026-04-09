@@ -2,7 +2,6 @@ from qc_tool.models.base_model import BaseModel
 
 
 class ParametersModel(BaseModel):
-    NEW_PARAMETERS = "NEW_PARAMETERS"
     NEW_SELECTION = "NEW_SELECTION"
     NEW_PARAMETER_DATA = "NEW_PARAMETER_DATA"
 
@@ -64,7 +63,6 @@ class ParametersModel(BaseModel):
         for parameters in self._multi_parameters:
             if set(parameters).issubset(self._available_parameters):
                 self._available_multi_parameters.add(" + ".join(parameters))
-        self._notify_listeners(self.NEW_PARAMETERS)
 
     @property
     def selection_size(self):

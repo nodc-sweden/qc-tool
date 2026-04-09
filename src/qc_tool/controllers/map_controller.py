@@ -42,16 +42,16 @@ class MapController:
         self._visits_model.set_visit_by_key(station_visit)
 
     def _on_new_visits(self):
-        all_stations = [
+        visit_positions = [
             (visit.visit_key, visit.longitude, visit.latitude)
             for visit in self._visits_model.visits.values()
         ]
-        if not all_stations:
+        if not visit_positions:
             self._map_model.set_points({})
             self.map_view.reset_map()
             return
 
-        station_names, longitudes, latitudes = zip(*all_stations)
+        visit_keys, longitudes, latitudes = zip(*visit_positions)
         longitudes, latitudes = self._convert_projection(longitudes, latitudes)
 
         colors = []
@@ -69,7 +69,7 @@ class MapController:
         visit_points = {
             "longitudes": longitudes,
             "latitudes": latitudes,
-            "visit_keys": station_names,
+            "visit_keys": visit_keys,
             "color": colors,
             "status": status,
         }
