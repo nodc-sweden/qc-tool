@@ -69,7 +69,6 @@ $ uv run qc-tool --file dataset/Raw_files/data.txt
 ```
 
 ### Köra programmet
-
 ```bash
 $ uv run qc-tool
 ```
