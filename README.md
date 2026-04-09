@@ -63,6 +63,17 @@ comittar.
 $ git commit --no-verify
 ```
 
+### Testköra programmet
+```bash
+$ uv run qc-tool --file dataset/Raw_files/data.txt
+```
+
+### Köra programmet
+
+```bash
+$ uv run qc-tool
+```
+
 ## Om programarkitekturen
 qc-tool är designat enligt en modell som heter Model View Controller (MVC). MVC delar upp ett program i tre olika
 sorters komponenter: Model, View och Controller.
