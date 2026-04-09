@@ -422,16 +422,16 @@ class FilteredProfilesSlot(BaseView):
         if self._parameter_data is None:
             return
         updated_map = {
-            (v._data["SERNO"], v._data["DEPH"]): QC_FLAG_CSS_COLORS.get(v.qc.total)
+            (v._data["visit_key"], v._data["DEPH"]): QC_FLAG_CSS_COLORS.get(v.qc.total)
             for v in updated_values
             if v._data["parameter"] == self._parameter
         }
         if not updated_map:
             return
         patches = [
-            (i, updated_map[(row["SERNO"], row["DEPH"])])
+            (i, updated_map[(row["visit_key"], row["DEPH"])])
             for i, row in enumerate(self._parameter_data.iter_rows(named=True))
-            if (row["SERNO"], row["DEPH"]) in updated_map
+            if (row["visit_key"], row["DEPH"]) in updated_map
         ]
         if patches:
             self._source.patch({"color": patches})
@@ -446,7 +446,7 @@ class FilteredProfilesSlot(BaseView):
                 i
                 for i, row in enumerate(self._parameter_data.iter_rows(named=True))
                 if any(
-                    row["SERNO"] == value._data["SERNO"]
+                    row["visit_key"] == value._data["visit_key"]
                     and row["parameter"] == value._data["parameter"]
                     and row["DEPH"] == value._data["DEPH"]
                     for value in selected

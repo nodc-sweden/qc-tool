@@ -545,7 +545,7 @@ class ProfileSlot(BaseView):
     def update_colors(self, updated_values: list[Parameter]):
         updated_map = {
             (
-                value._data["SERNO"],
+                value._data["visit_key"],
                 value._data["parameter"],
                 value._data["DEPH"],
             ): QC_FLAG_CSS_COLORS.get(value.qc.total)
@@ -555,9 +555,9 @@ class ProfileSlot(BaseView):
             if parameter_data is None:
                 continue
             patches = [
-                (i, updated_map[(row["SERNO"], row["parameter"], row["DEPH"])])
+                (i, updated_map[(row["visit_key"], row["parameter"], row["DEPH"])])
                 for i, row in enumerate(parameter_data.iter_rows(named=True))
-                if (row["SERNO"], row["parameter"], row["DEPH"]) in updated_map
+                if (row["visit_key"], row["parameter"], row["DEPH"]) in updated_map
             ]
             if patches:
                 source.patch({"color": patches})
@@ -575,7 +575,7 @@ class ProfileSlot(BaseView):
                 i
                 for i, row in enumerate(parameter_data.iter_rows(named=True))
                 if any(
-                    row["SERNO"] == value._data["SERNO"]
+                    row["visit_key"] == value._data["visit_key"]
                     and row["parameter"] == value._data["parameter"]
                     and row["DEPH"] == value._data["DEPH"]
                     for value in selected

@@ -158,7 +158,7 @@ class FileController:
         for value in self._mannual_qc_model.selected_values:
             data = data.with_columns(
                 pl.when(
-                    (pl.col("SERNO") == value._data["SERNO"])
+                    (pl.col("visit_key") == value._data["visit_key"])
                     & (pl.col("parameter") == value._data["parameter"])
                     & (pl.col("DEPH") == value._data["DEPH"])
                 )
@@ -181,7 +181,7 @@ class FileController:
                         )
                     data = data.with_columns(
                         pl.when(
-                            (pl.col("SERNO") == value._data["SERNO"])
+                            (pl.col("visit_key") == value._data["visit_key"])
                             & (pl.col("parameter") == value._data["parameter"])
                             & (pl.col("DEPH") == value._data["DEPH"])
                         )
