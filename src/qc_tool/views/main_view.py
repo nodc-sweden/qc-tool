@@ -24,6 +24,7 @@ class MainView(BaseView):
             self._controller.visits_browser_controller.visit_selector_controller,
             self._controller.visits_browser_controller.profile_grid_controller,
             self._controller.visits_browser_controller.filtered_profiles_controller,
+            self._controller.visits_browser_controller.scatter_controller,
             self._controller.visits_browser_controller.manual_qc_controller,
             self._controller.visits_browser_controller.comment_dialog_controller,
         )

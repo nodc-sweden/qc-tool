@@ -10,16 +10,16 @@ from bokeh.models import (
     Label,
     LassoSelectTool,
     Row,
+    SaveTool,
     Span,
     WheelZoomTool,
 )
 from bokeh.plotting import figure
 from ocean_data_qc.fyskem.parameter import Parameter
 from ocean_data_qc.fyskem.qc_flag import QC_FLAG_CSS_COLORS
-from ocean_data_qc.fyskem.qc_flags import QcFlags
 
 from qc_tool.models.manual_qc_model import ManualQcModel
-from qc_tool.models.visits_model import VisitsModel
+from qc_tool.models.scatter_model import ScatterModel
 from qc_tool.views.base_view import BaseView
 
 PARAMETER_ABBREVIATIONS = {
@@ -58,67 +58,152 @@ def expand_abbreviation(abbreviation: str) -> str:
     return PARAMETER_ABBREVIATIONS.get(abbreviation, abbreviation)
 
 
+class AllScattersData:
+    def __init__(self):
+        self.title = ""
+
+
 class ScatterSlot(BaseView):
+    _width = 475
+    _height = 475
+
+    source_fields = (
+        "x_name",
+        "x",
+        "x_unit",
+        "y_name",
+        "y",
+        "y_unit",
+        "depth",
+        "color",
+        "line_color",
+        "qcx",
+        "qcy",
+    )
+    filtered_source_fields = (
+        "x",
+        "y",
+    )
+
     def __init__(
         self,
-        visits_model: VisitsModel,
         manual_qc_model: ManualQcModel,
+        scatter_model: ScatterModel,
+        title: str = "",
         x_parameter: str = "",
         y_parameter: str = "",
+        scatter_index: int | None = None,
     ):
-        self._visits_model = visits_model
+        self._title = title
         self._manual_qc_model = manual_qc_model
+        self._scatter_model = scatter_model
+        self._x_parameter = x_parameter
+        self._y_parameter = y_parameter
+        self._merged_data = None
+        self._scatter_index = scatter_index
+
         self._manual_qc_model.register_listener(
             ManualQcModel.VALUES_SELECTED, self._on_values_selected
         )
 
-        self._width = 475
-        self._height = 475
-        self._x_parameter = x_parameter
-        self._y_parameter = y_parameter
-        self._merged_data = None
+        self._visit = None
+        self._filtered_data = None
+        self._show_lines = True
+        self._show_bounds = True
+        self._clear_called = False
         self._applying_highlight = False
-        self._source = ColumnDataSource(
-            data={"x": [], "y": [], "colors": [], "line_colors": []}
+
+        self._source = ColumnDataSource(data={key: [] for key in self.source_fields})
+        self._filtered_source = ColumnDataSource(
+            data={key: [] for key in self.filtered_source_fields}
         )
 
-        self._initialize_plot()
+        self._x_parameter_dropdown = Dropdown(
+            label=expand_abbreviation(self._x_parameter) or "x-parameter",
+            button_type="default",
+            menu=[],
+            width=190,
+        )
+        self._x_parameter_dropdown.on_click(self._x_parameter_selected)
 
-    def _initialize_plot(self):
+        self._y_parameter_dropdown = Dropdown(
+            label=expand_abbreviation(self._y_parameter) or "y-parameter",
+            button_type="default",
+            menu=[],
+            width=190,
+        )
+        self._y_parameter_dropdown.on_click(self._y_parameter_selected)
+
+        self._swap_axis_button = Button(label="X ↔ Y", width=65)
+        self._swap_axis_button.on_click(self._swap_axis_callback)
+
         wheel_zoom = WheelZoomTool()
-        self._hover = HoverTool()
+        hover = HoverTool()
         select = LassoSelectTool()
+        save = SaveTool()
 
-        self._crosshair_width = Span(dimension="width", line_dash="dashed", line_width=1)
-        self._crosshair_height = Span(
-            dimension="height", line_dash="dashed", line_width=1
-        )
-        crosshair = CrosshairTool(overlay=[self._crosshair_width, self._crosshair_height])
+        self._crosshair_line = Span(line_dash="dashed", line_width=1)
+        crosshair = CrosshairTool(overlay=self._crosshair_line)
 
         self._figure_config = {
+            # "title": self._title,
             "height": self._height,
             "width": self._width,
             "toolbar_location": "below",
-            "tools": ["reset", "pan", wheel_zoom, self._hover, crosshair, select],
+            "tools": ["pan", "reset", wheel_zoom, hover, crosshair, select, save],
+            "output_backend": "webgl",
+            "tooltips": [
+                ("x-parameter", "@x_name"),
+                ("x-value", "@x"),
+                ("x-unit", "@x_unit"),
+                ("x-qc", "@qcx"),
+                ("y-parameter", "@y_name"),
+                ("y-value", "@y"),
+                ("y-unit", "@y_unit"),
+                ("y-qc", "@qcy"),
+            ],
         }
         self._plot_values_config = {
-            "size": 7,
+            "size": 8,
             "alpha": 0.8,
-            "name": "values",
-            "color": "colors",
-            "line_color": "line_colors",
+        }
+        self._plot_line_config = {
+            "line_width": 1,
+            "color": "navy",
+            "alpha": 0.8,
         }
 
         self._figure = figure(**self._figure_config)
-        self._figure.toolbar.active_scroll = wheel_zoom
 
-        # Add values and lines
-        # _parameter_values är punkterna i plotten
-        self._parameter_values = self._figure.scatter(
-            "x", "y", source=self._source, **self._plot_values_config
+        # Add background
+        self._filtered_values = self._figure.scatter(
+            "x",
+            "y",
+            source=self._filtered_source,
+            size=5,
+            alpha=0.5,
+            color="gray",
         )
+
+        # Add values and line
+        self._line = self._figure.line(
+            "x",
+            "y",
+            source=self._source,
+            **self._plot_line_config,
+        )
+        self._values = self._figure.scatter(
+            "x",
+            "y",
+            source=self._source,
+            color="color",
+            line_color="line_color",
+            **self._plot_values_config,
+        )
+
         self._source.selected.on_change("indices", self._on_value_selected)
-        self._hover.renderers = [self._parameter_values]
+
+        hover.renderers = [self._values]
 
         # Add label to show when parameter is missing
         self._no_data_label = Label(
@@ -133,115 +218,78 @@ class ScatterSlot(BaseView):
         )
         self._figure.add_layout(self._no_data_label)
 
-        # Add x_parameter selector
-        self._x_parameter_dropdown = Dropdown(
-            label=expand_abbreviation(self._x_parameter) or "x-parameter",
-            button_type="default",
-            menu=[],
-            name="x_parameter",
-            width=190,
-        )
-        self._x_parameter_dropdown.on_click(self._x_parameter_selected)
-
-        # Add y_parameter selector
-        self._y_parameter_dropdown = Dropdown(
-            label=expand_abbreviation(self._y_parameter) or "y-parameter",
-            button_type="default",
-            menu=[],
-            name="y_parameter",
-            width=190,
-        )
-        self._y_parameter_dropdown.on_click(self._y_parameter_selected)
-
-        self._swap_axis_button = Button(label="X ↔ Y", width=65)
-        self._swap_axis_button.on_click(self._swap_axis_callback)
-
     def _x_parameter_selected(self, event: MenuItemClick):
+        if event.item == self._x_parameter:
+            return
         self._x_parameter = event.item
         self._x_parameter_dropdown.label = expand_abbreviation(self._x_parameter)
-        self._load_parameters()
+        self._scatter_model.selected_scatter_index = self._scatter_index
 
     def _y_parameter_selected(self, event: MenuItemClick):
+        if event.item == self._y_parameter:
+            return
         self._y_parameter = event.item
         self._y_parameter_dropdown.label = expand_abbreviation(self._y_parameter)
-        self._load_parameters()
+        self._scatter_model.selected_scatter_index = self._scatter_index
 
     def _swap_axis_callback(self, event):
         self._x_parameter, self._y_parameter = self._y_parameter, self._x_parameter
         self._x_parameter_dropdown.label = expand_abbreviation(self._x_parameter)
         self._y_parameter_dropdown.label = expand_abbreviation(self._y_parameter)
-        self._load_parameters()
+        self._scatter_model.selected_scatter_index = self._scatter_index
 
-    def _load_parameters(self):
-        if {self._x_parameter, self._y_parameter} <= set(
-            self._visits_model.selected_visit.parameters
-        ):
-            x_data = self._visits_model.selected_visit.data.filter(
-                pl.col("parameter") == self._x_parameter
-            ).sort("DEPH")
+    def clear_figure(self):
+        self.clear_selection()
+        self._source.data = {key: [] for key in self.source_fields}
+        self._filtered_source.data = {key: [] for key in self.filtered_source_fields}
+        self._no_data_label.visible = True
 
-            y_data = self._visits_model.selected_visit.data.filter(
-                pl.col("parameter") == self._y_parameter
-            ).sort("DEPH")
+    def set_data(
+        self,
+        x_parameter: str,
+        y_parameter: str,
+        source_data: dict | None = None,
+        merged_data: pl.DataFrame | None = None,
+        visit=None,
+    ):
+        self._visit = visit
 
-            merged_data = x_data.join(y_data, on="DEPH", suffix="_y")
+        # clear previous content
+        self.clear_figure()
 
-            merged_data = merged_data.with_columns(
-                quality_flag_x=[
-                    flags.total.value
-                    for flags in map(
-                        QcFlags.from_string, list(merged_data["quality_flag_long"])
-                    )
-                ],
-                quality_flag_y=[
-                    flags.total.value
-                    for flags in map(
-                        QcFlags.from_string, list(merged_data["quality_flag_long_y"])
-                    )
-                ],
-            )
+        # get data, units, and ranges
+        if merged_data is None:
+            return
 
-            qc_flags_x = list(
-                map(QcFlags.from_string, list(merged_data["quality_flag_long"]))
-            )
+        self._source.data = source_data
+        self._merged_data = merged_data
+        self._sync_profile_options()
 
-            qc_flags_y = list(
-                map(QcFlags.from_string, list(merged_data["quality_flag_long_y"]))
-            )
+    def set_filtered_data(
+        self,
+        filtered_data: dict | None,
+    ):
+        self._filtered_data = filtered_data
 
-            colors = [QC_FLAG_CSS_COLORS.get(flags.total) for flags in qc_flags_x]
+        if filtered_data is None:
+            self._filtered_source.data = {key: [] for key in self.filtered_source_fields}
+            return
 
-            # Evaluate and store all .value values first
-            total_values = [flags.total.value for flags in qc_flags_x]
-            incoming_values = [flags.incoming.value for flags in qc_flags_x]
-            line_colors = [
-                "black" if inc != tot else "none"
-                for inc, tot in zip(incoming_values, total_values)
-            ]
+        self._filtered_source.data = {
+            "x": filtered_data.get("x", []),
+            "y": filtered_data.get("y", []),
+        }
 
-            self._merged_data = merged_data
-            self._source.data = {
-                "x": list(merged_data["value"]),
-                "y": list(merged_data["value_y"]),
-                "colors": colors,
-                "line_colors": line_colors,
-                "deph": list(merged_data["DEPH"]),
-                "qcx": [f"{flags.total} ({flags.total.value})" for flags in qc_flags_x],
-                "qcy": [f"{flags.total} ({flags.total.value})" for flags in qc_flags_y],
-            }
+    def _sync_profile_options(self):
+        has_data = any(self._source.data.get("x"))
 
-            self._hover.tooltips = [
-                (self._x_parameter, "@x"),
-                (self._y_parameter, "@y"),
-                ("Depth", "@deph"),
-                (f"QC {self._x_parameter}", "@qcx"),
-                (f"QC {self._y_parameter}", "@qcy"),
-            ]
-            self._no_data_label.visible = False
-        else:
-            self._merged_data = None
-            self._source.data = {"x": [], "y": [], "colors": [], "line_colors": []}
-            self._no_data_label.visible = True
+        self._line.visible = self._show_lines
+        self._no_data_label.visible = not has_data
+
+    def clear_selection(self):
+        self._clear_called = True
+        self._source.selected.indices = []
+        self._clear_called = False
 
     def update_colors(self, updated_values: list[Parameter]):
         if self._merged_data is None:
@@ -258,38 +306,10 @@ class ScatterSlot(BaseView):
         if patches:
             saved_indices = list(self._source.selected.indices)
             self._applying_highlight = True
-            self._source.patch({"colors": patches})
+            self._source.patch({"color": patches})
             if saved_indices:
                 self._source.selected.indices = saved_indices
             self._applying_highlight = False
-
-    def _on_value_selected(self, _attr, _old, new):
-        if self._applying_highlight or self._merged_data is None:
-            return
-        parameters = []
-        for i in new:
-            row = self._merged_data.row(i, named=True)
-            parameters.append(
-                Parameter(
-                    {
-                        **row,
-                        "parameter": self._x_parameter,
-                        "value": row["value"],
-                        "quality_flag_long": row["quality_flag_long"],
-                    }
-                )
-            )
-            parameters.append(
-                Parameter(
-                    {
-                        **row,
-                        "parameter": self._y_parameter,
-                        "value": row["value_y"],
-                        "quality_flag_long": row["quality_flag_long_y"],
-                    }
-                )
-            )
-        self._manual_qc_model.set_values_from_filter(parameters)
 
     def _on_values_selected(self):
         self._applying_highlight = True
@@ -308,16 +328,28 @@ class ScatterSlot(BaseView):
             ]
         self._applying_highlight = False
 
-    def update_station(self):
-        self._x_parameter_dropdown.menu = [
-            (expand_abbreviation(parameter), parameter)
-            for parameter in self._visits_model.selected_visit.parameters
+    def select_values(self, rows):
+        selected_values = [
+            Parameter(self._parameter_data.row(n, named=True)) for n in rows
         ]
-        self._y_parameter_dropdown.menu = [
-            (expand_abbreviation(parameter), parameter)
-            for parameter in self._visits_model.selected_visit.parameters
-        ]
-        self._load_parameters()
+        if not self._clear_called:
+            self._manual_qc_model.set_selected_values(selected_values)
+
+    def _on_value_selected(self, attr, old, new):
+        if not self._applying_highlight:
+            self.select_values(new)
+
+    @property
+    def x_parameter(self) -> str:
+        return self._x_parameter
+
+    @property
+    def y_parameter(self) -> str:
+        return self._y_parameter
+
+    @property
+    def scatter_index(self) -> int | None:
+        return self._scatter_index
 
     @property
     def layout(self):
