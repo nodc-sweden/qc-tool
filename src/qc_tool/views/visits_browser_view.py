@@ -9,7 +9,6 @@ import jinja2
 from bokeh.models.layouts import Column, Row, TabPanel, Tabs
 
 from qc_tool.app_state import AppState
-from qc_tool.scatter_slot import ScatterSlot
 from qc_tool.views.base_view import BaseView
 from qc_tool.views.comment_dialog_view import CommentDialogView
 from qc_tool.views.filtered_profiles_view import FilteredProfilesView
@@ -17,6 +16,7 @@ from qc_tool.views.manual_qc_view import ManualQcView
 from qc_tool.views.map_view import MapView
 from qc_tool.views.parameter_selector_view import ParameterSelectorView
 from qc_tool.views.profile_grid_view import ProfileGridView
+from qc_tool.views.scatter_view import ScatterView
 from qc_tool.views.visit_info_view import VisitInfoView
 from qc_tool.views.visit_selector_view import VisitSelectorView
 
@@ -86,6 +86,7 @@ class VisitsBrowserView(BaseView):
         visit_selector_controller,
         profile_grid_controller,
         filtered_profiles_controller,
+        scatter_controller,
         manual_qc_controller,
         comment_dialog_controller,
     ):
@@ -107,32 +108,32 @@ class VisitsBrowserView(BaseView):
         self._comment_dialog_view = CommentDialogView(comment_dialog_controller)
         self._manual_qc_view.comment_dialog_view = self._comment_dialog_view
 
-        self._scatter_parameters = [
-            ScatterSlot(
-                self._state.visits,
-                self._state.manual_qc,
-                x_parameter="DOXY_BTL",
-                y_parameter="DOXY_CTD",
-            ),
-            ScatterSlot(
-                self._state.visits,
-                self._state.manual_qc,
-                x_parameter="ALKY",
-                y_parameter="SALT_CTD",
-            ),
-            ScatterSlot(
-                self._state.visits,
-                self._state.manual_qc,
-                x_parameter="PHOS",
-                y_parameter="NTRZ",
-            ),
-            ScatterSlot(
-                self._state.visits,
-                self._state.manual_qc,
-                x_parameter="NTRZ",
-                y_parameter="H2S",
-            ),
-        ]
+        # self._scatter_parameters = [
+        #     ScatterSlot(
+        #         self._state.visits,
+        #         self._state.manual_qc,
+        #         x_parameter="DOXY_BTL",
+        #         y_parameter="DOXY_CTD",
+        #     ),
+        #     ScatterSlot(
+        #         self._state.visits,
+        #         self._state.manual_qc,
+        #         x_parameter="ALKY",
+        #         y_parameter="SALT_CTD",
+        #     ),
+        #     ScatterSlot(
+        #         self._state.visits,
+        #         self._state.manual_qc,
+        #         x_parameter="PHOS",
+        #         y_parameter="NTRZ",
+        #     ),
+        #     ScatterSlot(
+        #         self._state.visits,
+        #         self._state.manual_qc,
+        #         x_parameter="NTRZ",
+        #         y_parameter="H2S",
+        #     ),
+        # ]
 
         # Top row
         navigation_column = Column(
@@ -196,16 +197,36 @@ class VisitsBrowserView(BaseView):
             child=filtered_profiles_layout,
             title="Profile Collection",
         )
-        # Tab for scatter plots
-        scatter_tab = TabPanel(
-            child=Row(
-                children=[parameter.layout for parameter in self._scatter_parameters]
-            ),
-            title="Parameter-parameter",
+
+        self._scatter_tab_handler = ScatterView(
+            scatter_controller,
+            state.scatters,
+            state.filter,
+            state.visits,
+            state.manual_qc,
         )
 
+        scatter_layout = Column(
+            self._scatter_tab_handler.layout,
+            height=800,
+            sizing_mode="stretch_width",
+            styles={"overflow-y": "auto"},
+        )
+
+        self._scatter_tab = TabPanel(
+            child=scatter_layout,
+            title="Parameter-parameter",
+        )
+        # # Tab for scatter plots
+        # scatter_tab = TabPanel(
+        #     child=Row(
+        #         children=[parameter.layout for parameter in self._scatter_parameters]
+        #     ),
+        #     title="Parameter-parameter",
+        # )
+
         bottom_row = Tabs(
-            tabs=[self._profile_tab, self._filtered_profiles_tab, scatter_tab],
+            tabs=[self._profile_tab, self._filtered_profiles_tab, self._scatter_tab],
             sizing_mode="stretch_both",
         )
 
@@ -230,10 +251,10 @@ class VisitsBrowserView(BaseView):
     def layout(self):
         return self._layout
 
-    def update_scatter_plots(self):
-        for plot in self._scatter_parameters:
-            plot.update_station()
-
-    def update_scatter_colors(self, updated_values):
-        for plot in self._scatter_parameters:
-            plot.update_colors(updated_values)
+    # def update_scatter_plots(self):
+    #     for plot in self._scatter_parameters:
+    #         plot.update_station()
+    #
+    # def update_scatter_colors(self, updated_values):
+    #     for plot in self._scatter_parameters:
+    #         plot.update_colors(updated_values)

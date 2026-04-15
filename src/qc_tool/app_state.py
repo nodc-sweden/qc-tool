@@ -7,6 +7,7 @@ from qc_tool.models.manual_qc_model import ManualQcModel
 from qc_tool.models.map_model import MapModel
 from qc_tool.models.parameters_model import ParametersModel
 from qc_tool.models.profiles_grid_model import ProfileGridModel
+from qc_tool.models.scatter_model import ScatterModel
 from qc_tool.models.validation_log_model import ValidationLogModel
 from qc_tool.models.visits_model import VisitsModel
 
@@ -26,5 +27,6 @@ class AppState:
         self.parameters = ParametersModel(self._message_queue)
         self.profile_grid = ProfileGridModel(2, 6, self._message_queue)
         self.filtered_profiles = FilteredProfilesModel(self._message_queue)
+        self.scatters = ScatterModel(self._message_queue)
         self.manual_qc = ManualQcModel(self._message_queue)
         self.geo_info = GeoInfoModel(self._message_queue)

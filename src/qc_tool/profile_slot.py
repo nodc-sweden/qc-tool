@@ -4,9 +4,7 @@ from typing import Self
 import pandas as pd
 from bokeh.colors import RGB
 from bokeh.core import enums
-from bokeh.core.property.primitive import Bool
 from bokeh.layouts import column
-from bokeh.model import DataModel
 from bokeh.models import (
     BoxAnnotation,
     Button,
@@ -624,23 +622,3 @@ class ProfileSlot(BaseView):
     @property
     def y_range(self):
         return self._figure.y_range
-
-
-class ParameterOptions(DataModel):
-    show_lines = Bool(default=True)
-    show_bounds = Bool(default=True)
-
-    def from_buttons(self, button_selection: list[int]):
-        show_lines = 0 in button_selection
-        show_bounds = 1 in button_selection
-        self.show_lines = show_lines
-        self.show_bounds = show_bounds
-
-    @property
-    def active_buttons(self):
-        active = []
-        if self.show_lines:
-            active.append(0)
-        if self.show_bounds:
-            active.append(1)
-        return active
