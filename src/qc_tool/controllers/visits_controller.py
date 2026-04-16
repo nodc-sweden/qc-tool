@@ -27,6 +27,9 @@ class VisitsController:
         self._validation_log_model = validation_log_model
         self._file_model.register_listener(FileModel.NEW_DATA, self._on_new_data)
         self._file_model.register_listener(FileModel.UPDATED_DATA, self._on_updated_data)
+        self._file_model.register_listener(
+            FileModel.NEW_MANUAL_FLAGS, self._on_new_manual_flags
+        )
         self._visits_model.register_listener(VisitsModel.NEW_VISITS, self._on_new_visits)
         self._filter_model = filter_model
         self._filter_model.register_listener(
@@ -71,6 +74,20 @@ class VisitsController:
 
     def _on_filter_changed(self):
         self._visits_model.apply_filter(self._filter_model)
+
+    def _on_new_manual_flags(self):
+        visit_key = self._visits_model.selected_visit.visit_key
+        visit = self._update_visit(visit_key)
+        self._visits_model.update_visit(visit_key, visit)
+        self._build_feedback_service()
+
+    def _update_visit(self, visit_key: str | None):
+        if visit_key is None:
+            return self._visits_model.visits
+        visit = Visit(
+            visit_key, self._file_model.data.filter(pl.col("visit_key") == visit_key)
+        )
+        return visit
 
     def _on_new_validation_log(self):
         self._build_feedback_service()

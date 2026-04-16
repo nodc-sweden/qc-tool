@@ -27,6 +27,10 @@ class VisitsModel(BaseModel):
         self._selected_visit = self._visits.get(self._selected_visit.visit_key)
         self._notify_listeners(self.UPDATED_VISITS)
 
+    def update_visit(self, visit_key: str | None, visit: Visit):
+        self._visits[visit_key] = visit
+        self._selected_visit = visit
+
     def set_visit(self, visit: Visit | None):
         self._selected_visit = visit
         self._notify_listeners(self.VISIT_SELECTED)

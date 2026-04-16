@@ -294,21 +294,59 @@ class ScatterSlot(BaseView):
     def update_colors(self, updated_values: list[Parameter]):
         if self._merged_data is None:
             return
-        updated_map = {
-            (v._data["parameter"], v._data["DEPH"]): QC_FLAG_CSS_COLORS.get(v.qc.total)
+
+        updated_map_x = {
+            (v._data["parameter"], v._data["DEPH"]): v
             for v in updated_values
+            if v._data["parameter"] == self._x_parameter
         }
-        patches = [
-            (i, updated_map[(self._x_parameter, row["DEPH"])])
-            for i, row in enumerate(self._merged_data.iter_rows(named=True))
-            if (self._x_parameter, row["DEPH"]) in updated_map
-        ]
-        if patches:
+        updated_map_y = {
+            (v._data["parameter"], v._data["DEPH"]): v
+            for v in updated_values
+            if v._data["parameter"] == self._y_parameter
+        }
+
+        if not updated_map_x and not updated_map_y:
+            return
+
+        color_patches = []
+        qcx_patches = []
+        qcy_patches = []
+
+        for i, row in enumerate(self._merged_data.iter_rows(named=True)):
+            key_x = (self._x_parameter, row["DEPH"])
+            key_y = (self._y_parameter, row["DEPH"])
+
+            if key_x in updated_map_x:
+                value_x = updated_map_x[key_x]
+                flags_x = value_x.qc
+                color = QC_FLAG_CSS_COLORS.get(flags_x.total)
+                qc_str_x = f"{flags_x.total} ({flags_x.total.value})"
+                color_patches.append((i, color))
+                qcx_patches.append((i, qc_str_x))
+            if key_y in updated_map_y:
+                value_y = updated_map_y[key_y]
+                flags_y = value_y.qc
+                qc_str_y = f"{flags_y.total} ({flags_y.total.value})"
+                qcy_patches.append((i, qc_str_y))
+
+        if color_patches or qcx_patches or qcy_patches:
             saved_indices = list(self._source.selected.indices)
             self._applying_highlight = True
-            self._source.patch({"color": patches})
+
+            patch_dict = {}
+            if color_patches:
+                patch_dict["color"] = color_patches
+            if qcx_patches:
+                patch_dict["qcx"] = qcx_patches
+            if qcy_patches:
+                patch_dict["qcy"] = qcy_patches
+
+            self._source.patch(patch_dict)
+
             if saved_indices:
                 self._source.selected.indices = saved_indices
+
             self._applying_highlight = False
 
     def _on_values_selected(self):

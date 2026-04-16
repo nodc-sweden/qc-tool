@@ -540,29 +540,90 @@ class ProfileSlot(BaseView):
         if not self._clear_called:
             self._manual_qc_model.set_selected_values(selected_values)
 
+    # def update_colors(self, updated_values: list[Parameter]):
+    #     updated_map = {
+    #         (
+    #             value._data["visit_key"],
+    #             value._data["parameter"],
+    #             value._data["DEPH"],
+    #         ): QC_FLAG_CSS_COLORS.get(value.qc.total)
+    #         for value in updated_values
+    #     }
+    #     for source, parameter_data in zip(self._sources, self._parameter_data):
+    #         if parameter_data is None:
+    #             continue
+    #         patches = [
+    #             (i, updated_map[(row["visit_key"], row["parameter"], row["DEPH"])])
+    #             for i, row in enumerate(parameter_data.iter_rows(named=True))
+    #             if (row["visit_key"], row["parameter"], row["DEPH"]) in updated_map
+    #         ]
+    #         if patches:
+    #             saved_indices = list(source.selected.indices)
+    #             self._applying_highlight = True
+    #             source.patch({"color": patches})
+    #             if saved_indices:
+    #                 source.selected.indices = saved_indices
+    #             self._applying_highlight = False
+
     def update_colors(self, updated_values: list[Parameter]):
         updated_map = {
             (
                 value._data["visit_key"],
                 value._data["parameter"],
                 value._data["DEPH"],
-            ): QC_FLAG_CSS_COLORS.get(value.qc.total)
+            ): value
             for value in updated_values
         }
+
         for source, parameter_data in zip(self._sources, self._parameter_data):
             if parameter_data is None:
                 continue
-            patches = [
-                (i, updated_map[(row["visit_key"], row["parameter"], row["DEPH"])])
-                for i, row in enumerate(parameter_data.iter_rows(named=True))
-                if (row["visit_key"], row["parameter"], row["DEPH"]) in updated_map
-            ]
-            if patches:
+
+            color_patches = []
+            qc_patches = []
+            qc_incoming_patches = []
+            qc_automatic_patches = []
+            qc_manual_patches = []
+
+            for i, row in enumerate(parameter_data.iter_rows(named=True)):
+                key = (row["visit_key"], row["parameter"], row["DEPH"])
+
+                if key not in updated_map:
+                    continue
+
+                value = updated_map[key]
+                flags = value.qc
+
+                qc_str = f"{flags.total} ({flags.total.value})"
+                qc_incoming_str = f"{flags.incoming} ({flags.incoming.value})"
+                qc_automatic_str = f"{flags.total_automatic} {flags.total_automatic_name}"
+                qc_manual_str = f"{flags.manual} ({flags.manual.value})"
+
+                color = QC_FLAG_CSS_COLORS.get(flags.total)
+
+                color_patches.append((i, color))
+                qc_patches.append((i, qc_str))
+                qc_incoming_patches.append((i, qc_incoming_str))
+                qc_automatic_patches.append((i, qc_automatic_str))
+                qc_manual_patches.append((i, qc_manual_str))
+
+            if color_patches:
                 saved_indices = list(source.selected.indices)
                 self._applying_highlight = True
-                source.patch({"color": patches})
+
+                source.patch(
+                    {
+                        "color": color_patches,
+                        "qc": qc_patches,
+                        "qc_incoming": qc_incoming_patches,
+                        "qc_automatic": qc_automatic_patches,
+                        "qc_manual": qc_manual_patches,
+                    }
+                )
+
                 if saved_indices:
                     source.selected.indices = saved_indices
+
                 self._applying_highlight = False
 
     def _on_values_selected(self):
