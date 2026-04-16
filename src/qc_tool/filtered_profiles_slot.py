@@ -419,22 +419,56 @@ class FilteredProfilesSlot(BaseView):
     def update_colors(self, updated_values: list[Parameter]):
         if self._parameter_data is None:
             return
+
         updated_map = {
-            (v._data["visit_key"], v._data["DEPH"]): QC_FLAG_CSS_COLORS.get(v.qc.total)
+            (v._data["visit_key"], v._data["DEPH"]): v
             for v in updated_values
             if v._data["parameter"] == self._parameter
         }
         if not updated_map:
             return
-        patches = [
-            (i, updated_map[(row["visit_key"], row["DEPH"])])
-            for i, row in enumerate(self._parameter_data.iter_rows(named=True))
-            if (row["visit_key"], row["DEPH"]) in updated_map
-        ]
-        if patches:
+
+        color_patches = []
+        qc_patches = []
+        qc_incoming_patches = []
+        qc_automatic_patches = []
+        qc_manual_patches = []
+
+        for i, row in enumerate(self._parameter_data.iter_rows(named=True)):
+            key = (row["visit_key"], row["DEPH"])
+
+            if key not in updated_map:
+                continue
+
+            value = updated_map[key]
+            flags = value.qc
+
+            qc_str = f"{flags.total} ({flags.total.value})"
+            qc_incoming_str = f"{flags.incoming} ({flags.incoming.value})"
+            qc_automatic_str = f"{flags.total_automatic} {flags.total_automatic_name}"
+            qc_manual_str = f"{flags.manual} ({flags.manual.value})"
+
+            color = QC_FLAG_CSS_COLORS.get(flags.total)
+
+            color_patches.append((i, color))
+            qc_patches.append((i, qc_str))
+            qc_incoming_patches.append((i, qc_incoming_str))
+            qc_automatic_patches.append((i, qc_automatic_str))
+            qc_manual_patches.append((i, qc_manual_str))
+
+        if color_patches:
             saved_indices = list(self._source.selected.indices)
             self._applying_highlight = True
-            self._source.patch({"color": patches})
+
+            self._source.patch(
+                {
+                    "color": color_patches,
+                    "qc": qc_patches,
+                    "qc_incoming": qc_incoming_patches,
+                    "qc_automatic": qc_automatic_patches,
+                    "qc_manual": qc_manual_patches,
+                }
+            )
             if saved_indices:
                 self._source.selected.indices = saved_indices
             self._applying_highlight = False

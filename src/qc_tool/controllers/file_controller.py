@@ -194,6 +194,7 @@ class FileController:
         self._file_model.flags_update(data)
         t1 = time.perf_counter()
         print(f"Manual QC finished ({t1 - t0:.3f} s.)")
+        self._file_model.manual_flags_update()
 
     def _reset_validation_logs(self):
         adm_logger.reset_log()
