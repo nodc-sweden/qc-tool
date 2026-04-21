@@ -208,9 +208,8 @@ class ScatterView(BaseView):
     def _load_filtered_data(self, x_parameter, y_parameter):
         if self._filter_model.filtered_data.is_empty():
             return None
-
         df = self._filter_model.filtered_data.select(
-            ["row_number", "parameter", "value"]
+            ["row_number", "visit_key", "parameter", "value"]
         ).filter(
             pl.col("parameter").is_in([x_parameter, y_parameter])
             & pl.col("value").is_not_null()
@@ -221,8 +220,10 @@ class ScatterView(BaseView):
         ):
             return None
 
+        df = df.with_columns((pl.col("row_number") + pl.col("visit_key")).alias("key"))
+
         df = df.pivot(
-            index="row_number",
+            index="key",
             columns="parameter",
             values="value",
         ).drop_nulls([x_parameter, y_parameter])
