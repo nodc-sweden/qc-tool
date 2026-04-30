@@ -60,7 +60,7 @@ class HelpView(BaseView):
 
         top_row = Row(
             children=[left_column_top, info_statistic_test_text, image_statistic_test],
-            sizing_mode="fixed",
+            sizing_mode="stretch_width",
         )
 
         # -----------------------
@@ -115,7 +115,7 @@ class HelpView(BaseView):
 
         bottom_row = Row(
             children=[flag_list, qc_steps],
-            sizing_mode="fixed",
+            sizing_mode="stretch_width",
         )
 
         # -----------------------
@@ -128,7 +128,7 @@ class HelpView(BaseView):
                 divider,
                 bottom_row,
             ],
-            sizing_mode="fixed",
+            sizing_mode="stretch_width",
         )
 
     @property

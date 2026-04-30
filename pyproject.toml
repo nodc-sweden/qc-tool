@@ -1,6 +1,6 @@
 [project]
 name = "qc-tool"
-version = "2025.2.5"
+version = "v2.0.1"
 description = "Kvalitetskontroll av lågupplöst data"
 authors = [
     {name = "Jonatan Skogsfors", email = "jonatan.skogsfors@smhi.se"},
@@ -62,6 +62,6 @@ select = [
 
 [tool.uv.sources]
 nodc-statistics = { git = "https://github.com/nodc-sweden/nodc-statistics", rev = "v2025.1.1" }
-ocean-data-qc = { git = "https://github.com/nodc-sweden/ocean-data-qc", rev = "main"}
-sharkadm = { git = "https://github.com/nodc-sweden/SHARKadm", rev = "main" }
+ocean-data-qc = { git = "https://github.com/nodc-sweden/ocean-data-qc", rev = "v1.1.2"}
+sharkadm = { git = "https://github.com/nodc-sweden/SHARKadm", rev = "v3.3.3" }
 nodc-station = { git = "https://github.com/nodc-sweden/nodc-station", rev = "v1.0.0" }
