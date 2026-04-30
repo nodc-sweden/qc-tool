@@ -1,4 +1,4 @@
-from bokeh.models import Column, Row, TabPanel, Tabs
+from bokeh.models import Column, Row, Spacer, TabPanel, Tabs
 
 from qc_tool.app_state import AppState
 from qc_tool.controllers.main_controller import MainController
@@ -48,7 +48,12 @@ class MainView(BaseView):
                 TabPanel(child=self._help_view.layout, title="Help"),
             ]
         )
-        self._layout = Column(children=[self._filter, self._tabs])
+        self._layout = Row(
+            children=[
+                Spacer(width=30),
+                Column(children=[self._filter, self._tabs]),
+            ]
+        )
 
     @property
     def layout(self):

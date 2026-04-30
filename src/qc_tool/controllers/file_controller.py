@@ -516,3 +516,52 @@ def _get_config_dir() -> Path | None:
         if config_dir.exists():
             return config_dir
     return None
+
+
+def _apply_transformers(controller):
+    print("Running SHARKadm transformers...")
+    t0 = time.perf_counter()
+    for transformer, args, kwargs in (
+        (transformers.AddCtdKust, (), {}),
+        (transformers.PolarsRemoveNonDataLines, (), {}),
+        (transformers.PolarsReplaceCommaWithDot, (), {}),
+        (multi_transformers.DateTimePolars, (), {}),
+        (multi_transformers.PositionPolars, (), {}),
+        (transformers.PolarsAddVisitKey, (), {}),
+        (transformers.PolarsAddPressure, (), {}),
+        (transformers.PolarsAddDensityWide, ("CTD",), {}),
+        (transformers.PolarsAddDensityWide, ("BTL",), {}),
+        (transformers.PolarsAddOxygenSaturationWide, ("CTD",), {}),
+        (transformers.PolarsAddOxygenSaturationWide, ("BTL",), {}),
+        (transformers.PolarsWideToLong, (), {}),
+        (transformers.PolarsMoveLessThanFlagRowFormat, (), {}),
+        (transformers.PolarsMoveLargerThanFlagRowFormat, (), {}),
+        (transformers.PolarsConvertFlagsToSDN, (), {}),
+        (transformers.PolarsAddAnalyseInfo, (), {}),
+        (transformers.PolarsAddLmqnt, (), {}),
+        (transformers.PolarsAddUncertainty, (), {}),
+        (transformers.PolarsRemoveColumns, ("COPY_VARIABLE.*",), {"regex": True}),
+        (
+            transformers.PolarsMapperParameterColumn,
+            (),
+            {"import_column": "SHARKarchive"},
+        ),
+    ):
+        tn_0 = time.perf_counter()
+        controller.transform(transformer(*args, **kwargs))
+        tn_1 = time.perf_counter()
+        print(f"\t{transformer.__name__}: {tn_1 - tn_0:.3f} s.")
+
+    t1 = time.perf_counter()
+    print(f"SHARKadm transformers finished ({t1 - t0:.3f} s.)")
+
+
+if __name__ == "__main__":
+    file_path = r"C:/LenaV/code/w_qc-tool/LIMS testdata/jan_2024_klippt_metadatafel/2025-06-24 1630-2024-LANDSKOD 77-FARTYGSKOD 10/Raw_data/data.txt"  # noqa: E501
+    controller = sharkadm_controller.get_polars_controller_with_data(file_path)
+    _apply_transformers(controller=controller)
+    print(controller.data.columns)
+    data = controller.export(
+        exporters.PolarsDataFrame(header_as="PhysicalChemical", float_columns=False)
+    )
+    print(data.columns)

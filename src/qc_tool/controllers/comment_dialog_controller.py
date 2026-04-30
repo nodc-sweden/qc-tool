@@ -5,25 +5,40 @@ from qc_tool.views.comment_dialog_view import CommentDialogView
 
 
 class CommentDialogController:
-    NO_COMMENT = "No comment"
+    NO_COMMENT = "Annat/fritext"
 
+    # Define available categories and for which flag choices they are valid
     COMMENT_CATEGORIES = (
         (NO_COMMENT, {}),
         ("Svavelväte förekommer", {QcFlag.BAD_VALUE}),
         ("Värde avviker i homogent lager", {QcFlag.BAD_VALUE, QcFlag.PROBABLY_BAD_VALUE}),
         ("Kontrollera för stansfel", {QcFlag.PROBABLY_BAD_VALUE}),
         ("Totalhalt avvikande högt/lågt värde", {QcFlag.PROBABLY_BAD_VALUE}),
-        ("Provtaget i gränsskikt", {QcFlag.BAD_VALUE, QcFlag.PROBABLY_BAD_VALUE}),
+        (
+            "Provtaget i gränsskikt",
+            {QcFlag.BAD_VALUE, QcFlag.PROBABLY_BAD_VALUE, QcFlag.GOOD_VALUE},
+        ),
         (
             "CTD och flaska stämmer ej",
             {QcFlag.BAD_VALUE, QcFlag.PROBABLY_BAD_VALUE},
         ),
         ("Analysen misslyckades", {QcFlag.BAD_VALUE}),
         ("Provtagning misslyckades", {QcFlag.BAD_VALUE}),
-        ("Flaska stängt på fel djup", {QcFlag.BAD_VALUE}),
-        ("Förväxlade djup", {QcFlag.BAD_VALUE}),
+        (
+            "Flaska stängt på fel djup",
+            {
+                QcFlag.BAD_VALUE,
+                QcFlag.PROBABLY_BAD_VALUE,
+            },
+        ),
+        (
+            "Förväxlade djup",
+            {
+                QcFlag.BAD_VALUE,
+                QcFlag.PROBABLY_BAD_VALUE,
+            },
+        ),
         ("Auto qc fel", {}),
-        ("Annat/fritext", {}),
     )
 
     def __init__(self, manual_qc: ManualQcModel):

@@ -101,7 +101,7 @@ class VisitsBrowserView(BaseView):
         )
 
         self._station_info = VisitInfoView(
-            controller.visit_info_controller, state.visits, width=400
+            controller.visit_info_controller, state.visits, width=600
         )
 
         self._manual_qc_view = ManualQcView(manual_qc_controller, self._state.manual_qc)

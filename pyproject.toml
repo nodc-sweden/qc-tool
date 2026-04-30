@@ -11,6 +11,7 @@ dependencies = [
     "pyproj==3.7.1",
     "pandas==2.3.3",
     "nodc-statistics",
+    "nodc-station",
     "sharkadm",
     "nodc-codes @ git+https://github.com/nodc-sweden/nodc-codes@v0.3.0",
     "ocean-data-qc",
@@ -61,6 +62,6 @@ select = [
 
 [tool.uv.sources]
 nodc-statistics = { git = "https://github.com/nodc-sweden/nodc-statistics", rev = "v2025.1.1" }
-ocean-data-qc = { git = "https://github.com/nodc-sweden/ocean-data-qc", rev = "v2026.1.1"}
+ocean-data-qc = { git = "https://github.com/nodc-sweden/ocean-data-qc", rev = "main"}
 sharkadm = { git = "https://github.com/nodc-sweden/SHARKadm", rev = "main" }
-
+nodc-station = { git = "https://github.com/nodc-sweden/nodc-station", rev = "v1.0.0" }
