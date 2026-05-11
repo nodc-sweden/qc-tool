@@ -74,6 +74,14 @@ class Visit:
         return self._data.select("datetime").to_series()[0]
 
     @property
+    def year(self):
+        return self._data.select("MYEAR").to_series()[0]
+
+    @property
+    def month(self):
+        return self._data.select("visit_month").to_series()[0]
+
+    @property
     def country_ship_cruise_visit_key(self):
         return "-".join(
             [str(self._common.get(key)) for key in ("CTRYID", "SHIPC", "CRUISE_NO")]

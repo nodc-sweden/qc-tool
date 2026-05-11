@@ -82,11 +82,11 @@ class VisitsModel(BaseModel):
 
     @property
     def years(self) -> set[int]:
-        return {visit.datetime.year for visit in self.visits.values()}
+        return {visit.year for visit in self.visits.values()}
 
     @property
     def months(self) -> set[int]:
-        return {visit.datetime.month for visit in self.visits.values()}
+        return {visit.month for visit in self.visits.values()}
 
     @property
     def cruises(self) -> set[str]:
@@ -105,14 +105,14 @@ class VisitsModel(BaseModel):
 
     def possible_years(self, filter_model: FilterModel):
         return {
-            visit.datetime.year
+            visit.year
             for visit in self._visits.values()
             if filter_model.matches(visit, ignore_year=True)
         }
 
     def possible_months(self, filter_model: FilterModel):
         return {
-            visit.datetime.month
+            visit.month
             for visit in self._visits.values()
             if filter_model.matches(visit, ignore_month=True)
         }

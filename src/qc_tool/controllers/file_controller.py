@@ -206,7 +206,7 @@ class FileController:
             (transformers.AddCtdKust, (), {}),
             (transformers.PolarsRemoveNonDataLines, (), {}),
             (transformers.PolarsReplaceCommaWithDot, (), {}),
-            (multi_transformers.DateTimePolars, (), {}),
+            (multi_transformers.DateTimePolars, (), {"strict": False}),
             (multi_transformers.PositionPolars, (), {}),
             (transformers.PolarsAddVisitKey, (), {}),
             (transformers.PolarsAddPressure, (), {}),

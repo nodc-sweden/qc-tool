@@ -26,6 +26,8 @@ MONTHS = [
     "Dec",
 ]
 
+MISSING_LABEL = "Missing value"
+
 
 class FilterView(BaseView):
     HEIGHT = 150
@@ -86,19 +88,24 @@ class FilterView(BaseView):
         self._filter_model.set_file_filter(new)
 
     def _on_year_filter_changed(self, attr, old, new):
-        self._filter_model.set_year_filter(new)
+        values = {None if value == MISSING_LABEL else int(value) for value in new}
+        self._filter_model.set_year_filter(values)
 
     def _on_month_filter_changed(self, attr, old, new):
-        self._filter_model.set_month_filter(new)
+        values = {None if value == "None" else int(value) for value in new}
+        self._filter_model.set_month_filter(values)
 
     def _on_cruise_filter_changed(self, attr, old, new):
-        self._filter_model.set_cruise_filter(new)
+        values = {"" if value == MISSING_LABEL else value for value in new}
+        self._filter_model.set_cruise_filter(values)
 
     def _on_station_filter_changed(self, attr, old, new):
-        self._filter_model.set_station_filter(new)
+        values = {"" if value == MISSING_LABEL else value for value in new}
+        self._filter_model.set_station_filter(values)
 
     def _on_basin_filter_changed(self, attr, old, new):
-        self._filter_model.set_basin_filter(new)
+        values = {None if value == MISSING_LABEL else value for value in new}
+        self._filter_model.set_basin_filter(values)
 
     def clear_filter(self, event):
         self._file_filter.value = []
@@ -119,13 +126,26 @@ class FilterView(BaseView):
         self._file_filter.options = [
             (str(path), short_names[path]) for path in all_paths if str(path) in available
         ]
-        self._year_filter.options = [str(year) for year in self._filter_model.years]
+        self._year_filter.options = [
+            MISSING_LABEL if year is None else str(year)
+            for year in self._filter_model.years
+        ]
         self._month_filter.options = [
-            (str(month), calendar.month_abbr[month])
+            (
+                str(month) if month is not None else "None",
+                calendar.month_abbr[month] if month is not None else MISSING_LABEL,
+            )
             for month in self._filter_model.months
         ]
         self._cruise_filter.options = [
-            str(cruise) for cruise in self._filter_model.cruises
+            MISSING_LABEL if cruise == "" else str(cruise)
+            for cruise in self._filter_model.cruises
         ]
-        self._station_filter.options = self._filter_model.stations
-        self._basin_filter.options = self._filter_model.basins
+        self._station_filter.options = [
+            MISSING_LABEL if station == "" else station
+            for station in self._filter_model.stations
+        ]
+        self._basin_filter.options = [
+            MISSING_LABEL if basin is None else basin
+            for basin in self._filter_model.basins
+        ]
