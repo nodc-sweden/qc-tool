@@ -75,11 +75,11 @@ class FilterModel(BaseModel):
 
     @property
     def years(self):
-        return sorted(self._years)
+        return sorted(self._years, key=lambda x: (x is None, x))
 
     @property
     def months(self):
-        return sorted(self._months)
+        return sorted(self._months, key=lambda x: (x is None, x))
 
     @property
     def stations(self):
@@ -91,7 +91,7 @@ class FilterModel(BaseModel):
 
     @property
     def basins(self):
-        return sorted(self._basins)
+        return sorted(self._basins, key=lambda x: (x is None, x))
 
     @property
     def filtered_data(self):
@@ -111,13 +111,13 @@ class FilterModel(BaseModel):
         self._notify_listeners(self.FILTER_CHANGED)
 
     def set_year_filter(self, years):
-        self._filtered_years = set(map(int, years))
+        self._filtered_years = set(years)
         if self._file_model.data is not None:
             self.filtered_data = self._file_model.data
         self._notify_listeners(self.FILTER_CHANGED)
 
     def set_month_filter(self, months):
-        self._filtered_months = set(map(int, months))
+        self._filtered_months = set(months)
         if self._file_model.data is not None:
             self.filtered_data = self._file_model.data
         self._notify_listeners(self.FILTER_CHANGED)
@@ -153,7 +153,14 @@ class FilterModel(BaseModel):
         if self._filtered_stations:
             expr &= pl.col("STATN").is_in(list(self._filtered_stations))
         if self._filtered_basins:
-            expr &= pl.col("sea_basin").is_in(list(self._filtered_basins))
+            non_null_basins = [b for b in self._filtered_basins if b is not None]
+            includes_none = None in self._filtered_basins
+            basin_expr = pl.lit(False)
+            if non_null_basins:
+                basin_expr |= pl.col("sea_basin").is_in(non_null_basins)
+            if includes_none:
+                basin_expr |= pl.col("sea_basin").is_null()
+            expr &= basin_expr
         return expr
 
     def matches(
@@ -171,8 +178,8 @@ class FilterModel(BaseModel):
 
         return (
             _field_matches(visit.file_path, self._filtered_files, ignore_file)
-            and _field_matches(visit.datetime.year, self._filtered_years, ignore_year)
-            and _field_matches(visit.datetime.month, self._filtered_months, ignore_month)
+            and _field_matches(visit.year, self._filtered_years, ignore_year)
+            and _field_matches(visit.month, self._filtered_months, ignore_month)
             and _field_matches(visit.cruise_number, self._filtered_cruises, ignore_cruise)
             and _field_matches(
                 visit.station_name, self._filtered_stations, ignore_station

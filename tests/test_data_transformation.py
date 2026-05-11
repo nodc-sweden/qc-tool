@@ -153,16 +153,16 @@ def test_change_report_filters_rows_with_manual_qc():
         (
             [Path("dir_a/file.txt"), Path("dir_b/file.txt")],
             {
-                Path("dir_a/file.txt"): "1. dir_a/file.txt",
-                Path("dir_b/file.txt"): "2. dir_b/file.txt",
+                Path("dir_a/file.txt"): f"1. {Path('dir_a/file.txt')}",
+                Path("dir_b/file.txt"): f"2. {Path('dir_b/file.txt')}",
             },
         ),
         (
             [Path("dir_a/file_a.txt"), Path("dir_b/file.txt"), Path("dir_c/file.txt")],
             {
                 Path("dir_a/file_a.txt"): "1. file_a.txt",
-                Path("dir_b/file.txt"): "2. dir_b/file.txt",
-                Path("dir_c/file.txt"): "3. dir_c/file.txt",
+                Path("dir_b/file.txt"): f"2. {Path('dir_b/file.txt')}",
+                Path("dir_c/file.txt"): f"3. {Path('dir_c/file.txt')}",
             },
         ),
         (
@@ -172,9 +172,9 @@ def test_change_report_filters_rows_with_manual_qc():
                 Path("root/subdir/c/dir/file.txt"),
             ],
             {
-                Path("root/a/dir/file.txt"): "1. a/dir/file.txt",
-                Path("root/subdir/b/dir/file.txt"): "2. b/dir/file.txt",
-                Path("root/subdir/c/dir/file.txt"): "3. c/dir/file.txt",
+                Path("root/a/dir/file.txt"): f"1. {Path('a/dir/file.txt')}",
+                Path("root/subdir/b/dir/file.txt"): f"2. {Path('b/dir/file.txt')}",
+                Path("root/subdir/c/dir/file.txt"): f"3. {Path('c/dir/file.txt')}",
             },
         ),
     ),
