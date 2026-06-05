@@ -1,6 +1,7 @@
 from qc_tool.controllers.file_controller import FileController
 from qc_tool.controllers.map_controller import MapController
 from qc_tool.controllers.validation_log_controller import ValidationLogController
+from qc_tool.models.ctd_file_model import CtdFileModel
 from qc_tool.models.file_model import FileModel
 from qc_tool.models.geo_info_model import GeoInfoModel
 from qc_tool.models.manual_qc_model import ManualQcModel
@@ -13,6 +14,7 @@ class SummaryController:
     def __init__(
         self,
         file_model: FileModel,
+        ctd_file_model: CtdFileModel,
         visits_model: VisitsModel,
         map_model: MapModel,
         validation_log_model: ValidationLogModel,
@@ -20,6 +22,7 @@ class SummaryController:
         geo_info_model: GeoInfoModel,
     ):
         self._file_model = file_model
+        self._ctd_file_model = ctd_file_model
         self._visits_model = visits_model
         self._validation_log_model = validation_log_model
         self._manual_qc_model = manual_qc_model
@@ -27,6 +30,7 @@ class SummaryController:
 
         self.file_controller = FileController(
             self._file_model,
+            self._ctd_file_model,
             self._validation_log_model,
             self._manual_qc_model,
             self._geo_info_model,

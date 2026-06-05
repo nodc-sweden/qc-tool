@@ -23,9 +23,14 @@ class Visit:
         }
     )
 
-    def __init__(self, visit_key: str, data: pl.DataFrame):
+    def __init__(
+        self, visit_key: str, data: pl.DataFrame, ctd_data: pl.DataFrame | None = None
+    ):
         self._visit_key = visit_key
         self._data = data
+        self._ctd_data = (
+            ctd_data if ctd_data is not None and not ctd_data.is_empty() else None
+        )
 
         self._common = {
             column: self._data[column].unique().to_list()[0]
@@ -130,3 +135,17 @@ class Visit:
     @property
     def latitude(self) -> float:
         return self._common.get("sample_latitude_dd")
+
+    @property
+    def has_ctd_data(self) -> bool:
+        return self._ctd_data is not None
+
+    def ctd_data_for_parameter(self, parameter: str):
+        if self._ctd_data is not None and parameter in self._ctd_data.columns:
+            columns = (
+                ["DEPTH_CTD", pl.col(parameter).cast(pl.Float64)]
+                if parameter != "DEPTH_CTD"
+                else [pl.col(parameter).cast(pl.Float64)]
+            )
+            return self._ctd_data.select(columns)
+        return None

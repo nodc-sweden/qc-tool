@@ -26,6 +26,7 @@ from ocean_data_qc.fyskem.qc_flag import QC_FLAG_CSS_COLORS
 
 from qc_tool.models.manual_qc_model import ManualQcModel
 from qc_tool.views.base_view import BaseView
+from qc_tool.visit import Visit
 
 PARAMETER_ABBREVIATIONS = {
     "ALKY": "Alkalinity",
@@ -110,14 +111,20 @@ class ProfileSlot(BaseView):
         )
 
         self._visit = None
-        self._data = None
         self._parameter_data = []
         self._show_lines = True
         self._show_bounds = True
         self._clear_called = False
         self._applying_highlight = False
 
-        self._sources = [
+        self._point_sources = [
+            ColumnDataSource(data={key: [] for key in self.source_fields}),
+            ColumnDataSource(data={key: [] for key in self.source_fields}),
+            ColumnDataSource(data={key: [] for key in self.source_fields}),
+            ColumnDataSource(data={key: [] for key in self.source_fields}),
+        ]
+
+        self._line_sources = [
             ColumnDataSource(data={key: [] for key in self.source_fields}),
             ColumnDataSource(data={key: [] for key in self.source_fields}),
             ColumnDataSource(data={key: [] for key in self.source_fields}),
@@ -171,7 +178,7 @@ class ProfileSlot(BaseView):
         self._figure.xaxis.visible = False
         # add xaxis to possible parameters
         self._extra_axes = []
-        max_number_of_parameters = len(self._sources)
+        max_number_of_parameters = len(self._point_sources)
         for i in range(max_number_of_parameters):
             range_name = f"x{i + 1}"
             self._figure.extra_x_ranges[range_name] = Range1d(start=0, end=1)
@@ -199,7 +206,7 @@ class ProfileSlot(BaseView):
             self._figure.line(
                 "x", "y", source=source, line_dash=dash, **self._plot_line_config
             )
-            for source, dash in zip(self._sources, enums.DashPattern)
+            for source, dash in zip(self._line_sources, enums.DashPattern)
         ]
         self._values = [
             self._figure.scatter(
@@ -210,19 +217,19 @@ class ProfileSlot(BaseView):
                 line_color="line_color",
                 **self._plot_values_config,
             )
-            for source in self._sources
+            for source in self._point_sources
         ]
 
-        self._sources[0].selected.on_change(
+        self._point_sources[0].selected.on_change(
             "indices", partial(self._on_value_selected, index=0)
         )
-        self._sources[1].selected.on_change(
+        self._point_sources[1].selected.on_change(
             "indices", partial(self._on_value_selected, index=1)
         )
-        self._sources[2].selected.on_change(
+        self._point_sources[2].selected.on_change(
             "indices", partial(self._on_value_selected, index=2)
         )
-        self._sources[3].selected.on_change(
+        self._point_sources[3].selected.on_change(
             "indices", partial(self._on_value_selected, index=3)
         )
 
@@ -361,14 +368,17 @@ class ProfileSlot(BaseView):
         self,
         title: str = "",
         data: list[tuple[str, dict]] | None = None,
-        visit=None,
+        visit: Visit | None = None,
     ):
         # clear previous content
         self.clear_selection()
         self._visit = visit
         self._parameter_data = []
 
-        for source in self._sources:
+        for source in self._point_sources:
+            source.data = {key: [] for key in self.source_fields}
+
+        for source in self._line_sources:
             source.data = {key: [] for key in self.source_fields}
 
         for source in self._axes_range_sources:
@@ -385,19 +395,35 @@ class ProfileSlot(BaseView):
         # get data, units, and ranges
         unit_to_range = {}
         axis_index = 0
-        for i, ((parameter_name, parameter_data), source, values) in enumerate(
-            zip(data, self._sources, self._values)
-        ):
+        for i, (
+            (parameter_name, parameter_data),
+            point_source,
+            line_source,
+            values,
+        ) in enumerate(zip(data, self._point_sources, self._line_sources, self._values)):
             if parameter_data is None:
                 self._parameter_data.append(None)
                 continue
 
-            source.data = parameter_data
+            point_source.data = parameter_data
+
+            if (
+                visit and (ctd_data := visit.ctd_data_for_parameter(parameter_name))
+            ) is not None and len(ctd_data):
+                line_source.data = {
+                    "x": list(ctd_data[parameter_name]),
+                    "y": list(ctd_data["DEPTH_CTD"]),
+                }
+            else:
+                line_source.data = parameter_data
+
             values.name = expand_abbreviation(parameter_name)
             self._parameter_data.append(parameter_data["data"])
 
             unit = parameter_data["unit"][0] if parameter_data["unit"] else ""
             x_values = [v for v in parameter_data["x"] if v is not None]
+            line_x_values = [v for v in line_source.data["x"] if v is not None]
+            x_values = set(x_values) | set(line_x_values)
 
             if not x_values:
                 continue
@@ -410,7 +436,7 @@ class ProfileSlot(BaseView):
 
     def _sync_profile_options(self):
         # Setting the visibility of elements according to parameter options
-        has_data = any(source.data.get("x") for source in self._sources)
+        has_data = any(source.data.get("x") for source in self._point_sources)
 
         for lines in self._lines:
             lines.visible = self._show_lines
@@ -528,7 +554,7 @@ class ProfileSlot(BaseView):
 
     def clear_selection(self):
         self._clear_called = True
-        for source in self._sources:
+        for source in self._point_sources:
             source.selected.indices = []
         self._clear_called = False
 
@@ -575,7 +601,7 @@ class ProfileSlot(BaseView):
             for value in updated_values
         }
 
-        for source, parameter_data in zip(self._sources, self._parameter_data):
+        for source, parameter_data in zip(self._point_sources, self._parameter_data):
             if parameter_data is None:
                 continue
 
@@ -629,7 +655,7 @@ class ProfileSlot(BaseView):
     def _on_values_selected(self):
         self._applying_highlight = True
         for index, (source, parameter_data) in enumerate(
-            zip(self._sources, self._parameter_data)
+            zip(self._point_sources, self._parameter_data)
         ):
             if parameter_data is None:
                 source.selected.indices = []

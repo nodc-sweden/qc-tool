@@ -54,16 +54,18 @@ def collect_log_messages(log: list):
     return log_messages
 
 
-def remove_lims(parts: tuple[str, ...]) -> tuple[str, ...]:
+def remove_lims_and_ctd(parts: tuple[str, ...]) -> tuple[str, ...]:
     if parts[-2:] == ("Raw_data", "data.txt"):
         return parts[:-2]
+    if parts[-1] == "data":
+        return parts[:-1]
     return parts
 
 
 def shortest_unique_paths(paths: list[Path]) -> dict[Path, str]:
     if not paths:
         return {}
-    effective_parts = {path: remove_lims(path.parts) for path in paths}
+    effective_parts = {path: remove_lims_and_ctd(path.parts) for path in paths}
     path_mapping = {path: parts[-1:] for path, parts in effective_parts.items()}
     collisions = True
     while collisions:

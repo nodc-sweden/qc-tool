@@ -26,12 +26,15 @@ class VisitInfoController:
         self._visits_model = visits_model
 
         self._visits_model.register_listener(
-            VisitsModel.VISIT_SELECTED, self._on_visit_selected
+            VisitsModel.VISIT_SELECTED, self._on_visit_selected_or_updated
+        )
+        self._visits_model.register_listener(
+            VisitsModel.UPDATED_VISITS, self._on_visit_selected_or_updated
         )
 
         self.visit_info_view: VisitInfoView = None
 
-    def _on_visit_selected(self):
+    def _on_visit_selected_or_updated(self):
         if visit := self._visits_model.selected_visit:
             metadata = [
                 (header, visit.common.get(key, ""))

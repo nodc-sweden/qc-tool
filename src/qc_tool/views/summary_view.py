@@ -27,7 +27,7 @@ class SummaryView(BaseView):
 
         self.map_view = MapView(map_controller, state.map)
 
-        self.file_view = FileView(file_controller, state.file)
+        self.file_view = FileView(file_controller, state.file, state.ctd_file)
         file_controller.file_view = self.file_view
 
         self._validation_view = ValidationLogView(
