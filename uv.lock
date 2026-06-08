@@ -681,11 +681,11 @@ wheels = [
 
 [[package]]
 name = "narwhals"
-version = "2.22.0"
+version = "2.22.1"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/9c/1c/c80cb7719721a44846c6301ef118434bae30a423924bfad3a47f16bdc064/narwhals-2.22.0.tar.gz", hash = "sha256:6486282bb7e4b4ab55963efbd8be1451b764cc4874b74d1fd625eba9dc60b86f", size = 417565 }
+sdist = { url = "https://files.pythonhosted.org/packages/62/3c/c4ef2164a71c1a63d7f1ae411c4082c5fa872405106db60a4b7114989ad7/narwhals-2.22.1.tar.gz", hash = "sha256:d62920805a0a43b7ff8b54b0c0d3142d796f8a9301836ada37e573d6a33cbcd9", size = 647493 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/1f/b6/e7cdde7b8e90d5dff25b622f95833ef26567ad184c977278b93a1cbd5717/narwhals-2.22.0-py3-none-any.whl", hash = "sha256:1421797ede01789cc1537619dbc3f36f840737240f748fdb24a60a0225fc80be", size = 453815 },
+    { url = "https://files.pythonhosted.org/packages/48/ca/36339329c4604adbcc99c899b7eb1ce1a555c499b6a6860757dc9bfed36d/narwhals-2.22.1-py3-none-any.whl", hash = "sha256:60567d774edf77db53906f89d9fbd164e66e56d66d388e1e6990f17ac33cfb53", size = 454815 },
 ]
 
 [[package]]
@@ -818,8 +818,8 @@ wheels = [
 
 [[package]]
 name = "ocean-data-qc"
-version = "1.1.3"
-source = { git = "https://github.com/nodc-sweden/ocean-data-qc?rev=v1.1.3#a87a74e246bad4f16bee4c77f0bf41baa8f7aeb4" }
+version = "1.1.4"
+source = { git = "https://github.com/nodc-sweden/ocean-data-qc?rev=v1.1.4#c29fcb6bc55c9a62b1ab8fba8d0dfad1869a6db7" }
 dependencies = [
     { name = "jinja2" },
     { name = "pandas" },
@@ -1325,7 +1325,7 @@ requires-dist = [
     { name = "nodc-codes", git = "https://github.com/nodc-sweden/nodc-codes?rev=v0.3.0" },
     { name = "nodc-station", git = "https://github.com/nodc-sweden/nodc-station?rev=v1.0.0" },
     { name = "nodc-statistics", git = "https://github.com/nodc-sweden/nodc-statistics?rev=v2025.1.1" },
-    { name = "ocean-data-qc", git = "https://github.com/nodc-sweden/ocean-data-qc?rev=v1.1.3" },
+    { name = "ocean-data-qc", git = "https://github.com/nodc-sweden/ocean-data-qc?rev=v1.1.4" },
     { name = "pandas", specifier = "==2.3.3" },
     { name = "pyproj", specifier = "==3.7.1" },
     { name = "sharkadm", git = "https://github.com/nodc-sweden/SHARKadm?rev=v3.4.0" },
