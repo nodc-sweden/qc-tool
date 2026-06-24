@@ -14,7 +14,6 @@ from qc_tool.views.base_view import BaseView
 
 _full_template = jinja2.Template("""
 <div class="visit-info-container">
-
     <div class="metadata-section">
         <table>
             {% for key, value in metadata %}
@@ -25,9 +24,15 @@ _full_template = jinja2.Template("""
             {% endfor %}
         </table>
     </div>
-
     <div class="log-section">
-
+        {% if tags %}
+        <fieldset class="tag-list">
+            <legend>Tags</legend>
+            {% for tag in tags %}
+            <div class="tag-banner">{{tag}}</div>
+            {% endfor %}
+        </fieldset>
+        {% endif %}
         <div class="collapsible-container">
 
             <!-- Hidden checkbox toggle -->
@@ -35,7 +40,6 @@ _full_template = jinja2.Template("""
 
             <!-- Clickable label -->
             <label for="toggle-log" class="toggle-label">
-
                 {% if logs %}
                     <img src="/qc_tool/static/images/warning.svg"
                          style="height:20px; vertical-align:middle; margin-right:8px;">
@@ -45,13 +49,10 @@ _full_template = jinja2.Template("""
                          style="height:20px; vertical-align:middle; margin-right:8px;">
                     (0)
                 {% endif %}
-
             </label>
-
             <!-- Collapsible content-->
             <div class="collapsible-content">
                 <div class="content-inner">
-
                     {% if logs %}
                         <ul>
                         {% for log in logs %}
@@ -64,14 +65,10 @@ _full_template = jinja2.Template("""
                     {% else %}
                         <p>No validation messages</p>
                     {% endif %}
-
                 </div>
             </div>
-
         </div>
-
     </div>
-
 </div>
 """)
 
@@ -91,7 +88,10 @@ class VisitInfoView(BaseView):
         )
 
     def update(self, metadata: list, logs: list[dict]):
-        self._div.text = _full_template.render(metadata=metadata, logs=logs)
+        tags = []
+        if self._visits_model.selected_visit.has_ctd_data:
+            tags.append("CTD Data")
+        self._div.text = _full_template.render(metadata=metadata, logs=logs, tags=tags)
 
     @property
     def layout(self):

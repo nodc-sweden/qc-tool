@@ -20,6 +20,7 @@ class MainController:
 
         self._visits_controller = VisitsController(
             self._state.file,
+            self._state.ctd_file,
             self._state.visits,
             self._state.filter,
             self._state.validation_log,
@@ -31,6 +32,7 @@ class MainController:
 
         self.summary_controller = SummaryController(
             self._state.file,
+            self._state.ctd_file,
             self._state.visits,
             self._state.map,
             self._state.validation_log,

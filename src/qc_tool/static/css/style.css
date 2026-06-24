@@ -129,3 +129,30 @@ input[type='checkbox'] {
     max-height: 400px;
     overflow-y: auto;
 }
+
+.tag-list {
+    border: 1px solid #d0d0d0;
+    border-radius: 4px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 4px;
+    padding: 4px 8px;
+    margin-bottom: 6px;
+}
+
+.tag-list legend {
+    font-size: 0.75em;
+    color: #888;
+    padding: 0 4px;
+}
+
+.tag-banner {
+    background-color: #d6e4f0;
+    color: #2c5f8a;
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-size: 0.8em;
+    font-weight: 500;
+    white-space: nowrap;
+}

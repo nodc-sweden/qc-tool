@@ -1,4 +1,5 @@
 from qc_tool.callback_queue import CallbackQueue
+from qc_tool.models.ctd_file_model import CtdFileModel
 from qc_tool.models.file_model import FileModel
 from qc_tool.models.filter_model import FilterModel
 from qc_tool.models.filtered_profiles_model import FilteredProfilesModel
@@ -17,6 +18,7 @@ class AppState:
         self._message_queue = CallbackQueue()
 
         self.file = FileModel(self._message_queue)
+        self.ctd_file = CtdFileModel(self._message_queue)
         self.visits = VisitsModel(self._message_queue)
         self.filter = FilterModel(
             self.file,

@@ -1,6 +1,7 @@
 import typing
 
 from qc_tool.data_transformation import shortest_unique_paths
+from qc_tool.models.ctd_file_model import CtdFileModel
 
 if typing.TYPE_CHECKING:
     from qc_tool.controllers.file_controller import FileController
@@ -26,11 +27,17 @@ from qc_tool.views.base_view import BaseView
 
 
 class FileView(BaseView):
-    def __init__(self, controller: "FileController", file_model: FileModel):
+    def __init__(
+        self,
+        controller: "FileController",
+        file_model: FileModel,
+        ctd_file_model: CtdFileModel,
+    ):
         self._controller = controller
         self._controller.file_view = self
 
         self._file_model = file_model
+        self._ctd_file_model = ctd_file_model
 
         self._load_header = Div(width=500, text="<h3>Load and save</h3>")
         self._loaded_file_label = Div(
@@ -48,8 +55,22 @@ class FileView(BaseView):
         self._select_data_button.on_click(self._on_select_data_button_clicked)
 
         self._add_to_existing = Switch(label="Add to loaded data", active=False)
-        self._load_file_section = Column(
+        self._load_data_section = Column(
             self._select_data_button, self._add_to_existing, styles={"margin-top": "20px"}
+        )
+
+        self._select_ctd_data_button = Button(
+            label="Select CTD data...",
+            icon=TablerIcon(icon_name="file-import", size="1.2em"),
+            disabled=True,
+        )
+        self._select_ctd_data_button.on_click(self._on_select_ctd_data_button_clicked)
+        self._load_ctd_file_section = Column(
+            self._select_ctd_data_button, styles={"margin-top": "20px"}
+        )
+
+        self._load_file_section = Row(
+            self._load_data_section, self._load_ctd_file_section
         )
 
         self._save_working_file_button = Button(
@@ -154,11 +175,30 @@ class FileView(BaseView):
             return
         selected_path = Path(selected_path)
         self._load_indicator.visible = True
-        self._loaded_file_label.text = "Loading..."
+        self._loaded_file_label.text = "Loading data..."
         curdoc().add_next_tick_callback(
             lambda: self._controller.load_file(
                 selected_path, self._add_to_existing.active
             )
+        )
+
+    def _on_select_ctd_data_button_clicked(self, event):
+        try:
+            root = tkinter.Tk()
+            root.iconify()
+            selected_path = tkinter.filedialog.askdirectory()
+            root.destroy()
+        except tkinter.TclError:
+            selected_path = None
+
+        if not selected_path:
+            return
+
+        selected_path = Path(selected_path)
+        self._load_indicator.visible = True
+        self._loaded_file_label.text = "Loading CTD data..."
+        curdoc().add_next_tick_callback(
+            lambda: self._controller.load_ctd_file(selected_path)
         )
 
     def _on_load_working_file_button_clicked(self, event):
@@ -174,7 +214,7 @@ class FileView(BaseView):
             return
         selected_path = Path(selected_path)
         self._load_indicator.visible = True
-        self._loaded_file_label.text = "Loading..."
+        self._loaded_file_label.text = "Loading working file..."
         curdoc().add_next_tick_callback(
             lambda: self._controller.load_working_file(
                 selected_path, self._file_model.data
@@ -204,9 +244,13 @@ class FileView(BaseView):
 
     def file_load_completed(self):
         self._load_indicator.visible = False
-        self._load_working_file_button.disabled = self._file_model.data is None
-        self._save_working_file_button.disabled = self._file_model.data is None
-        self._export_feedback_file_button.disabled = self._file_model.data is None
+        self._update_file_list()
+
+        no_data = self._file_model.data is None
+        self._select_ctd_data_button.disabled = no_data
+        self._load_working_file_button.disabled = no_data
+        self._save_working_file_button.disabled = no_data
+        self._export_feedback_file_button.disabled = no_data
 
         file_paths = self._file_model.file_paths
         short_names = shortest_unique_paths(file_paths)
@@ -221,20 +265,39 @@ class FileView(BaseView):
             buttons.append(button)
         self._save_file_buttons.children = buttons
 
-        if file_paths:
+    def feedback_load_completed(self):
+        self._load_indicator.visible = False
+        self._update_file_list()
+
+    def ctd_load_completed(self):
+        self._load_indicator.visible = False
+        self._update_file_list()
+
+    def _update_file_list(self):
+        file_paths = self._file_model.file_paths + self._ctd_file_model.file_paths
+        short_names = shortest_unique_paths(file_paths)
+
+        if self._file_model.file_paths:
             lines = "\n".join(
                 f"<span style='font-style: italic; display: block; line-height: 1.2;'"
                 f" onmouseover=\"this.style.background='#e0e0e0'\""
                 f" onmouseout=\"this.style.background=''\""
                 f" title='{path}'>{short_names[path]}</span>"
-                for path in file_paths
+                for path in self._file_model.file_paths
             )
             file_info = f"<label>Files:</label>{lines}"
+
+            if self._ctd_file_model.file_paths:
+                ctd_lines = "\n".join(
+                    f"<span style='font-style: italic; display: block; line-height: 1.2;'"
+                    f" onmouseover=\"this.style.background='#e0e0e0'\""
+                    f" onmouseout=\"this.style.background=''\""
+                    f" title='{path}'>{short_names[path]}</span>"
+                    for path in self._ctd_file_model.file_paths
+                )
+                file_info += f"<br /><label>CTD files:</label>{ctd_lines}"
         else:
             file_info = (
                 "<label>File:</label><p style='font-style: italic;'>No file loaded</p>"
             )
         self._loaded_file_label.text = file_info
-
-    def feedback_load_completed(self):
-        self._load_indicator.visible = False

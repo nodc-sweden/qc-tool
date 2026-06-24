@@ -36,7 +36,7 @@ class ProfileGridView(BaseView):
         self._manual_qc_model = manual_qc_model
 
         # Persistent layout container to allow dynamic, in-place updates
-        self._profiles = []
+        self._profiles: list[ProfileSlot] = []
         self._primary_plot = None
 
         self._column = Column(children=[], sizing_mode="stretch_both")

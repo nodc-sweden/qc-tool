@@ -19,8 +19,10 @@ from sharkadm import (
 from sharkadm import (
     controller as sharkadm_controller,
 )
+from sharkadm.controller import SHARKadmPolarsController
 
 from qc_tool.data_transformation import changes_report, prepare_data
+from qc_tool.models.ctd_file_model import CtdFileModel
 from qc_tool.models.file_model import FileModel
 from qc_tool.models.geo_info_model import GeoInfoModel
 from qc_tool.models.manual_qc_model import ManualQcModel
@@ -48,6 +50,7 @@ class FileController:
     def __init__(
         self,
         file_model: FileModel,
+        ctd_file_model: CtdFileModel,
         validation_log_model: ValidationLogModel,
         manual_qc_model: ManualQcModel,
         geo_info_model: GeoInfoModel,
@@ -56,6 +59,14 @@ class FileController:
         self._file_model.register_listener(FileModel.NEW_DATA, self._on_new_data)
         self._file_model.register_listener(FileModel.LOAD_ABORTED, self._on_load_aborted)
         self._file_model.register_listener(FileModel.UPDATED_DATA, self._on_feedback_load)
+
+        self._ctd_file_model = ctd_file_model
+        self._ctd_file_model.register_listener(
+            CtdFileModel.NEW_DATA, self._on_new_ctd_data
+        )
+        self._ctd_file_model.register_listener(
+            CtdFileModel.LOAD_ABORTED, self._on_ctd_load_aborted
+        )
 
         self._validation_log_model = validation_log_model
 
@@ -75,6 +86,10 @@ class FileController:
     @property
     def file_model(self):
         return self._file_model
+
+    @property
+    def ctd_file_model(self):
+        return self._ctd_file_model
 
     @property
     def ocean_shapefile(self):
@@ -112,9 +127,25 @@ class FileController:
             overlap = existing_keys & new_keys
             if overlap:
                 print(f"WARNING: {len(overlap)} visit_key(s) already loaded: {overlap}")
+
         self._file_model.add_data(data, file_path, add_to_existing)
+        self._ctd_file_model.clear_data()
+
         adm_logger.filter(log_types=[adm_logger.VALIDATION], level=">warning")
         self._validation_log_model.set_validation_log(adm_logger.data, add_to_existing)
+
+    def load_ctd_file(self, file_path: Path):
+        try:
+            controller = sharkadm_controller.get_polars_controller_with_data(file_path)
+        except Exception:  # noqa: BLE001
+            # Catching exceptions this broadly is not recommended, but sharkadm does not
+            # guarantee a specific exception.
+            self._ctd_file_model.no_new_data()
+            return
+
+        self._apply_ctd_transformers(controller)
+        data = controller.export(exporters.PolarsDataFrame())
+        self._ctd_file_model.add_data(data, file_path)
 
     def load_working_file(self, path, raw_data: pl.DataFrame):
         selected_path = Path(path)
@@ -145,6 +176,12 @@ class FileController:
 
     def _on_new_data(self):
         self.file_view.file_load_completed()
+
+    def _on_new_ctd_data(self):
+        self.file_view.ctd_load_completed()
+
+    def _on_ctd_load_aborted(self):
+        self.file_view.ctd_load_completed()
 
     def _on_load_aborted(self):
         self.file_view.file_load_completed()
@@ -199,7 +236,7 @@ class FileController:
     def _reset_validation_logs(self):
         adm_logger.reset_log()
 
-    def _apply_transformers(self, controller):
+    def _apply_transformers(self, controller: SHARKadmPolarsController):
         print("Running SHARKadm transformers...")
         t0 = time.perf_counter()
         for transformer, args, kwargs in (
@@ -235,6 +272,21 @@ class FileController:
 
         t1 = time.perf_counter()
         print(f"SHARKadm transformers finished ({t1 - t0:.3f} s.)")
+
+    def _apply_ctd_transformers(self, controller: SHARKadmPolarsController):
+        print("Running SHARKadm CTD transformers...")
+        t0 = time.perf_counter()
+        for transformer, args, kwargs in (
+            (transformers.AddVisitKeyProfile, (), {}),
+            (transformers.ExternalMapper, (), {"export_column": "QC_TOOL"}),
+        ):
+            tn_0 = time.perf_counter()
+            controller.transform(transformer(*args, **kwargs))
+            tn_1 = time.perf_counter()
+            print(f"\t{transformer.__name__}: {tn_1 - tn_0:.3f} s.")
+
+        t1 = time.perf_counter()
+        print(f"SHARKadm CTD transformers finished ({t1 - t0:.3f} s.)")
 
     def _define_validators_and_parameters(self):
         validators_and_parameters = (
@@ -554,14 +606,3 @@ def _apply_transformers(controller):
 
     t1 = time.perf_counter()
     print(f"SHARKadm transformers finished ({t1 - t0:.3f} s.)")
-
-
-if __name__ == "__main__":
-    file_path = r"C:/LenaV/code/w_qc-tool/LIMS testdata/jan_2024_klippt_metadatafel/2025-06-24 1630-2024-LANDSKOD 77-FARTYGSKOD 10/Raw_data/data.txt"  # noqa: E501
-    controller = sharkadm_controller.get_polars_controller_with_data(file_path)
-    _apply_transformers(controller=controller)
-    print(controller.data.columns)
-    data = controller.export(
-        exporters.PolarsDataFrame(header_as="PhysicalChemical", float_columns=False)
-    )
-    print(data.columns)
