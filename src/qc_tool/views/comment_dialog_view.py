@@ -131,10 +131,7 @@ class CommentDialogView(BaseView):
 
         no_flag_selected = self._qc_buttons.active is None
         category_not_selected = self._category_select.value == self.DEFAULT_CATEGORY_VALUE
-        no_comment_selected = self._category_select.value == self._controller.NO_COMMENT
-        if no_comment_selected:
-            self._comment_input.value = ""
-        self._comment_input.disabled = no_comment_selected or category_not_selected
+        self._comment_input.disabled = category_not_selected
 
         self._ok_button.disabled = no_flag_selected or category_not_selected
 
