@@ -88,7 +88,7 @@ class FileView(BaseView):
         self._load_working_file_button.on_click(self._on_load_working_file_button_clicked)
 
         self._working_state_section = Column(
-            Div(text="<i>Save or load you current working state:</i>"),
+            Div(text="<i>Save or load your current working state:</i>"),
             Row(self._save_working_file_button, self._load_working_file_button),
             styles={
                 "border": "1px solid #ccc",

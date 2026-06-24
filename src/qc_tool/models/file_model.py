@@ -23,7 +23,7 @@ class FileModel(BaseModel):
 
     def add_data(self, data, file_path: Path, add_to_existing: bool = False):
         if add_to_existing and self._data is not None:
-            self._data = pl.concat([self._data, data])
+            self._data = pl.concat([self._data, data], how="diagonal")
             self._file_paths.append(file_path)
         else:
             self._data = data
