@@ -141,11 +141,13 @@ class Visit:
         return self._ctd_data is not None
 
     def ctd_data_for_parameter(self, parameter: str):
-        if self._ctd_data is not None and parameter in self._ctd_data.columns:
-            columns = (
-                ["DEPTH_CTD", pl.col(parameter).cast(pl.Float64)]
-                if parameter != "DEPTH_CTD"
-                else [pl.col(parameter).cast(pl.Float64)]
-            )
-            return self._ctd_data.select(columns)
+        if self._ctd_data is not None:
+            ctd_parameter = parameter.replace("BTL", "CTD")
+            if ctd_parameter in self._ctd_data.columns:
+                columns = (
+                    ["DEPTH_CTD", pl.col(ctd_parameter).cast(pl.Float64)]
+                    if ctd_parameter != "DEPTH_CTD"
+                    else [pl.col(ctd_parameter).cast(pl.Float64)]
+                )
+                return self._ctd_data.select(columns)
         return None
