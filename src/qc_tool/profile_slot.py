@@ -411,7 +411,7 @@ class ProfileSlot(BaseView):
                 visit and (ctd_data := visit.ctd_data_for_parameter(parameter_name))
             ) is not None and len(ctd_data):
                 line_source.data = {
-                    "x": list(ctd_data[parameter_name]),
+                    "x": list(ctd_data[parameter_name.replace("BTL", "CTD")]),
                     "y": list(ctd_data["DEPTH_CTD"]),
                 }
             else:
