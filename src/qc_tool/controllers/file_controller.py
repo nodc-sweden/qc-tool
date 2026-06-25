@@ -278,6 +278,7 @@ class FileController:
         t0 = time.perf_counter()
         for transformer, args, kwargs in (
             (transformers.AddVisitKeyProfile, (), {}),
+            (transformers.AddMetadataToStandardFormat, (), {}),
             (transformers.ExternalMapper, (), {"export_column": "QC_TOOL"}),
         ):
             tn_0 = time.perf_counter()

@@ -1,5 +1,3 @@
-import re
-
 import polars as pl
 
 from qc_tool.feedback_service import FeedbackService
@@ -15,16 +13,6 @@ GEOLAYERS_AREATAG = {
     "ospar_subregions_20160418_3857_lagad": "area_tag",
     "helcom_subbasins_with_coastal_and_offshore_division_2022_level3_lagad": "level_34",
 }
-
-VISIT_KEY_PATTERN = re.compile(r"(\d{4}-\d{2}-\d{2})_(\d{2}:\d{2})_(\d+)_(.*)")
-
-
-def _normalized_visit_key(visit_key: str) -> str:
-    """This is a temporary method to normalize visit keys good enough for matching
-    LIMS and CTD."""
-    if match := VISIT_KEY_PATTERN.match(visit_key):
-        return f"{match.group(1)}_{match.group(3)}_{match.group(4)}".lower()
-    return visit_key.lower()
 
 
 class VisitsController:
@@ -75,23 +63,18 @@ class VisitsController:
 
     def _create_visits(self):
         # Extract list of all station visits
-        station_visits = sorted(self._file_model.data["visit_key"].unique())
+        station_visits = self._file_model.data[["visit_key", "SERNO"]].unique()
 
         # Initialize all visits
         visits = {
             visit_key: Visit(
                 visit_key,
                 self._file_model.data.filter(pl.col("visit_key") == visit_key),
-                self._ctd_file_model.data.filter(
-                    pl.col("visit_key").map_elements(
-                        _normalized_visit_key, return_dtype=pl.Utf8
-                    )
-                    == _normalized_visit_key(visit_key)
-                )
+                self._ctd_file_model.data.filter(pl.col("SERNO") == serno)
                 if self._ctd_file_model.data is not None
                 else None,
             )
-            for visit_key in station_visits
+            for visit_key, serno in station_visits.iter_rows()
         }
 
         return visits
