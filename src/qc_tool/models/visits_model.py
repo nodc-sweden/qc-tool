@@ -17,13 +17,23 @@ class VisitsModel(BaseModel):
         self._selected_visit = None
 
     def set_visits(self, visits: dict[str, Visit]):
-        self._visits = visits
+        self._visits = dict(
+            sorted(
+                visits.items(),
+                key=lambda item: item[1].datetime,
+            )
+        )
         self._filtered_visit_keys = None
         if self._visits:
             self._notify_listeners(self.NEW_VISITS)
 
     def update_visits(self, visits: dict[str, Visit]):
-        self._visits = visits
+        self._visits = dict(
+            sorted(
+                visits.items(),
+                key=lambda item: item[1].datetime,
+            )
+        )
         self._selected_visit = self._visits.get(self._selected_visit.visit_key)
         self._notify_listeners(self.UPDATED_VISITS)
 
@@ -54,9 +64,13 @@ class VisitsModel(BaseModel):
     def visits(self) -> dict[str, Visit]:
         if self._filtered_visit_keys is None:
             return self._visits
+        # always return visits sorted on date
         return {
             key: value
-            for key, value in self._visits.items()
+            for key, value in sorted(
+                self._visits.items(),
+                key=lambda item: item[1].datetime,
+            )
             if key in self._filtered_visit_keys
         }
 
@@ -76,9 +90,17 @@ class VisitsModel(BaseModel):
 
     @property
     def visit_keys(self) -> list[str]:
-        if self._filtered_visit_keys is not None:
-            return [visit for visit in self._visits if visit in self._filtered_visit_keys]
-        return list(self._visits.keys())
+        # always return visit keys sorted on date
+        keys = (
+            self._filtered_visit_keys
+            if self._filtered_visit_keys is not None
+            else self._visits.keys()
+        )
+
+        return sorted(
+            keys,
+            key=lambda visit_key: self._visits[visit_key].datetime,
+        )
 
     @property
     def years(self) -> set[int]:
