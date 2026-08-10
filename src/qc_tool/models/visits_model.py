@@ -74,6 +74,24 @@ class VisitsModel(BaseModel):
             if key in self._filtered_visit_keys
         }
 
+    def previous_visit_key(self) -> str | None:
+        if not self._selected_visit or not self.visit_keys:
+            return None
+
+        visit_keys = self.visit_keys
+        index = visit_keys.index(self._selected_visit.visit_key)
+
+        return visit_keys[(index - 1) % len(visit_keys)]
+
+    def next_visit_key(self) -> str | None:
+        if not self._selected_visit or not self.visit_keys:
+            return None
+
+        visit_keys = self.visit_keys
+        index = visit_keys.index(self._selected_visit.visit_key)
+
+        return visit_keys[(index + 1) % len(visit_keys)]
+
     def visit_by_index(self, index: int):
         return list(self._visits.values())[index]
 
@@ -101,6 +119,29 @@ class VisitsModel(BaseModel):
             keys,
             key=lambda visit_key: self._visits[visit_key].datetime,
         )
+
+    @property
+    def sernos(self) -> list[str]:
+        return [self._visits[visit_key].serno for visit_key in self.visit_keys]
+
+    @property
+    def station_names(self) -> list[str]:
+        return [self._visits[visit_key].station_name for visit_key in self.visit_keys]
+
+    @property
+    def visit_label_by_key(self) -> dict[str, str]:
+        return {
+            visit_key: (
+                f"{visit.serno} {visit.station_name} {visit.datetime.strftime('%Y-%m-%d %H:%M')}"  # noqa: E501
+                if visit.serno is not None
+                else visit_key
+            )
+            for visit_key, visit in self.visits.items()
+        }
+
+    @property
+    def visit_labels(self) -> list[str]:
+        return [self.visit_label_by_key[visit_key] for visit_key in self.visit_keys]
 
     @property
     def years(self) -> set[int]:

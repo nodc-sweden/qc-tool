@@ -100,6 +100,10 @@ class Visit:
         )
 
     @property
+    def serno(self) -> str:
+        return self._get_serno()
+
+    @property
     def visit_key(self) -> str:
         return self._visit_key
 
@@ -151,3 +155,17 @@ class Visit:
                 )
                 return self._ctd_data.select(columns)
         return None
+
+    def _get_serno(self) -> str:
+        """
+        this avoids missing errors/cases where a visit_key has >1 serno.
+        add a validator for this in sharkadm if not already exists.
+        """
+        if "SERNO" not in self._data.columns:
+            return ""
+
+        sernos = self._data.get_column("SERNO").drop_nulls().cast(pl.String).to_list()
+
+        sernos = sorted({serno for serno in sernos if serno})
+
+        return ", ".join(sernos)

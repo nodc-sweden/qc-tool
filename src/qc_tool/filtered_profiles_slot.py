@@ -262,7 +262,7 @@ class FilteredProfilesSlot(BaseView):
 
     def _init_statistics_plot(self):
         self._plot_line_statistics_config = {
-            "line_width": 4,
+            "line_width": 2,
             "color": "black",
             "alpha": 0.3,
         }

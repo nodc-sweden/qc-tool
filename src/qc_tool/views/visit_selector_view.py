@@ -36,7 +36,7 @@ class VisitSelectorView(BaseView):
             button_type="default",
             min_width=300,
             max_width=width,
-            menu=self._visits_model.visit_keys,
+            menu=self._visit_menu(),
         )
         self._visits_dropdown.on_click(self._on_visit_dropdown_changed)
         self._layout = Row(
@@ -51,28 +51,31 @@ class VisitSelectorView(BaseView):
         self._controller.set_visit(station_visit)
 
     def _on_previous_button_clicked(self):
-        station_index = (
-            self._visits_dropdown.menu.index(self._visits_dropdown.label) - 1
-        ) % len(self._visits_dropdown.menu)
-        station_visit = self._visits_dropdown.menu[station_index]
-        self._controller.set_visit(station_visit)
+        self._controller.set_visit(self._visits_model.previous_visit_key())
 
     def _on_next_button_clicked(self):
-        station_index = (
-            self._visits_dropdown.menu.index(self._visits_dropdown.label) + 1
-        ) % len(self._visits_dropdown.menu)
-        station_visit = self._visits_dropdown.menu[station_index]
-        self._controller.set_visit(station_visit)
+        self._controller.set_visit(self._visits_model.next_visit_key())
+
+    def _visit_menu(self):
+        return list(
+            zip(
+                self._visits_model.visit_labels,
+                self._visits_model.visit_keys,
+            )
+        )
 
     def update_visits(self):
-        self._visits_dropdown.menu = self._visits_model.visit_keys
+        self._visits_dropdown.menu = self._visit_menu()
 
     @property
     def layout(self):
         return self._layout
 
     def set_visit(self, station_visit: str | None):
-        self._visits_dropdown.label = station_visit
-
-    def set_visits(self, visits):
-        self._visits_dropdown.menu = visits
+        if station_visit is None:
+            self._visits_dropdown.label = "Select visit"
+        else:
+            self._visits_dropdown.label = self._visits_model.visit_label_by_key.get(
+                station_visit,
+                station_visit,
+            )
