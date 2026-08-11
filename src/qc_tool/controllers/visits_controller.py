@@ -61,23 +61,27 @@ class VisitsController:
         self._visits_model.update_visits(visits)
         self._build_feedback_service()
 
+    def _create_visit(self, visit_key: str):
+        visit_data = self._file_model.data.filter(pl.col("visit_key") == visit_key)
+
+        sernos = self._get_visit_sernos(visit_data)
+
+        ctd_data = (
+            self._ctd_file_model.data.filter(pl.col("SERNO").is_in(sernos))
+            if self._ctd_file_model.data is not None and sernos
+            else None
+        )
+
+        return Visit(
+            visit_key,
+            visit_data,
+            ctd_data,
+        )
+
     def _create_visits(self):
-        # Extract list of all station visits
-        station_visits = self._file_model.data[["visit_key", "SERNO"]].unique()
+        visit_keys = self._file_model.data["visit_key"].unique()
 
-        # Initialize all visits
-        visits = {
-            visit_key: Visit(
-                visit_key,
-                self._file_model.data.filter(pl.col("visit_key") == visit_key),
-                self._ctd_file_model.data.filter(pl.col("SERNO") == serno)
-                if self._ctd_file_model.data is not None
-                else None,
-            )
-            for visit_key, serno in station_visits.iter_rows()
-        }
-
-        return visits
+        return {visit_key: self._create_visit(visit_key) for visit_key in visit_keys}
 
     def _on_new_visits(self):
         self._visits_model.set_visit(self._visits_model.first_visit_or_none())
@@ -94,10 +98,8 @@ class VisitsController:
     def _update_visit(self, visit_key: str | None):
         if visit_key is None:
             return self._visits_model.visits
-        visit = Visit(
-            visit_key, self._file_model.data.filter(pl.col("visit_key") == visit_key)
-        )
-        return visit
+
+        return self._create_visit(visit_key)
 
     def _on_new_validation_log(self):
         self._build_feedback_service()
@@ -118,3 +120,11 @@ class VisitsController:
             visit.validation_logs = self._feedback_service.get_logs_for_visit(visit)
 
         self._visits_model._notify_listeners(VisitsModel.FEEDBACK_READY)
+
+    def _get_visit_sernos(self, visit_data: pl.DataFrame) -> list[str]:
+        if "SERNO" not in visit_data.columns:
+            return []
+
+        sernos = visit_data.get_column("SERNO").drop_nulls().cast(pl.String).to_list()
+
+        return sorted({serno for serno in sernos if serno})
