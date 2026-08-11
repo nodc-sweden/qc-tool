@@ -20,7 +20,7 @@ class VisitsModel(BaseModel):
         self._visits = dict(
             sorted(
                 visits.items(),
-                key=lambda item: item[1].datetime,
+                key=lambda item: self._visit_sort_key(item[1]),
             )
         )
         self._filtered_visit_keys = None
@@ -31,7 +31,7 @@ class VisitsModel(BaseModel):
         self._visits = dict(
             sorted(
                 visits.items(),
-                key=lambda item: item[1].datetime,
+                key=lambda item: self._visit_sort_key(item[1]),
             )
         )
         self._selected_visit = self._visits.get(self._selected_visit.visit_key)
@@ -56,6 +56,12 @@ class VisitsModel(BaseModel):
         }
         self._notify_listeners(self.FILTER_APPLIED)
 
+    def _visit_sort_key(self, visit: Visit):
+        return (
+            visit.datetime is None,
+            visit.datetime,
+        )
+
     @property
     def selected_visit(self) -> Visit:
         return self._selected_visit
@@ -67,10 +73,7 @@ class VisitsModel(BaseModel):
         # always return visits sorted on date
         return {
             key: value
-            for key, value in sorted(
-                self._visits.items(),
-                key=lambda item: item[1].datetime,
-            )
+            for key, value in self._visits.items()
             if key in self._filtered_visit_keys
         }
 
@@ -108,17 +111,14 @@ class VisitsModel(BaseModel):
 
     @property
     def visit_keys(self) -> list[str]:
-        # always return visit keys sorted on date
-        keys = (
-            self._filtered_visit_keys
-            if self._filtered_visit_keys is not None
-            else self._visits.keys()
-        )
+        if self._filtered_visit_keys is None:
+            return list(self._visits.keys())
 
-        return sorted(
-            keys,
-            key=lambda visit_key: self._visits[visit_key].datetime,
-        )
+        return [
+            visit_key
+            for visit_key in self._visits
+            if visit_key in self._filtered_visit_keys
+        ]
 
     @property
     def sernos(self) -> list[str]:
@@ -130,14 +130,17 @@ class VisitsModel(BaseModel):
 
     @property
     def visit_label_by_key(self) -> dict[str, str]:
-        return {
-            visit_key: (
-                f"{visit.serno} {visit.station_name} {visit.datetime.strftime('%Y-%m-%d %H:%M')}"  # noqa: E501
-                if visit.serno is not None
-                else visit_key
-            )
-            for visit_key, visit in self.visits.items()
-        }
+        labels = {}
+
+        for visit_key, visit in self.visits.items():
+            if visit.serno and visit.datetime is not None:
+                labels[visit_key] = (
+                    f"{visit.serno} {visit.station_name} {visit.datetime:%Y-%m-%d %H:%M}"
+                )
+            else:
+                labels[visit_key] = visit_key
+
+        return labels
 
     @property
     def visit_labels(self) -> list[str]:
