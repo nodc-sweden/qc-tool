@@ -19,7 +19,7 @@ from sharkadm import (
 from sharkadm import (
     controller as sharkadm_controller,
 )
-from sharkadm.controller import SHARKadmPolarsController
+from sharkadm.controller import SHARKadmPolarsController, get_polars_controller_with_data
 
 from qc_tool.data_transformation import changes_report, prepare_data
 from qc_tool.models.ctd_file_model import CtdFileModel
@@ -167,6 +167,18 @@ class FileController:
             file_path, separator="\t"
         )
 
+    def save_dv_template_for_source(self, source_path: Path):
+        qcdata = self._file_model.data.filter(pl.col("source") == str(source_path))
+        cc = get_polars_controller_with_data(qcdata)
+        if "DvTemplate" in cc.data["data_holder_name"][0]:
+            cc.export(exporters.ExportDvTemplateWithQcResult(source_path, open_file=True))
+        elif "LIMS" in cc.data["data_holder_name"][0].upper():
+            cc.export(
+                exporters.LimsExportDvTemplateWithQcResult(source_path, open_file=True)
+            )
+        else:
+            print("No export available for current data holder format")
+
     def save_changed_data(self, file_path: Path):
         changes_report(self._file_model.data).write_excel(
             file_path,
@@ -241,6 +253,7 @@ class FileController:
         t0 = time.perf_counter()
         for transformer, args, kwargs in (
             (transformers.AddCtdKust, (), {}),
+            (transformers.AddDataHolderName, (), {}),
             (transformers.PolarsRemoveNonDataLines, (), {}),
             (transformers.PolarsReplaceCommaWithDot, (), {}),
             (multi_transformers.DateTimePolars, (), {"strict": False}),
