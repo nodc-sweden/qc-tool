@@ -25,6 +25,7 @@ class FileModel(BaseModel):
         if add_to_existing and self._data is not None:
             self._data = pl.concat([self._data, data], how="diagonal")
             self._file_paths.append(file_path)
+            print(self._data.columns)
         else:
             self._data = data
             self._file_paths = [file_path]

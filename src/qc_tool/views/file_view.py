@@ -107,6 +107,27 @@ class FileView(BaseView):
         self._export_feedback_file_button.on_click(
             self._on_export_feedback_button_clicked
         )
+        # La till DV export-knapp samt grupperade knapparna
+        self._save_dv_template_file_button = Button(
+            label="Save DV template file...",
+            icon=TablerIcon(icon_name="file-export", size="1.2em"),
+            disabled=True,
+            styles={"margin-top": "20px"},
+        )
+        self._save_dv_template_file_button.on_click(
+            self._on_save_dv_template_file_button_clicked
+        )
+
+        self._export_file_section = Column(
+            Div(text="<i>Export your current feedback file or DV template QC file:</i>"),
+            Row(self._export_feedback_file_button, self._save_dv_template_file_button),
+            styles={
+                "border": "1px solid #ccc",
+                "padding": "5px",
+                "border-radius": "4px",
+                "margin-top": "20px",
+            },
+        )
 
         self._load_indicator = Div(
             width=50,
@@ -129,14 +150,28 @@ class FileView(BaseView):
             styles={"width": "fit-content", "height": "fit-content"},
         )
 
+        self._save_dv_template_file_buttons = Column()
+        self._save_dv_template_selection_dialog = Dialog(
+            title="Save dv template file",
+            content=self._save_dv_template_file_buttons,
+            visible=False,
+            closable=True,
+            minimizable=False,
+            maximizable=False,
+            collapsible=False,
+            pinnable=False,
+            styles={"width": "fit-content", "height": "fit-content"},
+        )
+
         self._layout = Column(
             self._load_header,
             self._loaded_file_label,
             self._load_indicator,
             self._load_file_section,
             self._working_state_section,
-            self._export_feedback_file_button,
+            self._export_file_section,
             self._save_selection_dialog,
+            self._save_dv_template_selection_dialog,
         )
 
     def _on_save_working_file_button_clicked(self, event):
@@ -161,6 +196,15 @@ class FileView(BaseView):
         if not selected_path:
             return
         self._controller.save_data_for_source(source_path, Path(selected_path))
+
+    def _on_save_dv_template_file_button_clicked(self, event):
+        if len(self._file_model.file_paths) > 1:
+            self._save_dv_template_selection_dialog.visible = True
+            return
+        self._save_dv_template_file(self._file_model.file_paths[0])
+
+    def _save_dv_template_file(self, source_path: Path):
+        self._controller.save_dv_template_for_source(source_path)
 
     def _on_select_data_button_clicked(self, event):
         try:
@@ -251,6 +295,7 @@ class FileView(BaseView):
         self._load_working_file_button.disabled = no_data
         self._save_working_file_button.disabled = no_data
         self._export_feedback_file_button.disabled = no_data
+        self._save_dv_template_file_button.disabled = no_data
 
         file_paths = self._file_model.file_paths
         short_names = shortest_unique_paths(file_paths)
@@ -264,6 +309,16 @@ class FileView(BaseView):
             button.on_click(lambda event, p=path: self._save_file(p))
             buttons.append(button)
         self._save_file_buttons.children = buttons
+
+        dv_buttons = []
+        for path in file_paths:
+            dv_button = Button(
+                label=short_names[path],
+                icon=TablerIcon(icon_name="device-floppy", size="1.2em"),
+            )
+            dv_button.on_click(lambda event, p=path: self._save_dv_template_file(p))
+            dv_buttons.append(dv_button)
+        self._save_dv_template_file_buttons.children = dv_buttons
 
     def feedback_load_completed(self):
         self._load_indicator.visible = False
