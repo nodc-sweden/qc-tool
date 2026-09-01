@@ -43,7 +43,6 @@ class ParameterSelectorController:
         self._parameters_model.set_default_parameters()
 
     def _on_visit_selected(self):
-        self._parameters_model.reset_parameter_data()
         self._parameters_model.available_parameters = (
             (self._visits_model.selected_visit.parameters)
             if self._visits_model.selected_visit

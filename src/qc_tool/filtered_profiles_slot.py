@@ -1,7 +1,6 @@
 from typing import Self
 
 import pandas as pd
-from bokeh.colors import RGB
 from bokeh.events import MenuItemClick
 from bokeh.layouts import column
 from bokeh.models import (
@@ -238,9 +237,6 @@ class FilteredProfilesSlot(BaseView):
 
     def _init_background(self):
         # Add sea level and sky
-        self._sky = self._figure.image_url(
-            url=["qc_tool/static/images/gull.png"], x=0, y=-500
-        )
         self._sea_level = BoxAnnotation(
             bottom=0, fill_color="lightskyblue", fill_alpha=0.10
         )
@@ -248,9 +244,9 @@ class FilteredProfilesSlot(BaseView):
         self._figure.add_layout(self._sea_level)
 
         # Add ocean floor
-        self._ocean_floor = BoxAnnotation(fill_color=RGB(60, 25, 0), fill_alpha=0.50)
-        self._ocean_floor.level = "underlay"
-        self._ocean_floor.visible = False
+        self._ocean_floor = Span(
+            location=0, dimension="width", line_width=2, line_color="brown"
+        )
         self._figure.add_layout(self._ocean_floor)
 
     def _parameter_selected(self, event: MenuItemClick):
@@ -337,7 +333,6 @@ class FilteredProfilesSlot(BaseView):
         self._statistics_source.data = {key: [] for key in self.statistics_source_fields}
         self._ocean_floor.visible = False
         self._sea_level.visible = False
-        self._sky.visible = False
         self._no_data_label.visible = True
 
     def set_data(
@@ -388,9 +383,8 @@ class FilteredProfilesSlot(BaseView):
         self._ocean_floor.visible = self._show_bounds and has_data
         self._no_data_label.visible = not has_data
         self._sea_level.visible = self._show_bounds and has_data
-        self._sky.visible = self._show_bounds and has_data
         if self._visit is not None:
-            self._ocean_floor.top = max(
+            self._ocean_floor.location = max(
                 d
                 for d in [self._visit.water_depth, self._visit.max_depth, 0]
                 if d is not None

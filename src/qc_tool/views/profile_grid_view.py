@@ -1,20 +1,18 @@
 import typing
+from time import perf_counter
 
 from qc_tool.models.manual_qc_model import ManualQcModel
 
 if typing.TYPE_CHECKING:
     from qc_tool.controllers.profile_grid_controller import ProfileGridController
 
-import polars as pl
 from bokeh.models import Column, Row
 from ocean_data_qc import statistic
-from ocean_data_qc.fyskem.qc_flag import QC_FLAG_CSS_COLORS, QcFlag
-from ocean_data_qc.fyskem.qc_flags import QcFlags
 
 from qc_tool.models.parameters_model import ParametersModel
 from qc_tool.models.profiles_grid_model import ProfileGridModel
 from qc_tool.models.visits_model import VisitsModel
-from qc_tool.profile_slot import ProfileSlot
+from qc_tool.profile_slot import ProfileSlot, SlotConfig
 from qc_tool.views.base_view import BaseView
 
 
@@ -115,134 +113,124 @@ class ProfileGridView(BaseView):
             profile.update_colors(updated_values)
 
     def update_grid_content(self, start_index: int = 0):
+        t0 = perf_counter()
+        visit = self._visits_model.selected_visit
+        if visit:
+            water_depth = (
+                visit.water_depth if visit.water_depth is not None else visit.max_depth
+            )
+            max_depth = visit.max_depth
+        else:
+            water_depth = None
+            max_depth = None
+
         empty_slots = [""] * max(
             self._profile_grid_model.number_of_profiles
             - len(self._parameters_model.selected_parameters),
             0,
         )
-        parameters = self._parameters_model.selected_parameters + empty_slots
+        requested_slot_parameters = (
+            self._parameters_model.selected_parameters + empty_slots
+        )
+        for n, (slot, parameters) in enumerate(
+            zip(self._profiles, requested_slot_parameters)
+        ):
+            configuration = self._get_slot_configuration(parameters)
+            slot._configuration = configuration
 
-        for n, (profile, parameter) in enumerate(zip(self._profiles, parameters)):
             if n < start_index:
                 continue
-            if "+" in parameter:
-                parameter_components = [
-                    component.strip() for component in parameter.split("+")
-                ]
-                data = [
-                    (component, self._load_parameter(component)[0])
-                    for component in parameter_components
-                ]
-                profile.set_data(
-                    parameter,
-                    data,
-                    visit=self._visits_model.selected_visit,
-                )
-            else:
-                parameter_data, parameter_statistics = self._load_parameter(parameter)
-                profile.set_data(
-                    parameter,
-                    [(parameter, parameter_data)] if parameter else [],
-                    self._visits_model.selected_visit,
-                )
-                if self._visits_model.selected_visit:
-                    water_depth = (
-                        self._visits_model.selected_visit.water_depth
-                        if self._visits_model.selected_visit.water_depth is not None
-                        else self._visits_model.selected_visit.max_depth
-                    )
-                else:
-                    water_depth = None
-                profile.update_statistics(
-                    parameter_statistics=parameter_statistics,
-                    water_depth=water_depth,
-                )
-
-    def _load_parameter(self, parameter):
-        if (
-            parameter not in self._parameters_model.parameter_data
-            and self._visits_model.selected_visit is not None
-        ):
-            parameter_data = self._visits_model.selected_visit.data.filter(
-                pl.col("parameter") == parameter
-            ).sort("DEPH")
-
-            if "quality_flag_long" not in parameter_data.columns:
-                parameter_data = parameter_data.with_columns(
-                    quality_flag_long=pl.col("quality_flag").map_elements(
-                        lambda x: str(QcFlags(QcFlag.parse(x), None, None, None)),
-                        return_dtype=pl.Utf8,
+            slot_data = []
+            for parameter in slot._configuration.parameters:
+                parameter_data = self._get_parameter_data(parameter)
+                slot_data.append(
+                    (
+                        parameter,
+                        parameter_data,
+                        visit.ctd_data_for_parameter(parameter),
                     )
                 )
-
-            parameter_data = parameter_data.with_columns(
-                quality_flag=pl.struct("quality_flag_long").map_elements(
-                    lambda row: QcFlags.from_string(row["quality_flag_long"]).total.value,
-                    return_dtype=pl.Utf8,
-                )
+            slot.set_data(
+                title=parameters,
+                data=slot_data,
+                max_depth=max_depth,
+                water_depth=water_depth,
             )
-
-            qc_flags = list(map(QcFlags.from_string, parameter_data["quality_flag_long"]))
-
-            colors = [
-                QC_FLAG_CSS_COLORS.get(QcFlag.parse(flag))
-                for flag in parameter_data["quality_flag"]
-            ]
-
-            line_colors = [
-                "black" if flags.incoming.value != flags.total.value else "none"
-                for flags in qc_flags
-            ]
-
-            if parameter_data.is_empty():
-                source_data = None
-            else:
-                source_data = {
-                    "x": list(parameter_data["value"]),
-                    "unit": list(parameter_data["unit"]),
-                    "y": list(parameter_data["DEPH"]),
-                    "color": colors,
-                    "line_color": line_colors,
-                    "qc": [f"{flags.total} ({flags.total.value})" for flags in qc_flags],
-                    "qc_incoming": [
-                        f"{flags.incoming} ({flags.incoming.value})" for flags in qc_flags
-                    ],
-                    "qc_automatic": [
-                        f"{flags.total_automatic} {flags.total_automatic_name}"
-                        for flags in qc_flags
-                    ],
-                    "qc_manual": [
-                        f"{flags.manual} ({flags.manual.value})" for flags in qc_flags
-                    ],
-                    "data": parameter_data,
-                }
-
-            if None in (self._visits_model.selected_visit.sea_basin, source_data):
-                parameter_statistics = None
-            else:
-                statistics_parameter = parameter
-
-                parameter_statistics = (
-                    statistic.get_profile_statistics_for_parameter_and_sea_basin(
-                        statistics_parameter,
-                        self._visits_model.selected_visit.sea_basin,
-                        self._visits_model.selected_visit.datetime,
-                        statistics=(
-                            "median",
-                            "25p",
-                            "75p",
-                            "min",
-                            "max",
-                            "flag2_lower",
-                            "flag2_upper",
-                            "flag3_lower",
-                            "flag3_upper",
-                        ),
-                    )
-                )
-            self._parameters_model.parameter_data[parameter] = (
-                source_data,
-                parameter_statistics,
+            statistics_parameter = self._get_statistics_parameter(
+                slot._configuration.parameters
             )
+            parameter_statistics = (
+                self._get_parameter_statistics(statistics_parameter)
+                if slot.has_data
+                else None
+            )
+            slot.update_statistics(
+                parameter_statistics=parameter_statistics,
+                water_depth=water_depth,
+            )
+        print(
+            f"ProfileGridView.update_grid_content {n - start_index}",
+            f"slots in {perf_counter() - t0:.4f} sec",
+        )
 
-        return self._parameters_model.parameter_data.get(parameter, (None, None))
+    def _get_parameter_data(self, parameter):
+        visit = self._visits_model.selected_visit
+
+        if visit is None:
+            return None
+
+        return visit.parameter_data(parameter)
+
+    def _get_parameter_statistics(self, parameter):
+        visit = self._visits_model.selected_visit
+
+        if visit is None:
+            return None
+        if None in (visit.sea_basin, visit.datetime):
+            return None
+
+        parameter_statistics = (
+            statistic.get_profile_statistics_for_parameter_and_sea_basin(
+                parameter,
+                visit.sea_basin,
+                visit.datetime,
+                statistics=(
+                    "median",
+                    "25p",
+                    "75p",
+                    "min",
+                    "max",
+                    "flag2_lower",
+                    "flag2_upper",
+                    "flag3_lower",
+                    "flag3_upper",
+                ),
+            )
+        )
+
+        return parameter_statistics
+
+    def _get_statistics_parameter(self, parameter_components):
+        if len(parameter_components) == 1:
+            return parameter_components[0]
+
+        if len(parameter_components) != 2:
+            return None
+
+        bases = {
+            parameter.removesuffix("_CTD").removesuffix("_BTL")
+            for parameter in parameter_components
+        }
+
+        if len(bases) == 1:
+            return bases.pop().lower()
+
+        return None
+
+    def _get_slot_configuration(self, parameter: str) -> SlotConfig:
+        if not parameter:
+            return SlotConfig(())
+
+        components = tuple(component.strip() for component in parameter.split("+"))
+
+        return SlotConfig(components)

@@ -43,6 +43,7 @@ class VisitsBrowserController:
             self._state.profile_grid,
             self._state.parameters,
             self._state.manual_qc,
+            self._state.visits,
         )
         self.filtered_profiles_controller = FilteredProfilesController(
             self._state.file,

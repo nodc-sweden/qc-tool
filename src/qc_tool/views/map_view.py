@@ -91,10 +91,16 @@ class MapView(BaseView):
         return self._map
 
     def _station_selected_callback(self, attr, old, new):
-        if new:
-            selected_index = new[0]
-            station_visit = self._map_model.unselected.data["visit_keys"][selected_index]
-            self._controller.select_visit(station_visit)
+        # only trigger if new difiers from old
+        if old == new:
+            return
+
+        if not new:
+            return
+
+        selected_index = new[0]
+        station_visit = self._map_model.unselected.data["visit_keys"][selected_index]
+        self._controller.select_visit(station_visit)
 
     def set_position(self, x_start, x_end, y_start, y_end):
         self._map.x_range.start = x_start
