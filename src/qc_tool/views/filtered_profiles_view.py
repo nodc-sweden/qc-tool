@@ -1,4 +1,5 @@
 import typing
+from time import perf_counter
 
 from qc_tool.models.manual_qc_model import ManualQcModel
 
@@ -80,6 +81,7 @@ class FilteredProfilesView(BaseView):
             profile.update_colors(updated_values)
 
     def update_grid_content(self, flag: str):
+        t0 = perf_counter()
         if self._visits_model.selected_visit is None:
             return
         for i, profile in enumerate(self._profiles):
@@ -126,6 +128,10 @@ class FilteredProfilesView(BaseView):
                 profile._parameter_dropdown.menu = (
                     self._visits_model.selected_visit.parameters
                 )
+        print(
+            f"filtered profiles update_grid_content() {i}",
+            f"parameters in {perf_counter() - t0}",
+        )
 
     def _load_parameter(self, parameter):
         if self._visits_model.selected_visit is not None:

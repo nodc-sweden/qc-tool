@@ -1,6 +1,7 @@
 from qc_tool.models.manual_qc_model import ManualQcModel
 from qc_tool.models.parameters_model import ParametersModel
 from qc_tool.models.profiles_grid_model import ProfileGridModel
+from qc_tool.models.visits_model import VisitsModel
 from qc_tool.views.profile_grid_view import ProfileGridView
 
 
@@ -10,6 +11,7 @@ class ProfileGridController:
         profile_grid_model: ProfileGridModel,
         parameters_model: ParametersModel,
         manual_qc_model: ManualQcModel,
+        visits_model: VisitsModel,
     ):
         self._profile_grid_model = profile_grid_model
         self._profile_grid_model.register_listener(
@@ -18,8 +20,8 @@ class ProfileGridController:
 
         self._parameters_model = parameters_model
         self._parameters_model.register_listener(
-            (ParametersModel.NEW_SELECTION, ParametersModel.NEW_PARAMETER_DATA),
-            self._on_new_selection,
+            ParametersModel.NEW_SELECTION,
+            self._on_grid_content_changed,
         )
 
         self._manual_qc_model = manual_qc_model
@@ -27,9 +29,15 @@ class ProfileGridController:
             ManualQcModel.QC_PERFORMED, self._on_qc_performed
         )
 
+        self._visits_model = visits_model
+        self._visits_model.register_listener(
+            VisitsModel.VISIT_SELECTED,
+            self._on_grid_content_changed,
+        )
+
         self.profile_grid_view: ProfileGridView = None
 
-    def _on_new_selection(self):
+    def _on_grid_content_changed(self):
         if self.profile_grid_view is None:
             return
         self.profile_grid_view.update_grid_content()

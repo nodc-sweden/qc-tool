@@ -20,9 +20,12 @@ class MapModel(BaseModel):
         self._data_source.data = points
 
     def set_selection(self, visit_keys: list[str]):
-        self._data_source.selected.indices = [
+        new_indices = [
             self._data_source.data["visit_keys"].index(key) for key in visit_keys
         ]
+        # only update if indices differ
+        if self._data_source.selected.indices != new_indices:
+            self._data_source.selected.indices = new_indices
 
     @property
     def unselected(self):

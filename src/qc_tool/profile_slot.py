@@ -1,8 +1,9 @@
+from dataclasses import dataclass
 from functools import partial
 from typing import Self
 
 import pandas as pd
-from bokeh.colors import RGB
+import polars as pl
 from bokeh.core import enums
 from bokeh.layouts import column
 from bokeh.models import (
@@ -26,7 +27,6 @@ from ocean_data_qc.fyskem.qc_flag import QC_FLAG_CSS_COLORS
 
 from qc_tool.models.manual_qc_model import ManualQcModel
 from qc_tool.views.base_view import BaseView
-from qc_tool.visit import Visit
 
 PARAMETER_ABBREVIATIONS = {
     "ALKY": "Alkalinity",
@@ -70,6 +70,11 @@ class ProfileData:
         self.water_depth = 250
 
 
+@dataclass(frozen=True)
+class SlotConfig:
+    parameters: tuple[str, ...]
+
+
 class ProfileSlot(BaseView):
     _width = 300
     _height = 400
@@ -110,10 +115,12 @@ class ProfileSlot(BaseView):
             ManualQcModel.VALUES_SELECTED, self._on_values_selected
         )
 
-        self._visit = None
         self._parameter_data = []
+        self._parameters = ()
+        self._configuration = SlotConfig(parameters=())
         self._show_lines = True
         self._show_bounds = True
+        self._has_data = False
         self._clear_called = False
         self._applying_highlight = False
 
@@ -279,9 +286,6 @@ class ProfileSlot(BaseView):
 
     def _init_background(self):
         # Add sea level and sky
-        self._sky = self._figure.image_url(
-            url=["qc_tool/static/images/gull.png"], x=0, y=-500
-        )
         self._sea_level = BoxAnnotation(
             bottom=0, fill_color="lightskyblue", fill_alpha=0.10
         )
@@ -289,9 +293,9 @@ class ProfileSlot(BaseView):
         self._figure.add_layout(self._sea_level)
 
         # Add ocean floor
-        self._ocean_floor = BoxAnnotation(fill_color=RGB(60, 25, 0), fill_alpha=0.50)
-        self._ocean_floor.level = "underlay"
-        self._ocean_floor.visible = False
+        self._ocean_floor = Span(
+            location=0, dimension="width", line_width=2, line_color="brown"
+        )
         self._figure.add_layout(self._ocean_floor)
 
     def _init_statistics_plot(self):
@@ -367,52 +371,36 @@ class ProfileSlot(BaseView):
     def set_data(
         self,
         title: str = "",
-        data: list[tuple[str, dict]] | None = None,
-        visit: Visit | None = None,
+        data: list[tuple[str, dict | None, pl.DataFrame | None]] | None = None,
+        max_depth: float | None = None,
+        water_depth: float | None = None,
     ):
-        # clear previous content
-        self.clear_selection()
-        self._visit = visit
+
         self._parameter_data = []
-
-        for source in self._point_sources:
-            source.data = {key: [] for key in self.source_fields}
-
-        for source in self._line_sources:
-            source.data = {key: [] for key in self.source_fields}
-
-        for source in self._axes_range_sources:
-            source.data = {
-                key: [] for key in ["range_name", "x_min", "x_max", "y_min", "y_max"]
-            }
-
-        self._statistics_source.data = {key: [] for key in self.statistics_source_fields}
-
-        self._reset_x_axes()
-
+        data = data or []
         self._figure.title.text = expand_abbreviation(title)
-
         # get data, units, and ranges
         unit_to_range = {}
         axis_index = 0
+        self._parameters = tuple(parameter_name for parameter_name, _, _ in data)
         for i, (
-            (parameter_name, parameter_data),
+            (parameter_name, parameter_data, parameter_ctd_data),
             point_source,
             line_source,
             values,
         ) in enumerate(zip(data, self._point_sources, self._line_sources, self._values)):
+            # if data is missing make sure plot gets empty data to not show old data
             if parameter_data is None:
+                point_source.data = {key: [] for key in self.source_fields}
+                line_source.data = {key: [] for key in self.source_fields}
                 self._parameter_data.append(None)
                 continue
-
+            # update points and lines with the new data
             point_source.data = parameter_data
-
-            if (
-                visit and (ctd_data := visit.ctd_data_for_parameter(parameter_name))
-            ) is not None and len(ctd_data):
+            if parameter_ctd_data is not None and len(parameter_ctd_data):
                 line_source.data = {
-                    "x": list(ctd_data[parameter_name.replace("BTL", "CTD")]),
-                    "y": list(ctd_data["DEPTH_CTD"]),
+                    "x": list(parameter_ctd_data[parameter_name.replace("BTL", "CTD")]),
+                    "y": list(parameter_ctd_data["DEPTH_CTD"]),
                 }
             else:
                 line_source.data = parameter_data
@@ -429,41 +417,44 @@ class ProfileSlot(BaseView):
                 continue
 
             axis_index = self._sync_axes(
-                unit, parameter_name, x_values, i, unit_to_range, axis_index
+                unit,
+                parameter_name,
+                x_values,
+                i,
+                unit_to_range,
+                axis_index,
+                water_depth,
+                max_depth,
             )
+        self._sync_profile_options(water_depth, max_depth)
 
-        self._sync_profile_options()
+    def _sync_profile_options(self, water_depth=None, max_depth=None):
 
-    def _sync_profile_options(self):
-        # Setting the visibility of elements according to parameter options
-        has_data = any(source.data.get("x") for source in self._point_sources)
+        self._has_data = any(source.data.get("x") for source in self._point_sources)
 
         for lines in self._lines:
             lines.visible = self._show_lines
-        self._ocean_floor.visible = self._show_bounds and has_data
-        self._no_data_label.visible = not has_data
-        self._sea_level.visible = self._show_bounds and has_data
-        self._sky.visible = self._show_bounds and has_data
-        if self._visit is not None:
-            self._ocean_floor.top = max(
-                d
-                for d in [self._visit.water_depth, self._visit.max_depth, 0]
-                if d is not None
-            )
+        self._ocean_floor.visible = self._show_bounds and self.has_data
+        self._no_data_label.visible = not self.has_data
+        self._sea_level.visible = self._show_bounds and self.has_data
+        self._ocean_floor.location = max(
+            d for d in [water_depth, max_depth, 0] if d is not None
+        )
 
     def _sync_axes(
-        self, unit, parameter_name, x_values, renderer_index, unit_to_range, axis_index
+        self,
+        unit,
+        parameter_name,
+        x_values,
+        renderer_index,
+        unit_to_range,
+        axis_index,
+        water_depth=None,
+        max_depth=None,
     ):
         # set yaxis range
         y_min = -5
-        y_max = (
-            max(
-                d
-                for d in [self._visit.water_depth, self._visit.max_depth, 0]
-                if d is not None
-            )
-            + 5
-        )
+        y_max = max(d for d in [water_depth, max_depth, 0] if d is not None) + 5
         self._figure.y_range.start = y_max
         self._figure.y_range.end = y_min
 
@@ -536,28 +527,6 @@ class ProfileSlot(BaseView):
 
         return axis_index
 
-    def _reset_x_axes(self):
-        for i, ax in enumerate(self._extra_axes):
-            ax.visible = False
-            ax.axis_label = ""
-        for val_renderer, line_renderer in zip(self._values, self._lines):
-            val_renderer.x_range_name = "default"
-            line_renderer.x_range_name = "default"
-
-        self._median_values_line.x_range_name = "default"
-        self._median_values_dash.x_range_name = "default"
-        self._limits_area.x_range_name = "default"
-        self._flag3_lower_limits_area.x_range_name = "default"
-        self._flag3_upper_limits_area.x_range_name = "default"
-        self._min_line.x_range_name = "default"
-        self._max_line.x_range_name = "default"
-
-    def clear_selection(self):
-        self._clear_called = True
-        for source in self._point_sources:
-            source.selected.indices = []
-        self._clear_called = False
-
     def select_values(self, index, rows):
         selected_values = [
             Parameter(self._parameter_data[index].row(n, named=True)) for n in rows
@@ -565,31 +534,6 @@ class ProfileSlot(BaseView):
         self._statistics_source.selected.indices = []
         if not self._clear_called:
             self._manual_qc_model.set_selected_values(selected_values)
-
-    # def update_colors(self, updated_values: list[Parameter]):
-    #     updated_map = {
-    #         (
-    #             value._data["visit_key"],
-    #             value._data["parameter"],
-    #             value._data["DEPH"],
-    #         ): QC_FLAG_CSS_COLORS.get(value.qc.total)
-    #         for value in updated_values
-    #     }
-    #     for source, parameter_data in zip(self._sources, self._parameter_data):
-    #         if parameter_data is None:
-    #             continue
-    #         patches = [
-    #             (i, updated_map[(row["visit_key"], row["parameter"], row["DEPH"])])
-    #             for i, row in enumerate(parameter_data.iter_rows(named=True))
-    #             if (row["visit_key"], row["parameter"], row["DEPH"]) in updated_map
-    #         ]
-    #         if patches:
-    #             saved_indices = list(source.selected.indices)
-    #             self._applying_highlight = True
-    #             source.patch({"color": patches})
-    #             if saved_indices:
-    #                 source.selected.indices = saved_indices
-    #             self._applying_highlight = False
 
     def update_colors(self, updated_values: list[Parameter]):
         updated_map = {
@@ -701,6 +645,21 @@ class ProfileSlot(BaseView):
             "flag3_lower": filtered_stats["flag3_lower"].tolist(),
             "flag3_upper": filtered_stats["flag3_upper"].tolist(),
         }
+
+    def configure(self, configuration: SlotConfig):
+        # if configuration == self._configuration:
+        #             return False
+        self._configuration = configuration
+        # configuration-related Bokeh work here
+        # return True
+
+    @property
+    def configuration(self) -> SlotConfig:
+        return self._configuration
+
+    @property
+    def has_data(self) -> bool:
+        return self._has_data
 
     @property
     def layout(self):

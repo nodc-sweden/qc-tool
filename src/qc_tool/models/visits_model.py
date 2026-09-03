@@ -42,6 +42,13 @@ class VisitsModel(BaseModel):
         self._selected_visit = visit
 
     def set_visit(self, visit: Visit | None):
+        old_key = getattr(self._selected_visit, "visit_key", None)
+        new_key = getattr(visit, "visit_key", None)
+
+        # do not notify listeners if the visit is not changed
+        if old_key == new_key:
+            return
+
         self._selected_visit = visit
         self._notify_listeners(self.VISIT_SELECTED)
 

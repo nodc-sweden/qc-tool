@@ -1,4 +1,6 @@
 import polars as pl
+from ocean_data_qc.fyskem.qc_flag import QC_FLAG_CSS_COLORS, QcFlag
+from ocean_data_qc.fyskem.qc_flags import QcFlags
 
 
 class Visit:
@@ -49,6 +51,69 @@ class Visit:
         self._max_depth = self._data["DEPH"].max()
 
         self.validation_logs = []
+        self._parameter_data: dict[str, dict | None] = {}
+
+    def parameter_data(self, parameter: str):
+        if parameter not in self._parameter_data:
+            self._parameter_data[parameter] = self._build_parameter_data(parameter)
+
+        return self._parameter_data[parameter]
+
+    def _build_parameter_data(self, parameter: str) -> dict | None:
+        parameter_data = self._data.filter(pl.col("parameter") == parameter).sort("DEPH")
+
+        if parameter_data.is_empty():
+            return None
+
+        # TODO: could this be more efficient?
+        # raw QC
+        # → QcFlags
+        # → string
+        # → QcFlags again
+        if "quality_flag_long" not in parameter_data.columns:
+            parameter_data = parameter_data.with_columns(
+                quality_flag_long=pl.col("quality_flag").map_elements(
+                    lambda x: str(QcFlags(QcFlag.parse(x), None, None, None)),
+                    return_dtype=pl.Utf8,
+                )
+            )
+
+        parameter_data = parameter_data.with_columns(
+            quality_flag=pl.struct("quality_flag_long").map_elements(
+                lambda row: QcFlags.from_string(row["quality_flag_long"]).total.value,
+                return_dtype=pl.Utf8,
+            )
+        )
+
+        qc_flags = list(map(QcFlags.from_string, parameter_data["quality_flag_long"]))
+
+        colors = [
+            QC_FLAG_CSS_COLORS.get(QcFlag.parse(flag))
+            for flag in parameter_data["quality_flag"]
+        ]
+
+        line_colors = [
+            "black" if flags.incoming.value != flags.total.value else "none"
+            for flags in qc_flags
+        ]
+
+        return {
+            "x": list(parameter_data["value"]),
+            "unit": list(parameter_data["unit"]),
+            "y": list(parameter_data["DEPH"]),
+            "color": colors,
+            "line_color": line_colors,
+            "qc": [f"{flags.total} ({flags.total.value})" for flags in qc_flags],
+            "qc_incoming": [
+                f"{flags.incoming} ({flags.incoming.value})" for flags in qc_flags
+            ],
+            "qc_automatic": [
+                f"{flags.total_automatic} {flags.total_automatic_name}"
+                for flags in qc_flags
+            ],
+            "qc_manual": [f"{flags.manual} ({flags.manual.value})" for flags in qc_flags],
+            "data": parameter_data,
+        }
 
     @property
     def parameters(self) -> list[str]:
