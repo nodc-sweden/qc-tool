@@ -61,7 +61,9 @@ class ValidationLogView(BaseView):
         )
 
     def update(self, validation_remarks):
-        self._layout.text = _validation_log_template.render(validation=validation_remarks)
+        self._layout.text = _validation_log_template.render(
+            validation=validation_remarks
+        )
 
     @property
     def layout(self):

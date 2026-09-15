@@ -9,7 +9,9 @@ class BaseModel:
         self._message_queue = message_queue
         self._listeners = defaultdict(list)
 
-    def register_listener(self, event: str | Iterable[str], callback: Callable[[], None]):
+    def register_listener(
+        self, event: str | Iterable[str], callback: Callable[[], None]
+    ):
         if isinstance(event, str):
             event = [event]
         for event_name in event:

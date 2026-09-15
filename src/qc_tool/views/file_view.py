@@ -56,7 +56,9 @@ class FileView(BaseView):
 
         self._add_to_existing = Switch(label="Add to loaded data", active=False)
         self._load_data_section = Column(
-            self._select_data_button, self._add_to_existing, styles={"margin-top": "20px"}
+            self._select_data_button,
+            self._add_to_existing,
+            styles={"margin-top": "20px"},
         )
 
         self._select_ctd_data_button = Button(
@@ -78,14 +80,18 @@ class FileView(BaseView):
             icon=TablerIcon(icon_name="device-floppy", size="1.2em"),
             disabled=True,
         )
-        self._save_working_file_button.on_click(self._on_save_working_file_button_clicked)
+        self._save_working_file_button.on_click(
+            self._on_save_working_file_button_clicked
+        )
 
         self._load_working_file_button = Button(
             label="Load working file...",
             icon=TablerIcon(icon_name="folder-open", size="1.2em"),
             disabled=True,
         )
-        self._load_working_file_button.on_click(self._on_load_working_file_button_clicked)
+        self._load_working_file_button.on_click(
+            self._on_load_working_file_button_clicked
+        )
 
         self._working_state_section = Column(
             Div(text="<i>Save or load your current working state:</i>"),
@@ -119,7 +125,9 @@ class FileView(BaseView):
         )
 
         self._export_file_section = Column(
-            Div(text="<i>Export your current feedback file or DV template QC file:</i>"),
+            Div(
+                text="<i>Export your current feedback file or DV template QC file:</i>"
+            ),
             Row(self._export_feedback_file_button, self._save_dv_template_file_button),
             styles={
                 "border": "1px solid #ccc",
@@ -209,8 +217,10 @@ class FileView(BaseView):
     def _on_select_data_button_clicked(self, event):
         try:
             root = tkinter.Tk()
-            root.iconify()
-            selected_path = tkinter.filedialog.askopenfilename()
+            root.withdraw()
+            root.attributes("-topmost", True)
+            root.update()
+            selected_path = tkinter.filedialog.askopenfilename(parent=root)
             root.destroy()
         except tkinter.TclError:
             selected_path = None
@@ -268,7 +278,9 @@ class FileView(BaseView):
     def _on_export_feedback_button_clicked(self, event):
         try:
             root = tkinter.Tk()
-            root.iconify()
+            root.withdraw()
+            root.attributes("-topmost", True)
+            root.update()
             selected_path = tkinter.filedialog.asksaveasfilename(
                 defaultextension=".xlsx",
                 filetypes=[("Excel Files", "*.xlsx"), ("All Files", "*.*")],

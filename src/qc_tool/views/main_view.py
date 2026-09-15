@@ -44,7 +44,9 @@ class MainView(BaseView):
         self._tabs = Tabs(
             tabs=[
                 TabPanel(child=self._summary_view.layout, title="Summary"),
-                TabPanel(child=self._visits_browser_view.layout, title="Visits browser"),
+                TabPanel(
+                    child=self._visits_browser_view.layout, title="Visits browser"
+                ),
                 TabPanel(child=self._help_view.layout, title="Help"),
             ]
         )

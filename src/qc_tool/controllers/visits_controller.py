@@ -32,11 +32,15 @@ class VisitsController:
         self._ctd_file_model.register_listener(
             CtdFileModel.NEW_DATA, self._on_updated_data
         )
-        self._file_model.register_listener(FileModel.UPDATED_DATA, self._on_updated_data)
+        self._file_model.register_listener(
+            FileModel.UPDATED_DATA, self._on_updated_data
+        )
         self._file_model.register_listener(
             FileModel.NEW_MANUAL_FLAGS, self._on_new_manual_flags
         )
-        self._visits_model.register_listener(VisitsModel.NEW_VISITS, self._on_new_visits)
+        self._visits_model.register_listener(
+            VisitsModel.NEW_VISITS, self._on_new_visits
+        )
         self._filter_model = filter_model
         self._filter_model.register_listener(
             FilterModel.FILTER_CHANGED, self._on_filter_changed

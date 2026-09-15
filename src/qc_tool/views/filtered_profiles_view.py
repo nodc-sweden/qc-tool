@@ -73,7 +73,9 @@ class FilteredProfilesView(BaseView):
         for n in range(self._rows):
             start = n * self._columns
             end = start + self._columns
-            row = Row(children=[profile.layout for profile in self._profiles[start:end]])
+            row = Row(
+                children=[profile.layout for profile in self._profiles[start:end]]
+            )
             self._column.children.append(row)
 
     def update_colors(self, updated_values):
@@ -148,11 +150,15 @@ class FilteredProfilesView(BaseView):
                 )
             parameter_data = parameter_data.with_columns(
                 quality_flag=pl.struct("quality_flag_long").map_elements(
-                    lambda row: QcFlags.from_string(row["quality_flag_long"]).total.value,
+                    lambda row: (
+                        QcFlags.from_string(row["quality_flag_long"]).total.value
+                    ),
                     return_dtype=pl.Utf8,
                 )
             )
-            qc_flags = list(map(QcFlags.from_string, parameter_data["quality_flag_long"]))
+            qc_flags = list(
+                map(QcFlags.from_string, parameter_data["quality_flag_long"])
+            )
 
             colors = [
                 QC_FLAG_CSS_COLORS.get(QcFlag.parse(flag))
@@ -173,9 +179,12 @@ class FilteredProfilesView(BaseView):
                     "y": list(parameter_data["DEPH"]),
                     "color": colors,
                     "line_color": line_colors,
-                    "qc": [f"{flags.total} ({flags.total.value})" for flags in qc_flags],
+                    "qc": [
+                        f"{flags.total} ({flags.total.value})" for flags in qc_flags
+                    ],
                     "qc_incoming": [
-                        f"{flags.incoming} ({flags.incoming.value})" for flags in qc_flags
+                        f"{flags.incoming} ({flags.incoming.value})"
+                        for flags in qc_flags
                     ],
                     "qc_automatic": [
                         f"{flags.total_automatic} {flags.total_automatic_name}"

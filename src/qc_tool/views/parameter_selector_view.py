@@ -61,7 +61,8 @@ class ParameterSelectorView(BaseView):
 
         self._row = row(
             column(
-                self._available_parameters_select, self._available_multi_parameters_select
+                self._available_parameters_select,
+                self._available_multi_parameters_select,
             ),
             column(
                 Spacer(height=20),
@@ -103,7 +104,9 @@ class ParameterSelectorView(BaseView):
             icon=TablerIcon(icon_name="arrow-down", size="1.2em"),
             width=80,
         )
-        self._move_down_button.on_event("button_click", self._on_move_down_button_pressed)
+        self._move_down_button.on_event(
+            "button_click", self._on_move_down_button_pressed
+        )
 
         self._rows_input.on_change("value", self._on_rows_changed)
         self._columns_input.on_change("value", self._on_columns_changed)

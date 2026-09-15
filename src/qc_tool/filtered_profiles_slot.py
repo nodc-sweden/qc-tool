@@ -276,7 +276,11 @@ class FilteredProfilesSlot(BaseView):
             "color": "orange",
             "alpha": 0.1,
         }
-        self._plot_line_min_max_config = {"color": "red", "line_width": 0.5, "alpha": 0.5}
+        self._plot_line_min_max_config = {
+            "color": "red",
+            "line_width": 0.5,
+            "alpha": 0.5,
+        }
 
         # Add statistics
         self._median_values_line = self._figure.line(
@@ -330,7 +334,9 @@ class FilteredProfilesSlot(BaseView):
         self.clear_selection()
         self._source.data = {key: [] for key in self.source_fields}
         self._filtered_source.data = {key: [] for key in self.filtered_source_fields}
-        self._statistics_source.data = {key: [] for key in self.statistics_source_fields}
+        self._statistics_source.data = {
+            key: [] for key in self.statistics_source_fields
+        }
         self._ocean_floor.visible = False
         self._sea_level.visible = False
         self._no_data_label.visible = True
@@ -367,7 +373,9 @@ class FilteredProfilesSlot(BaseView):
         self._filtered_data = filtered_data
 
         if filtered_data is None:
-            self._filtered_source.data = {key: [] for key in self.filtered_source_fields}
+            self._filtered_source.data = {
+                key: [] for key in self.filtered_source_fields
+            }
             return
 
         self._filtered_source.data = {

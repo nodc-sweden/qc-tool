@@ -6,7 +6,9 @@ from qc_tool.views.filter_view import FilterView
 class FilterController:
     def __init__(self, visits_model: VisitsModel, filter_model: FilterModel):
         self._visits_model = visits_model
-        self._visits_model.register_listener(VisitsModel.NEW_VISITS, self._on_new_visits)
+        self._visits_model.register_listener(
+            VisitsModel.NEW_VISITS, self._on_new_visits
+        )
 
         self._filter_model = filter_model
         self._filter_model.register_listener(

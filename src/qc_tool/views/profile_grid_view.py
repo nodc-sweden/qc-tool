@@ -76,7 +76,9 @@ class ProfileGridView(BaseView):
                 )
         elif len(self._profiles) > self._profile_grid_model.number_of_profiles:
             # Too many profiles, removing extra.
-            self._profiles = self._profiles[: self._profile_grid_model.number_of_profiles]
+            self._profiles = self._profiles[
+                : self._profile_grid_model.number_of_profiles
+            ]
 
         for n, row in enumerate(self.plot_rows):
             if len(row.children) != self._profile_grid_model.columns:
@@ -93,7 +95,9 @@ class ProfileGridView(BaseView):
                 end = start + self._profile_grid_model.columns
                 self.plot_rows.append(
                     Row(
-                        children=[profile.layout for profile in self._profiles[start:end]]
+                        children=[
+                            profile.layout for profile in self._profiles[start:end]
+                        ]
                     )
                 )
         elif len(self.plot_rows) > self._profile_grid_model.rows:

@@ -318,7 +318,11 @@ class ProfileSlot(BaseView):
             "color": "orange",
             "alpha": 0.1,
         }
-        self._plot_line_min_max_config = {"color": "red", "line_width": 0.5, "alpha": 0.5}
+        self._plot_line_min_max_config = {
+            "color": "red",
+            "line_width": 0.5,
+            "alpha": 0.5,
+        }
 
         # Add statistics
         self._median_values_line = self._figure.line(
@@ -388,7 +392,9 @@ class ProfileSlot(BaseView):
             point_source,
             line_source,
             values,
-        ) in enumerate(zip(data, self._point_sources, self._line_sources, self._values)):
+        ) in enumerate(
+            zip(data, self._point_sources, self._line_sources, self._values)
+        ):
             # if data is missing make sure plot gets empty data to not show old data
             if parameter_data is None:
                 point_source.data = {key: [] for key in self.source_fields}
@@ -566,7 +572,9 @@ class ProfileSlot(BaseView):
 
                 qc_str = f"{flags.total} ({flags.total.value})"
                 qc_incoming_str = f"{flags.incoming} ({flags.incoming.value})"
-                qc_automatic_str = f"{flags.total_automatic} {flags.total_automatic_name}"
+                qc_automatic_str = (
+                    f"{flags.total_automatic} {flags.total_automatic_name}"
+                )
                 qc_manual_str = f"{flags.manual} ({flags.manual.value})"
 
                 color = QC_FLAG_CSS_COLORS.get(flags.total)

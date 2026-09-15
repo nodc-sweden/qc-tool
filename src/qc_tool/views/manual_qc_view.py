@@ -97,7 +97,9 @@ class ManualQcView(BaseView):
         self._manual_qc_model.register_listener(
             ManualQcModel.FLAG_CANCELLED, self._on_flag_cancelled
         )
-        self._manual_qc_model.register_listener(ManualQcModel.QC_PERFORMED, self._update)
+        self._manual_qc_model.register_listener(
+            ManualQcModel.QC_PERFORMED, self._update
+        )
 
         self.comment_dialog_view: "CommentDialogView | None" = None
 

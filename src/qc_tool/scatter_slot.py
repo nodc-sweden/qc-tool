@@ -272,7 +272,9 @@ class ScatterSlot(BaseView):
         self._filtered_data = filtered_data
 
         if filtered_data is None:
-            self._filtered_source.data = {key: [] for key in self.filtered_source_fields}
+            self._filtered_source.data = {
+                key: [] for key in self.filtered_source_fields
+            }
             return
 
         self._filtered_source.data = {

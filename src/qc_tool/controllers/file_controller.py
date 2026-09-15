@@ -16,10 +16,14 @@ from sharkadm import (
     transformers,
     validators,
 )
+import nodc_config
 from sharkadm import (
     controller as sharkadm_controller,
 )
-from sharkadm.controller import SHARKadmPolarsController, get_polars_controller_with_data
+from sharkadm.controller import (
+    SHARKadmPolarsController,
+    get_polars_controller_with_data,
+)
 
 from qc_tool.data_transformation import changes_report, prepare_data
 from qc_tool.models.ctd_file_model import CtdFileModel
@@ -55,10 +59,15 @@ class FileController:
         manual_qc_model: ManualQcModel,
         geo_info_model: GeoInfoModel,
     ):
+        self._nodc_conf = nodc_config.get_nodc_config()
         self._file_model = file_model
         self._file_model.register_listener(FileModel.NEW_DATA, self._on_new_data)
-        self._file_model.register_listener(FileModel.LOAD_ABORTED, self._on_load_aborted)
-        self._file_model.register_listener(FileModel.UPDATED_DATA, self._on_feedback_load)
+        self._file_model.register_listener(
+            FileModel.LOAD_ABORTED, self._on_load_aborted
+        )
+        self._file_model.register_listener(
+            FileModel.UPDATED_DATA, self._on_feedback_load
+        )
 
         self._ctd_file_model = ctd_file_model
         self._ctd_file_model.register_listener(
@@ -102,7 +111,9 @@ class FileController:
 
         print(f"Loading data from {file_path}...")
         try:
-            controller = sharkadm_controller.get_polars_controller_with_data(file_path)
+            controller = sharkadm_controller.get_polars_controller_with_data(
+                self._nodc_conf, file_path
+            )
         except Exception:  # noqa: BLE001
             # Catching exceptions this broadly is not recommended, but sharkadm does not
             # guarantee a specific exception.
@@ -136,7 +147,9 @@ class FileController:
 
     def load_ctd_file(self, file_path: Path):
         try:
-            controller = sharkadm_controller.get_polars_controller_with_data(file_path)
+            controller = sharkadm_controller.get_polars_controller_with_data(
+                self._nodc_conf, file_path
+            )
         except Exception:  # noqa: BLE001
             # Catching exceptions this broadly is not recommended, but sharkadm does not
             # guarantee a specific exception.
@@ -169,9 +182,11 @@ class FileController:
 
     def save_dv_template_for_source(self, source_path: Path):
         qcdata = self._file_model.data.filter(pl.col("source") == str(source_path))
-        cc = get_polars_controller_with_data(qcdata)
+        cc = get_polars_controller_with_data(self._nodc_conf, qcdata)
         if "DvTemplate" in cc.data["data_holder_name"][0]:
-            cc.export(exporters.ExportDvTemplateWithQcResult(source_path, open_file=True))
+            cc.export(
+                exporters.ExportDvTemplateWithQcResult(source_path, open_file=True)
+            )
         elif "LIMS" in cc.data["data_holder_name"][0].upper():
             cc.export(
                 exporters.LimsExportDvTemplateWithQcResult(source_path, open_file=True)
@@ -330,7 +345,9 @@ class FileController:
             (
                 validators.ValidateStationIdentity,
                 {
-                    "stations": nodc_station.get_station_object(case_sensitive=False),
+                    "stations": nodc_station.get_station_object(
+                        self._nodc_conf, case_sensitive=False
+                    ),
                     "latitude_key": "sample_sweref99tm_y",
                     "longitude_key": "sample_sweref99tm_x",
                 },
@@ -446,7 +463,9 @@ class FileController:
             split = (
                 pl.col("quality_flag_long")
                 .str.split_exact("_", 3)
-                .struct.rename_fields(["INCOMING_QC", "AUTO_QC", "MANUAL_QC", "TOTAL_QC"])
+                .struct.rename_fields(
+                    ["INCOMING_QC", "AUTO_QC", "MANUAL_QC", "TOTAL_QC"]
+                )
                 .alias("split_qc_fields")
             )
 

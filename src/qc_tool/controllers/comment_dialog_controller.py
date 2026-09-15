@@ -11,7 +11,10 @@ class CommentDialogController:
     COMMENT_CATEGORIES = (
         (NO_COMMENT, {}),
         ("Svavelväte förekommer", {QcFlag.BAD_VALUE}),
-        ("Värde avviker i homogent lager", {QcFlag.BAD_VALUE, QcFlag.PROBABLY_BAD_VALUE}),
+        (
+            "Värde avviker i homogent lager",
+            {QcFlag.BAD_VALUE, QcFlag.PROBABLY_BAD_VALUE},
+        ),
         ("Kontrollera för stansfel", {QcFlag.PROBABLY_BAD_VALUE}),
         ("Totalhalt avvikande högt/lågt värde", {QcFlag.PROBABLY_BAD_VALUE}),
         (

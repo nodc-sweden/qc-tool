@@ -1,0 +1,1376 @@
+@startuml
+
+title Class diagram: qc_tool
+
+class app_state.AppState #AC6FED {
+	+file
+	+filter
+	+filtered_profiles
+	+geo_info
+	+manual_qc
+	+map
+	+parameters
+	+profile_grid
+	+scatters
+	+validation_log
+	+visits
+	-_message_queue
+==
+	
+}
+
+class base_model.BaseModel #B6C85E {
+	-_listeners
+	-_message_queue
+==
+	+register_listener()
+	-_notify_listeners()
+}
+
+class base_view.BaseView #6A8997 {
+	
+==
+	+layout()
+}
+
+class callback_queue.CallbackQueue #586F76 {
+	+a, @ca
+	-_consuming
+==
+	+add_callbacks()
+	+consume()
+}
+
+class comment_dialog_controller.CommentDialogController #EF9CD7 {
+	+COMMENT_CATEGORIES, @ca
+	+NO_COMMENT, @ca
+	-_manual_qc_model
+==
+	+on_cancel()
+	+on_ok()
+	-_categories_for_flag(), @cm
+	-_on_flag_requested()
+}
+
+class comment_dialog_view.CommentDialogView #A85DE6 {
+	+AVAILABLE_FLAGS, @ca
+	+DEFAULT_CATEGORY_VALUE, @ca
+	-_cancel_button
+	-_category_select
+	-_comment_header
+	-_comment_input
+	-_commment_section
+	-_controller
+	-_dialog
+	-_flag_header
+	-_flag_section
+	-_ok_button
+	-_qc_buttons
+	-_qc_flag_buttons
+	layout, @p
+	selected_flag, @p
+==
+	+close()
+	+open()
+	-_on_cancel_clicked()
+	-_on_input_changed()
+	-_on_ok_clicked()
+	-_validate_input()
+}
+
+class data_transformation.changes_report #FC5DEC {
+	
+==
+	
+}
+
+class data_transformation.collect_log_messages #FC5DEC {
+	
+==
+	
+}
+
+class data_transformation.get_validators_in_log #FC5DEC {
+	
+==
+	
+}
+
+class data_transformation.prepare_data #FC5DEC {
+	
+==
+	
+}
+
+class data_transformation.remove_lims #FC5DEC {
+	
+==
+	
+}
+
+class data_transformation.shortest_unique_paths #FC5DEC {
+	
+==
+	
+}
+
+class feedback_service.FeedbackService #7CA5E6 {
+	+data
+	+validation_log
+	-_row_to_logs
+	-_visits_model
+	log_messages, @p
+==
+	+get_export_data()
+	+get_logs_for_visit()
+	+get_visit_details()
+	+get_visit_feedback()
+	-_count()
+	-_get_logs_for_visit()
+	-_index_logs_by_row()
+}
+
+class file_controller.FileController #6A8BDA {
+	-_file_model
+	-_geo_info
+	-_geo_info_model
+	-_manual_qc_model
+	-_ocean_shapefile
+	-_validation_log_model
+	file_model, @p
+	ocean_shapefile, @p
+==
+	+apply_working_file()
+	+load_file()
+	+load_working_file()
+	+save_changed_data()
+	+save_data_for_source()
+	-_apply_manual_flag(), @sm
+	-_apply_post_transformers()
+	-_apply_transformers()
+	-_define_validators_and_parameters()
+	-_expand_quality_flag_long(), @sm
+	-_match_sea_basins()
+	-_on_feedback_load()
+	-_on_load_aborted()
+	-_on_new_data()
+	-_on_qc_performed()
+	-_read_geo_info()
+	-_reset_validation_logs()
+	-_run_automatic_qc(), @sm
+	-_run_validators()
+}
+
+class file_controller._get_config_dir #6A8BDA {
+	
+==
+	
+}
+
+class file_controller._load_ocean_shapefile #6A8BDA {
+	
+==
+	
+}
+
+class file_model.FileModel #CF6DCE {
+	+FLAGS_UPDATED, @ca
+	+LOAD_ABORTED, @ca
+	+NEW_DATA, @ca
+	+UPDATED_DATA, @ca
+	-_data
+	-_file_paths
+	-_validation
+	data, @p
+	file_paths, @p
+==
+	+add_data()
+	+data_flags_update()
+	+flags_update()
+	+no_new_data()
+}
+
+class file_view.FileView #7FEAB7 {
+	-_add_to_existing
+	-_controller
+	-_export_feedback_file_button
+	-_file_input
+	-_file_model
+	-_layout
+	-_load_file_section
+	-_load_header
+	-_load_indicator
+	-_load_working_file_button
+	-_loaded_file_label
+	-_save_file_buttons
+	-_save_selection_dialog
+	-_save_working_file_button
+	-_select_data_button
+	-_working_state_section
+	layout, @p
+==
+	+feedback_load_completed()
+	+file_load_completed()
+	+ultextension=".txt",()
+	+ultextension=".xlsx",()
+	-_on_export_feedback_button_clicked()
+	-_on_load_working_file_button_clicked()
+	-_on_save_working_file_button_clicked()
+	-_on_select_data_button_clicked()
+	-_save_file()
+}
+
+class filter_controller.FilterController #9F5AB8 {
+	-_filter_model
+	-_visits_model
+==
+	-_on_filter_changed()
+	-_on_filter_options_changed()
+	-_on_new_visits()
+}
+
+class filter_model.FilterModel #DBB95D {
+	+FILTER_CHANGED, @ca
+	+FILTER_OPTIONS_CHANGED, @ca
+	+filtered_data
+	-_basins
+	-_cruises
+	-_file_model
+	-_files
+	-_filtered_basins
+	-_filtered_cruises
+	-_filtered_data
+	-_filtered_files
+	-_filtered_months
+	-_filtered_stations
+	-_filtered_years
+	-_months
+	-_stations
+	-_years
+	basins, @p
+	cruises, @p
+	file_paths, @p
+	files, @p
+	filtered_data, @p
+	months, @p
+	stations, @p
+	years, @p
+==
+	+clear_all()
+	+filtered_data_expression()
+	+matches()
+	+set_basin_filter()
+	+set_cruise_filter()
+	+set_file_filter()
+	+set_filter_options()
+	+set_month_filter()
+	+set_station_filter()
+	+set_year_filter()
+	-_field_matches()
+}
+
+class filter_view.FilterView #F556E7 {
+	+HEIGHT, @ca
+	-_basin_filter
+	-_clear_filter_button
+	-_controller
+	-_cruise_filter
+	-_file_filter
+	-_filter_model
+	-_layout
+	-_month_filter
+	-_station_filter
+	-_year_filter
+	layout, @p
+==
+	+clear_filter()
+	+update_filter_options()
+	-_on_basin_filter_changed()
+	-_on_cruise_filter_changed()
+	-_on_file_filter_changed()
+	-_on_month_filter_changed()
+	-_on_station_filter_changed()
+	-_on_year_filter_changed()
+}
+
+class filtered_profiles_controller.FilteredProfilesController #CFB9E8 {
+	-_file_model
+	-_filter_model
+	-_filtered_profiles_model
+	-_manual_qc_model
+	-_visits_model
+==
+	-_on_new_file()
+	-_on_new_filter()
+	-_on_new_parameter()
+	-_on_qc_performed()
+	-_on_visit_selected()
+}
+
+class filtered_profiles_model.FilteredProfilesModel #EE5AAE {
+	+NEW_SELECTION, @ca
+	-_selected_profile_index
+	selected_profile_index, @p
+==
+	
+}
+
+class filtered_profiles_slot.AllProfilesData #57CA75 {
+	+title
+	+water_depth
+==
+	
+}
+
+class filtered_profiles_slot.FilteredProfilesSlot #57CA75 {
+	+filtered_source_fields, @ca
+	+source_fields, @ca
+	+statistics_source_fields, @ca
+	-_applying_highlight
+	-_clear_called
+	-_crosshair_line
+	-_data
+	-_figure
+	-_figure_config
+	-_filtered_data
+	-_filtered_profiles_model
+	-_filtered_source
+	-_filtered_values
+	-_flag3_lower_limits_area
+	-_flag3_upper_limits_area
+	-_height, @ca
+	-_limits_area
+	-_line
+	-_manual_qc_model
+	-_max_line
+	-_median_values_dash
+	-_median_values_line
+	-_min_line
+	-_no_data_label
+	-_ocean_floor
+	-_parameter
+	-_parameter_data
+	-_parameter_dropdown
+	-_plot_area_statistics_config
+	-_plot_dash_statistics_config
+	-_plot_flag3_fill_statistics_config
+	-_plot_line_config
+	-_plot_line_min_max_config
+	-_plot_line_statistics_config
+	-_plot_values_config
+	-_profile_index
+	-_sea_level
+	-_show_bounds
+	-_show_lines
+	-_sky
+	-_source
+	-_statistics_source
+	-_title
+	-_values
+	-_visit
+	-_width, @ca
+	layout, @p
+	parameter, @p
+	profile_index, @p
+	y_range, @p
+==
+	+clear_figure()
+	+clear_selection()
+	+select_values()
+	+set_data()
+	+set_filtered_data()
+	+update_colors()
+	+update_statistics()
+	-_init_background()
+	-_init_statistics_plot()
+	-_on_value_selected()
+	-_on_values_selected()
+	-_parameter_selected()
+	-_sync_profile_options()
+	-_sync_y_axis()
+}
+
+class filtered_profiles_slot.expand_abbreviation #57CA75 {
+	
+==
+	
+}
+
+class filtered_profiles_view.FilteredProfilesView #6EDE8B {
+	-_background_data
+	-_column
+	-_columns
+	-_controller
+	-_filter_model
+	-_filtered_profiles_model
+	-_manual_qc_model
+	-_parameter_data
+	-_primary_plot
+	-_profiles
+	-_rows
+	-_visits_model
+	layout, @p
+==
+	+update_colors()
+	+update_grid_content()
+	-_build_grid()
+	-_load_filtered_data()
+	-_load_parameter()
+}
+
+class flag_info.FlagInfo #586EA5 {
+	-_div
+	layout, @p
+==
+	
+}
+
+class geo_info_model.GeoInfoModel #ABD999 {
+	-_geo_info
+	geo_info, @p
+==
+	
+}
+
+class help_view.HelpView #FD967E {
+	-_div
+	layout, @p
+==
+	
+}
+
+class main.QcTool #B7E68F {
+	
+==
+	-_parse_startup_file(), @sm
+}
+
+class main_controller.MainController #EC5BA6 {
+	+filter_controller
+	+summary_controller
+	+visits_browser_controller
+	-_main_view
+	-_state
+	-_transformer
+	-_validation
+	-_visits_controller
+==
+	-_convert_projection()
+	-_set_validation()
+}
+
+class main_view.MainView #6C775E {
+	-_controller
+	-_filter
+	-_filter_view
+	-_help_view
+	-_layout
+	-_summary_view
+	-_tabs
+	-_visits_browser_view
+	layout, @p
+==
+	
+}
+
+class manual_qc_controller.ManualQcController #CEB69F {
+	+manual_qc_model
+	+manual_qc_view
+	-_visits_model
+==
+	+deselect_value()
+	+on_filter_changed()
+	+set_flag()
+	-_on_visit_selected()
+}
+
+class manual_qc_model.ManualQcModel #F97A6A {
+	+FLAG_CANCELLED, @ca
+	+FLAG_REQUESTED, @ca
+	+QC_PERFORMED, @ca
+	+VALUES_SELECTED, @ca
+	-_comment
+	-_comment_category
+	-_selected_values
+	comment, @p
+	comment_category, @p
+	selected_values, @p
+==
+	+cancel_flag()
+	+confirm_flag()
+	+deselect_value()
+	+request_flag()
+	+set_selected_values()
+	+set_values_from_filter()
+	-_restore_selection()
+}
+
+class manual_qc_view.ManualQcView #97E8EA {
+	-_controller
+	-_depth_selector
+	-_deselect_trigger
+	-_manual_qc_header
+	-_manual_qc_model
+	-_parameter_selector
+	-_range_max_selector
+	-_range_min_selector
+	-_select_row
+	-_set_flag_button
+	-_value_table
+	layout, @p
+==
+	+update_depths()
+	+update_parameters()
+	-_depths_in_range()
+	-_on_depths_changed()
+	-_on_deselect_triggered()
+	-_on_flag_button_clicked()
+	-_on_flag_cancelled()
+	-_on_parameters_changed()
+	-_on_range_changed()
+	-_on_values_selected()
+	-_update()
+}
+
+class map_controller.MapController #8DBE67 {
+	+margin_ratio, @ca
+	+min_map_range, @ca
+	-_map_model
+	-_transformer
+	-_visits_model
+==
+	+select_visit()
+	-_convert_projection()
+	-_on_new_visits()
+	-_on_visit_selected()
+	-_zoom_to_points()
+}
+
+class map_model.MapModel #7566CE {
+	-_data_source
+	unselected, @p
+==
+	+set_points()
+	+set_selection()
+}
+
+class map_view.MapView #6BC9CC {
+	-_controller
+	-_map
+	-_map_model
+	-_stations
+	height, @p
+	layout, @p
+	width, @p
+==
+	+reset_map()
+	+set_position()
+	+ult_x_range =()
+	+ult_y_range =()
+	-_station_selected_callback()
+}
+
+class parameter_selector_controller.ParameterSelectorController #E5E9FD {
+	-_file_model
+	-_parameters_model
+	-_profiles_model
+	-_visits_model
+==
+	+deselect_parameters()
+	+move_selection_down()
+	+move_selection_up()
+	+select_parameters()
+	+set_columns()
+	+set_rows()
+	-_on_new_data()
+	-_on_new_grid_size()
+	-_on_visit_selected()
+}
+
+class parameter_selector_view.ParameterSelectorView #AB67CA {
+	-_available_multi_parameters_select
+	-_available_parameters_select
+	-_columns_input
+	-_controller
+	-_deselect_button
+	-_move_down_button
+	-_move_up_button
+	-_parameters_model
+	-_profile_grid_model
+	-_row
+	-_rows_input
+	-_select_button
+	-_selected_parameters
+	layout, @p
+==
+	+clear_all_selections()
+	+sync_button_state()
+	+update_parameters()
+	-_init_buttons()
+	-_on_available_multi_parameters_selected()
+	-_on_available_parameters_selected()
+	-_on_columns_changed()
+	-_on_deselect_button_pressed()
+	-_on_move_down_button_pressed()
+	-_on_move_up_button_pressed()
+	-_on_rows_changed()
+	-_on_select_button_pressed()
+}
+
+class parameters_model.ParametersModel #FFDECB {
+	+NEW_PARAMETER_DATA, @ca
+	+NEW_SELECTION, @ca
+	+selected_parameters
+	-_available_multi_parameters
+	-_available_parameters
+	-_default_parameters, @ca
+	-_multi_parameters, @ca
+	-_parameter_data
+	-_selected_parameters
+	available_multiparameters, @p
+	available_parameters, @p
+	enabled, @p
+	parameter_data, @p
+	selected_parameters, @p
+	selection_size, @p
+==
+	+reset_parameter_data()
+	+set_default_parameters()
+}
+
+class profile_grid_controller.ProfileGridController #CFC8E9 {
+	-_manual_qc_model
+	-_parameters_model
+	-_profile_grid_model
+==
+	-_on_new_grid_size()
+	-_on_new_selection()
+	-_on_qc_performed()
+}
+
+class profile_grid_view.ProfileGridView #ECADCF {
+	-_column
+	-_controller
+	-_manual_qc_model
+	-_parameters_model
+	-_primary_plot
+	-_profile_grid_model
+	-_profiles
+	-_visits_model
+	layout, @p
+	plot_rows, @p
+==
+	+update_colors()
+	+update_grid_content()
+	+update_grid_size()
+	-_load_parameter()
+}
+
+class profile_slot.ProfileData #6DDF9A {
+	+title
+	+water_depth
+==
+	
+}
+
+class profile_slot.ProfileSlot #6DDF9A {
+	+source_fields, @ca
+	+statistics_source_fields, @ca
+	-_applying_highlight
+	-_axes_range_sources
+	-_clear_called
+	-_crosshair_line
+	-_data
+	-_extra_axes
+	-_figure
+	-_figure_config
+	-_flag3_lower_limits_area
+	-_flag3_upper_limits_area
+	-_height, @ca
+	-_limits_area
+	-_lines
+	-_manual_qc_model
+	-_max_line
+	-_median_values_dash
+	-_median_values_line
+	-_min_line
+	-_no_data_label
+	-_ocean_floor
+	-_parameter_data
+	-_plot_area_statistics_config
+	-_plot_dash_statistics_config
+	-_plot_flag3_fill_statistics_config
+	-_plot_line_config
+	-_plot_line_min_max_config
+	-_plot_line_statistics_config
+	-_plot_values_config
+	-_reset_button
+	-_sea_level
+	-_show_bounds
+	-_show_lines
+	-_sky
+	-_sources
+	-_statistics_source
+	-_title
+	-_values
+	-_visit
+	-_width, @ca
+	layout, @p
+	y_range, @p
+==
+	+clear_selection()
+	+select_values()
+	+set_data()
+	+update_colors()
+	+update_statistics()
+	-_init_background()
+	-_init_statistics_plot()
+	-_on_value_selected()
+	-_on_values_selected()
+	-_reset_x_axes()
+	-_sync_axes()
+	-_sync_profile_options()
+}
+
+class profile_slot.expand_abbreviation #6DDF9A {
+	
+==
+	
+}
+
+class profiles_grid_model.ProfileGridModel #55C5C9 {
+	+NEW_GRID_SIZE, @ca
+	-_columns
+	-_rows
+	columns, @p
+	number_of_profiles, @p
+	rows, @p
+==
+	
+}
+
+class scatter_controller.ScatterController #86DA55 {
+	-_file_model
+	-_filter_model
+	-_manual_qc_model
+	-_scatter_model
+	-_visits_model
+==
+	-_on_new_file()
+	-_on_new_filter()
+	-_on_new_parameter()
+	-_on_qc_performed()
+	-_on_visit_selected()
+}
+
+class scatter_model.ScatterModel #CF7F8C {
+	+NEW_SELECTION, @ca
+	-_selected_scatter_index
+	selected_scatter_index, @p
+==
+	
+}
+
+class scatter_slot.AllScattersData #5BB8F8 {
+	+title
+==
+	
+}
+
+class scatter_slot.ScatterSlot #5BB8F8 {
+	+filtered_source_fields, @ca
+	+source_fields, @ca
+	-_applying_highlight
+	-_clear_called
+	-_crosshair_line
+	-_figure
+	-_figure_config
+	-_filtered_data
+	-_filtered_source
+	-_filtered_values
+	-_height, @ca
+	-_line
+	-_manual_qc_model
+	-_merged_data
+	-_no_data_label
+	-_plot_line_config
+	-_plot_values_config
+	-_scatter_index
+	-_scatter_model
+	-_show_bounds
+	-_show_lines
+	-_source
+	-_swap_axis_button
+	-_title
+	-_values
+	-_visit
+	-_width, @ca
+	-_x_parameter
+	-_x_parameter_dropdown
+	-_y_parameter
+	-_y_parameter_dropdown
+	layout, @p
+	scatter_index, @p
+	x_parameter, @p
+	y_parameter, @p
+==
+	+clear_figure()
+	+clear_selection()
+	+select_values()
+	+set_data()
+	+set_filtered_data()
+	+update_colors()
+	-_on_value_selected()
+	-_on_values_selected()
+	-_swap_axis_callback()
+	-_sync_profile_options()
+	-_x_parameter_selected()
+	-_y_parameter_selected()
+}
+
+class scatter_slot.expand_abbreviation #5BB8F8 {
+	
+==
+	
+}
+
+class scatter_view.ScatterView #E6FD57 {
+	-_background_data
+	-_column
+	-_columns
+	-_controller
+	-_filter_model
+	-_manual_qc_model
+	-_parameter_data
+	-_primary_plot
+	-_rows
+	-_scatter_model
+	-_scatters
+	-_visits_model
+	layout, @p
+==
+	+update_colors()
+	+update_grid_content()
+	-_build_grid()
+	-_load_filtered_data()
+	-_load_parameters()
+}
+
+
+class summary_controller.SummaryController #E97BBD {
+	+file_controller
+	+map_controller
+	+validation_log_controller
+	-_file_model
+	-_geo_info_model
+	-_manual_qc_model
+	-_validation_log_model
+	-_visits_model
+==
+	
+}
+
+class summary_view.SummaryView #679B5B {
+	+file_view
+	+map_view
+	-_controller
+	-_info_tabs
+	-_layout
+	-_main_info
+	-_validation_view
+	layout, @p
+==
+	+update_validation_log()
+}
+
+class validation_log_controller.ValidationLogController #6E8CF7 {
+	-_validation_log
+	-_validation_log_model
+==
+	-_on_new_validation_log()
+}
+
+class validation_log_model.ValidationLogModel #9DCCC6 {
+	+NEW_VALIDATION_LOG, @ca
+	-_validation_log
+	-_validation_remarks
+	validation_log, @p
+	validation_remarks, @p
+==
+	+set_validation_log()
+}
+
+class validation_log_view.ValidationLogView #ACC688 {
+	-_controller
+	-_layout
+	-_validation_log_model
+	layout, @p
+==
+	+update()
+}
+
+class visit.Visit #EE7DB7 {
+	+COMMON_COLUMNS, @ca
+	+validation_logs
+	-_common
+	-_data
+	-_max_depth
+	-_parameters
+	-_row_numbers
+	-_sea_basin
+	-_visit_key
+	common, @p
+	country_ship_cruise, @p
+	country_ship_cruise_visit_key, @p
+	cruise_number, @p
+	data, @p
+	datetime, @p
+	depths, @p
+	file_path, @p
+	latitude, @p
+	longitude, @p
+	max_depth, @p
+	parameters, @p
+	row_numbers, @p
+	sea_basin, @p
+	station_name, @p
+	visit_key, @p
+	water_depth, @p
+==
+	
+}
+
+class visit_info_controller.VisitInfoController #5A99E7 {
+	+STATION_DATA_FIELDS, @ca
+	-_visits_model
+==
+	-_on_visit_selected()
+}
+
+class visit_info_view.VisitInfoView #D5C8FD {
+	-_controller
+	-_div
+	-_table
+	-_visits_model
+	layout, @p
+==
+	+update()
+}
+
+class visit_selector_controller.VisitSelectorController #C6ACAC {
+	-_filter_model
+	-_visits_model
+==
+	+set_visit()
+	-_on_filter_changed()
+	-_on_new_visits()
+	-_on_visit_selected()
+}
+
+class visit_selector_view.VisitSelectorView #B5C57F {
+	-_controller
+	-_filter_model
+	-_layout
+	-_next_button
+	-_previous_button
+	-_visits_dropdown
+	-_visits_model
+	layout, @p
+==
+	+set_visit()
+	+set_visits()
+	+update_visits()
+	-_on_next_button_clicked()
+	-_on_previous_button_clicked()
+	-_on_visit_dropdown_changed()
+}
+
+class visits_browser_controller.VisitsBrowserController #8DE5C9 {
+	+comment_dialog_controller
+	+filtered_profiles_controller
+	+manual_qc_controller
+	+map_controller
+	+parameter_selector_controller
+	+profile_grid_controller
+	+scatter_controller
+	+visit_info_controller
+	+visit_selector_controller
+	-_manual_qc_model
+	-_state
+	-_visits_model
+==
+	
+}
+
+class visits_browser_view.VisitsBrowserView #AA857A {
+	-_comment_dialog_view
+	-_controller
+	-_filtered_profiles_tab
+	-_filtered_profiles_tab_handler
+	-_layout
+	-_manual_qc_view
+	-_map_view
+	-_parameter_handler
+	-_profile_tab
+	-_profile_tab_handler
+	-_scatter_tab
+	-_scatter_tab_handler
+	-_state
+	-_station_info
+	-_validation
+	-_visit_selector_view
+	layout, @p
+==
+	+parameter_handler_callback()
+	+save_file_callback()
+	-_set_extra_info_tab()
+	-_set_validation()
+}
+
+class visits_controller.VisitsController #B98FB5 {
+	-_feedback_service
+	-_file_model
+	-_filter_model
+	-_validation_log_model
+	-_visits_model
+==
+	-_attach_logs_to_visits()
+	-_build_feedback_service()
+	-_create_visits()
+	-_on_filter_changed()
+	-_on_new_data()
+	-_on_new_validation_log()
+	-_on_new_visits()
+	-_on_updated_data()
+}
+
+class visits_model.VisitsModel #C58CBC {
+	+FEEDBACK_READY, @ca
+	+FILTER_APPLIED, @ca
+	+NEW_VISITS, @ca
+	+UPDATED_VISITS, @ca
+	+VISIT_SELECTED, @ca
+	-_filtered_visit_keys
+	-_selected_visit
+	-_visits
+	cruises, @p
+	months, @p
+	selected_visit, @p
+	stations, @p
+	visit_keys, @p
+	visits, @p
+	years, @p
+==
+	+apply_filter()
+	+first_visit_id_or_none()
+	+first_visit_or_none()
+	+possible_basins()
+	+possible_cruises()
+	+possible_files()
+	+possible_months()
+	+possible_stations()
+	+possible_years()
+	+set_visit()
+	+set_visit_by_key()
+	+set_visits()
+	+update_visits()
+	+visit_by_index()
+}
+
+
+filtered_profiles_slot.FilteredProfilesSlot <|-[#57CA75,thickness=2]- base_view.BaseView
+
+flag_info.FlagInfo <|-[#586EA5,thickness=2]- base_view.BaseView
+
+profile_slot.ProfileSlot <|-[#6DDF9A,thickness=2]- base_view.BaseView
+
+scatter_slot.ScatterSlot <|-[#5BB8F8,thickness=2]- base_view.BaseView
+
+file_model.FileModel <|-[#CF6DCE,thickness=2]- base_model.BaseModel
+
+filtered_profiles_model.FilteredProfilesModel <|-[#EE5AAE,thickness=2]- base_model.BaseModel
+
+filter_model.FilterModel <|-[#DBB95D,thickness=2]- base_model.BaseModel
+
+geo_info_model.GeoInfoModel <|-[#ABD999,thickness=2]- base_model.BaseModel
+
+manual_qc_model.ManualQcModel <|-[#F97A6A,thickness=2]- base_model.BaseModel
+
+map_model.MapModel <|-[#7566CE,thickness=2]- base_model.BaseModel
+
+parameters_model.ParametersModel <|-[#FFDECB,thickness=2]- base_model.BaseModel
+
+profiles_grid_model.ProfileGridModel <|-[#55C5C9,thickness=2]- base_model.BaseModel
+
+scatter_model.ScatterModel <|-[#CF7F8C,thickness=2]- base_model.BaseModel
+
+validation_log_model.ValidationLogModel <|-[#9DCCC6,thickness=2]- base_model.BaseModel
+
+visits_model.VisitsModel <|-[#C58CBC,thickness=2]- base_model.BaseModel
+
+base_view.BaseView <|-[#6A8997,thickness=2]- abc.ABC
+
+comment_dialog_view.CommentDialogView <|-[#A85DE6,thickness=2]- base_view.BaseView
+
+file_view.FileView <|-[#7FEAB7,thickness=2]- base_view.BaseView
+
+filtered_profiles_view.FilteredProfilesView <|-[#6EDE8B,thickness=2]- base_view.BaseView
+
+filter_view.FilterView <|-[#F556E7,thickness=2]- base_view.BaseView
+
+help_view.HelpView <|-[#FD967E,thickness=2]- base_view.BaseView
+
+main_view.MainView <|-[#6C775E,thickness=2]- base_view.BaseView
+
+manual_qc_view.ManualQcView <|-[#97E8EA,thickness=2]- base_view.BaseView
+
+map_view.MapView <|-[#6BC9CC,thickness=2]- base_view.BaseView
+
+parameter_selector_view.ParameterSelectorView <|-[#AB67CA,thickness=2]- base_view.BaseView
+
+profile_grid_view.ProfileGridView <|-[#ECADCF,thickness=2]- base_view.BaseView
+
+scatter_view.ScatterView <|-[#E6FD57,thickness=2]- base_view.BaseView
+
+summary_view.SummaryView <|-[#679B5B,thickness=2]- base_view.BaseView
+
+validation_log_view.ValidationLogView <|-[#ACC688,thickness=2]- base_view.BaseView
+
+visits_browser_view.VisitsBrowserView <|-[#AA857A,thickness=2]- base_view.BaseView
+
+visit_info_view.VisitInfoView <|-[#D5C8FD,thickness=2]- base_view.BaseView
+
+visit_selector_view.VisitSelectorView <|-[#B5C57F,thickness=2]- base_view.BaseView
+
+data_transformation.collect_log_messages o-[#FC5DEC,thickness=5]- data_transformation.get_validators_in_log
+data_transformation.collect_log_messages o-[#FC5DEC,thickness=5]- start_server
+
+data_transformation.shortest_unique_paths o-[#FC5DEC,thickness=5]- data_transformation.remove_lims
+data_transformation.shortest_unique_paths o-[#FC5DEC,thickness=5]- start_server
+
+filtered_profiles_slot.FilteredProfilesSlot o-[#57CA75,thickness=5]- filtered_profiles_slot.expand_abbreviation
+filtered_profiles_slot.FilteredProfilesSlot o-[#57CA75,thickness=5]- filtered_profiles_slot.expand_abbreviation
+filtered_profiles_slot.FilteredProfilesSlot o-[#57CA75,thickness=5]- profile_slot.expand_abbreviation
+filtered_profiles_slot.FilteredProfilesSlot o-[#57CA75,thickness=5]- scatter_slot.expand_abbreviation
+filtered_profiles_slot.FilteredProfilesSlot o-[#57CA75,thickness=5]- start_server
+
+profile_slot.ProfileSlot o-[#6DDF9A,thickness=5]- profile_slot.expand_abbreviation
+profile_slot.ProfileSlot o-[#6DDF9A,thickness=5]- profile_slot.expand_abbreviation
+profile_slot.ProfileSlot o-[#6DDF9A,thickness=5]- profile_slot.expand_abbreviation
+profile_slot.ProfileSlot o-[#6DDF9A,thickness=5]- filtered_profiles_slot.expand_abbreviation
+profile_slot.ProfileSlot o-[#6DDF9A,thickness=5]- scatter_slot.expand_abbreviation
+profile_slot.ProfileSlot o-[#6DDF9A,thickness=5]- start_server
+
+scatter_slot.ScatterSlot o-[#5BB8F8,thickness=5]- scatter_slot.expand_abbreviation
+scatter_slot.ScatterSlot o-[#5BB8F8,thickness=5]- scatter_slot.expand_abbreviation
+scatter_slot.ScatterSlot o-[#5BB8F8,thickness=5]- scatter_slot.expand_abbreviation
+scatter_slot.ScatterSlot o-[#5BB8F8,thickness=5]- scatter_slot.expand_abbreviation
+scatter_slot.ScatterSlot o-[#5BB8F8,thickness=5]- scatter_slot.expand_abbreviation
+scatter_slot.ScatterSlot o-[#5BB8F8,thickness=5]- scatter_slot.expand_abbreviation
+scatter_slot.ScatterSlot o-[#5BB8F8,thickness=5]- filtered_profiles_slot.expand_abbreviation
+scatter_slot.ScatterSlot o-[#5BB8F8,thickness=5]- profile_slot.expand_abbreviation
+scatter_slot.ScatterSlot o-[#5BB8F8,thickness=5]- start_server
+
+file_controller.FileController o-[#6A8BDA,thickness=5]- file_controller._load_ocean_shapefile
+file_controller.FileController o-[#6A8BDA,thickness=5]- data_transformation.prepare_data
+file_controller.FileController o-[#6A8BDA,thickness=5]- start_server
+file_controller.FileController o-[#6A8BDA,thickness=5]- file_view.FileView
+
+file_controller._load_ocean_shapefile o-[#6A8BDA,thickness=5]- file_controller._get_config_dir
+file_controller._load_ocean_shapefile o-[#6A8BDA,thickness=5]- start_server
+
+start_server.main o-[#FFBEC7,thickness=5]- start_server
+start_server.main o-[#FFBEC7,thickness=5]- start_server.setup_arguments
+
+start_server.setup_arguments o-[#FFBEC7,thickness=5]- start_server
+
+start_server o-[#FFBEC7,thickness=5]- start_server
+start_server o-[#FFBEC7,thickness=5]- start_server
+start_server o-[#FFBEC7,thickness=5]- start_server
+
+main.QcTool o-[#B7E68F,thickness=5]- app_state.AppState
+main.QcTool o-[#B7E68F,thickness=5]- main_controller.MainController
+main.QcTool o-[#B7E68F,thickness=5]- start_server
+main.QcTool o-[#B7E68F,thickness=5]- start_server.main
+main.QcTool o-[#B7E68F,thickness=5]- main_view.MainView
+
+app_state.AppState o-[#AC6FED,thickness=5]- callback_queue.CallbackQueue
+app_state.AppState o-[#AC6FED,thickness=5]- file_model.FileModel
+app_state.AppState o-[#AC6FED,thickness=5]- filtered_profiles_model.FilteredProfilesModel
+app_state.AppState o-[#AC6FED,thickness=5]- filter_model.FilterModel
+app_state.AppState o-[#AC6FED,thickness=5]- geo_info_model.GeoInfoModel
+app_state.AppState o-[#AC6FED,thickness=5]- manual_qc_model.ManualQcModel
+app_state.AppState o-[#AC6FED,thickness=5]- map_model.MapModel
+app_state.AppState o-[#AC6FED,thickness=5]- parameters_model.ParametersModel
+app_state.AppState o-[#AC6FED,thickness=5]- profiles_grid_model.ProfileGridModel
+app_state.AppState o-[#AC6FED,thickness=5]- scatter_model.ScatterModel
+app_state.AppState o-[#AC6FED,thickness=5]- validation_log_model.ValidationLogModel
+app_state.AppState o-[#AC6FED,thickness=5]- visits_model.VisitsModel
+app_state.AppState o-[#AC6FED,thickness=5]- start_server
+
+validation_log_model.ValidationLogModel o-[#9DCCC6,thickness=5]- data_transformation.collect_log_messages
+validation_log_model.ValidationLogModel o-[#9DCCC6,thickness=5]- start_server
+
+file_view.FileView o-[#7FEAB7,thickness=5]- data_transformation.shortest_unique_paths
+file_view.FileView o-[#7FEAB7,thickness=5]- start_server
+
+filter_view.FilterView o-[#F556E7,thickness=5]- data_transformation.shortest_unique_paths
+filter_view.FilterView o-[#F556E7,thickness=5]- start_server
+
+visits_controller.VisitsController o-[#B98FB5,thickness=5]- feedback_service.FeedbackService
+visits_controller.VisitsController o-[#B98FB5,thickness=5]- start_server
+
+filtered_profiles_view.FilteredProfilesView o-[#6EDE8B,thickness=5]- filtered_profiles_slot.FilteredProfilesSlot
+filtered_profiles_view.FilteredProfilesView o-[#6EDE8B,thickness=5]- start_server
+
+profile_grid_view.ProfileGridView o-[#ECADCF,thickness=5]- profile_slot.ProfileSlot
+profile_grid_view.ProfileGridView o-[#ECADCF,thickness=5]- start_server
+
+scatter_view.ScatterView o-[#E6FD57,thickness=5]- scatter_slot.ScatterSlot
+scatter_view.ScatterView o-[#E6FD57,thickness=5]- start_server
+
+visits_model.VisitsModel o-[#C58CBC,thickness=5]- visit.Visit
+visits_model.VisitsModel o-[#C58CBC,thickness=5]- start_server
+
+visits_browser_controller.VisitsBrowserController o-[#8DE5C9,thickness=5]- comment_dialog_controller.CommentDialogController
+visits_browser_controller.VisitsBrowserController o-[#8DE5C9,thickness=5]- filtered_profiles_controller.FilteredProfilesController
+visits_browser_controller.VisitsBrowserController o-[#8DE5C9,thickness=5]- manual_qc_controller.ManualQcController
+visits_browser_controller.VisitsBrowserController o-[#8DE5C9,thickness=5]- map_controller.MapController
+visits_browser_controller.VisitsBrowserController o-[#8DE5C9,thickness=5]- parameter_selector_controller.ParameterSelectorController
+visits_browser_controller.VisitsBrowserController o-[#8DE5C9,thickness=5]- profile_grid_controller.ProfileGridController
+visits_browser_controller.VisitsBrowserController o-[#8DE5C9,thickness=5]- scatter_controller.ScatterController
+visits_browser_controller.VisitsBrowserController o-[#8DE5C9,thickness=5]- visit_info_controller.VisitInfoController
+visits_browser_controller.VisitsBrowserController o-[#8DE5C9,thickness=5]- visit_selector_controller.VisitSelectorController
+visits_browser_controller.VisitsBrowserController o-[#8DE5C9,thickness=5]- start_server
+visits_browser_controller.VisitsBrowserController o-[#8DE5C9,thickness=5]- visits_browser_view.VisitsBrowserView
+
+summary_controller.SummaryController o-[#E97BBD,thickness=5]- file_controller.FileController
+summary_controller.SummaryController o-[#E97BBD,thickness=5]- map_controller.MapController
+summary_controller.SummaryController o-[#E97BBD,thickness=5]- validation_log_controller.ValidationLogController
+summary_controller.SummaryController o-[#E97BBD,thickness=5]- start_server
+
+main_controller.MainController o-[#EC5BA6,thickness=5]- filter_controller.FilterController
+main_controller.MainController o-[#EC5BA6,thickness=5]- summary_controller.SummaryController
+main_controller.MainController o-[#EC5BA6,thickness=5]- visits_browser_controller.VisitsBrowserController
+main_controller.MainController o-[#EC5BA6,thickness=5]- visits_controller.VisitsController
+main_controller.MainController o-[#EC5BA6,thickness=5]- start_server
+main_controller.MainController o-[#EC5BA6,thickness=5]- start_server.main
+
+map_view.MapView o-[#6BC9CC,thickness=5]- map_model.MapModel
+map_view.MapView o-[#6BC9CC,thickness=5]- start_server
+
+feedback_service.FeedbackService o-[#7CA5E6,thickness=5]- visits_model.VisitsModel
+feedback_service.FeedbackService o-[#7CA5E6,thickness=5]- start_server
+
+visit_info_view.VisitInfoView o-[#D5C8FD,thickness=5]- visits_model.VisitsModel
+visit_info_view.VisitInfoView o-[#D5C8FD,thickness=5]- start_server
+
+callback_queue.CallbackQueue o-[#586F76,thickness=5]- start_server
+
+data_transformation.get_validators_in_log o-[#FC5DEC,thickness=5]- start_server
+
+data_transformation.remove_lims o-[#FC5DEC,thickness=5]- start_server
+
+data_transformation.prepare_data o-[#FC5DEC,thickness=5]- start_server
+
+data_transformation.changes_report o-[#FC5DEC,thickness=5]- start_server
+
+filtered_profiles_slot.AllProfilesData o-[#57CA75,thickness=5]- start_server
+
+flag_info.FlagInfo o-[#586EA5,thickness=5]- start_server
+
+profile_slot.ProfileData o-[#6DDF9A,thickness=5]- start_server
+
+visit.Visit o-[#EE7DB7,thickness=5]- start_server
+
+comment_dialog_controller.CommentDialogController o-[#EF9CD7,thickness=5]- start_server
+comment_dialog_controller.CommentDialogController o-[#EF9CD7,thickness=5]- comment_dialog_view.CommentDialogView
+
+file_controller._get_config_dir o-[#6A8BDA,thickness=5]- start_server
+
+filtered_profiles_controller.FilteredProfilesController o-[#CFB9E8,thickness=5]- start_server
+filtered_profiles_controller.FilteredProfilesController o-[#CFB9E8,thickness=5]- filtered_profiles_view.FilteredProfilesView
+
+filter_controller.FilterController o-[#9F5AB8,thickness=5]- start_server
+filter_controller.FilterController o-[#9F5AB8,thickness=5]- filter_view.FilterView
+
+manual_qc_controller.ManualQcController o-[#CEB69F,thickness=5]- start_server
+
+map_controller.MapController o-[#8DBE67,thickness=5]- start_server
+map_controller.MapController o-[#8DBE67,thickness=5]- map_view.MapView
+
+parameter_selector_controller.ParameterSelectorController o-[#E5E9FD,thickness=5]- start_server
+parameter_selector_controller.ParameterSelectorController o-[#E5E9FD,thickness=5]- parameter_selector_view.ParameterSelectorView
+
+profile_grid_controller.ProfileGridController o-[#CFC8E9,thickness=5]- start_server
+profile_grid_controller.ProfileGridController o-[#CFC8E9,thickness=5]- profile_grid_view.ProfileGridView
+
+scatter_controller.ScatterController o-[#86DA55,thickness=5]- start_server
+scatter_controller.ScatterController o-[#86DA55,thickness=5]- scatter_view.ScatterView
+
+validation_log_controller.ValidationLogController o-[#6E8CF7,thickness=5]- start_server
+validation_log_controller.ValidationLogController o-[#6E8CF7,thickness=5]- validation_log_view.ValidationLogView
+
+visit_info_controller.VisitInfoController o-[#5A99E7,thickness=5]- start_server
+visit_info_controller.VisitInfoController o-[#5A99E7,thickness=5]- visit_info_view.VisitInfoView
+
+visit_selector_controller.VisitSelectorController o-[#C6ACAC,thickness=5]- start_server
+visit_selector_controller.VisitSelectorController o-[#C6ACAC,thickness=5]- visit_selector_view.VisitSelectorView
+
+base_model.BaseModel o-[#B6C85E,thickness=5]- start_server
+
+file_model.FileModel o-[#CF6DCE,thickness=5]- start_server
+
+filtered_profiles_model.FilteredProfilesModel o-[#EE5AAE,thickness=5]- start_server
+
+filter_model.FilterModel o-[#DBB95D,thickness=5]- start_server
+
+geo_info_model.GeoInfoModel o-[#ABD999,thickness=5]- start_server
+
+manual_qc_model.ManualQcModel o-[#F97A6A,thickness=5]- start_server
+
+map_model.MapModel o-[#7566CE,thickness=5]- start_server
+
+parameters_model.ParametersModel o-[#FFDECB,thickness=5]- start_server
+
+profiles_grid_model.ProfileGridModel o-[#55C5C9,thickness=5]- start_server
+
+scatter_model.ScatterModel o-[#CF7F8C,thickness=5]- start_server
+
+comment_dialog_view.CommentDialogView o-[#A85DE6,thickness=5]- start_server
+
+help_view.HelpView o-[#FD967E,thickness=5]- start_server
+
+main_view.MainView o-[#6C775E,thickness=5]- start_server
+main_view.MainView o-[#6C775E,thickness=5]- start_server.main
+main_view.MainView o-[#6C775E,thickness=5]- filter_view.FilterView
+main_view.MainView o-[#6C775E,thickness=5]- help_view.HelpView
+main_view.MainView o-[#6C775E,thickness=5]- summary_view.SummaryView
+main_view.MainView o-[#6C775E,thickness=5]- visits_browser_view.VisitsBrowserView
+
+manual_qc_view.ManualQcView o-[#97E8EA,thickness=5]- start_server
+
+parameter_selector_view.ParameterSelectorView o-[#AB67CA,thickness=5]- start_server
+
+summary_view.SummaryView o-[#679B5B,thickness=5]- start_server
+summary_view.SummaryView o-[#679B5B,thickness=5]- start_server.main
+summary_view.SummaryView o-[#679B5B,thickness=5]- file_view.FileView
+summary_view.SummaryView o-[#679B5B,thickness=5]- map_view.MapView
+summary_view.SummaryView o-[#679B5B,thickness=5]- validation_log_view.ValidationLogView
+
+validation_log_view.ValidationLogView o-[#ACC688,thickness=5]- start_server
+
+visits_browser_view.VisitsBrowserView o-[#AA857A,thickness=5]- start_server
+visits_browser_view.VisitsBrowserView o-[#AA857A,thickness=5]- comment_dialog_view.CommentDialogView
+visits_browser_view.VisitsBrowserView o-[#AA857A,thickness=5]- filtered_profiles_view.FilteredProfilesView
+visits_browser_view.VisitsBrowserView o-[#AA857A,thickness=5]- manual_qc_view.ManualQcView
+visits_browser_view.VisitsBrowserView o-[#AA857A,thickness=5]- map_view.MapView
+visits_browser_view.VisitsBrowserView o-[#AA857A,thickness=5]- parameter_selector_view.ParameterSelectorView
+visits_browser_view.VisitsBrowserView o-[#AA857A,thickness=5]- profile_grid_view.ProfileGridView
+visits_browser_view.VisitsBrowserView o-[#AA857A,thickness=5]- scatter_view.ScatterView
+visits_browser_view.VisitsBrowserView o-[#AA857A,thickness=5]- visit_info_view.VisitInfoView
+visits_browser_view.VisitsBrowserView o-[#AA857A,thickness=5]- visit_selector_view.VisitSelectorView
+
+visit_selector_view.VisitSelectorView o-[#B5C57F,thickness=5]- start_server
+
+@enduml

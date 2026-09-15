@@ -180,7 +180,9 @@ class FilterModel(BaseModel):
             _field_matches(visit.file_path, self._filtered_files, ignore_file)
             and _field_matches(visit.year, self._filtered_years, ignore_year)
             and _field_matches(visit.month, self._filtered_months, ignore_month)
-            and _field_matches(visit.cruise_number, self._filtered_cruises, ignore_cruise)
+            and _field_matches(
+                visit.cruise_number, self._filtered_cruises, ignore_cruise
+            )
             and _field_matches(
                 visit.station_name, self._filtered_stations, ignore_station
             )

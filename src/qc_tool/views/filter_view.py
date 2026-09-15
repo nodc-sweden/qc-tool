@@ -124,7 +124,9 @@ class FilterView(BaseView):
         short_names = shortest_unique_paths(all_paths)
         available = set(self._filter_model.files)
         self._file_filter.options = [
-            (str(path), short_names[path]) for path in all_paths if str(path) in available
+            (str(path), short_names[path])
+            for path in all_paths
+            if str(path) in available
         ]
         self._year_filter.options = [
             MISSING_LABEL if year is None else str(year)

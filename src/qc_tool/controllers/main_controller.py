@@ -28,7 +28,9 @@ class MainController:
 
         self._transformer = Transformer.from_crs("EPSG:4326", "EPSG:3857")
 
-        self.filter_controller = FilterController(self._state.visits, self._state.filter)
+        self.filter_controller = FilterController(
+            self._state.visits, self._state.filter
+        )
 
         self.summary_controller = SummaryController(
             self._state.file,

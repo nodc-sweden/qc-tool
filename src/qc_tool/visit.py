@@ -60,7 +60,9 @@ class Visit:
         return self._parameter_data[parameter]
 
     def _build_parameter_data(self, parameter: str) -> dict | None:
-        parameter_data = self._data.filter(pl.col("parameter") == parameter).sort("DEPH")
+        parameter_data = self._data.filter(pl.col("parameter") == parameter).sort(
+            "DEPH"
+        )
 
         if parameter_data.is_empty():
             return None
@@ -111,7 +113,9 @@ class Visit:
                 f"{flags.total_automatic} {flags.total_automatic_name}"
                 for flags in qc_flags
             ],
-            "qc_manual": [f"{flags.manual} ({flags.manual.value})" for flags in qc_flags],
+            "qc_manual": [
+                f"{flags.manual} ({flags.manual.value})" for flags in qc_flags
+            ],
             "data": parameter_data,
         }
 

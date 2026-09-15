@@ -70,7 +70,9 @@ class ScatterView(BaseView):
         for n in range(self._rows):
             start = n * self._columns
             end = start + self._columns
-            row = Row(children=[scatter.layout for scatter in self._scatters[start:end]])
+            row = Row(
+                children=[scatter.layout for scatter in self._scatters[start:end]]
+            )
             self._column.children.append(row)
 
     def update_colors(self, updated_values):
@@ -110,7 +112,9 @@ class ScatterView(BaseView):
                         self._visits_model.selected_visit,
                     )
                     scatter.set_filtered_data(
-                        self._load_filtered_data(scatter.x_parameter, scatter.y_parameter)
+                        self._load_filtered_data(
+                            scatter.x_parameter, scatter.y_parameter
+                        )
                     )
 
                 scatter._x_parameter_dropdown.menu = (
