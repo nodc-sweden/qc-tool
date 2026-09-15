@@ -67,5 +67,5 @@ nodc-statistics = { git = "https://github.com/nodc-sweden/nodc-statistics", rev 
 ocean-data-qc = { git = "https://github.com/nodc-sweden/ocean-data-qc", rev = "v2026.1.1"}
 nodc-codes = { git = "https://github.com/nodc-sweden/nodc-codes", rev = "v3.0.0" }
 nodc-station = { git = "https://github.com/nodc-sweden/nodc-station", rev = "v2.0.0" }
-sharkadm = { git = "https://github.com/nodc-sweden/sharkadm" }
+sharkadm = { git = "https://github.com/nodc-sweden/sharkadm", rev = "6e013b0" }
 
