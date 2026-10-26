@@ -211,8 +211,10 @@ class FileView(BaseView):
     def _on_select_data_button_clicked(self, event):
         try:
             root = tkinter.Tk()
-            root.iconify()
-            selected_path = tkinter.filedialog.askopenfilename()
+            root.withdraw()
+            root.attributes("-topmost", True)
+            root.update()
+            selected_path = tkinter.filedialog.askopenfilename(parent=root)
             root.destroy()
         except tkinter.TclError:
             selected_path = None
@@ -270,7 +272,9 @@ class FileView(BaseView):
     def _on_export_feedback_button_clicked(self, event):
         try:
             root = tkinter.Tk()
-            root.iconify()
+            root.withdraw()
+            root.attributes("-topmost", True)
+            root.update()
             selected_path = tkinter.filedialog.asksaveasfilename(
                 defaultextension=".xlsx",
                 filetypes=[("Excel Files", "*.xlsx"), ("All Files", "*.*")],
