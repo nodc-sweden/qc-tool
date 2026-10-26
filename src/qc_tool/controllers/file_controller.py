@@ -3,6 +3,7 @@ import time
 from pathlib import Path
 
 import geopandas
+import nodc_config
 import nodc_station
 import pandas as pd
 import polars as pl
@@ -58,6 +59,7 @@ class FileController:
         manual_qc_model: ManualQcModel,
         geo_info_model: GeoInfoModel,
     ):
+        self._nodc_conf = nodc_config.get_nodc_config()
         self._file_model = file_model
         self._file_model.register_listener(FileModel.NEW_DATA, self._on_new_data)
         self._file_model.register_listener(FileModel.LOAD_ABORTED, self._on_load_aborted)
@@ -105,7 +107,9 @@ class FileController:
 
         print(f"Loading data from {file_path}...")
         try:
-            controller = sharkadm_controller.get_polars_controller_with_data(file_path)
+            controller = sharkadm_controller.get_polars_controller_with_data(
+                self._nodc_conf, file_path
+            )
         except Exception:  # noqa: BLE001
             # Catching exceptions this broadly is not recommended, but sharkadm does not
             # guarantee a specific exception.
@@ -139,7 +143,9 @@ class FileController:
 
     def load_ctd_file(self, file_path: Path):
         try:
-            controller = sharkadm_controller.get_polars_controller_with_data(file_path)
+            controller = sharkadm_controller.get_polars_controller_with_data(
+                self._nodc_conf, file_path
+            )
         except Exception:  # noqa: BLE001
             # Catching exceptions this broadly is not recommended, but sharkadm does not
             # guarantee a specific exception.
@@ -172,7 +178,7 @@ class FileController:
 
     def save_dv_template_for_source(self, source_path: Path):
         qcdata = self._file_model.data.filter(pl.col("source") == str(source_path))
-        cc = get_polars_controller_with_data(qcdata)
+        cc = get_polars_controller_with_data(self._nodc_conf, qcdata)
         if "DvTemplate" in cc.data["data_holder_name"][0]:
             cc.export(exporters.ExportDvTemplateWithQcResult(source_path, open_file=True))
         elif "LIMS" in cc.data["data_holder_name"][0].upper():
@@ -333,7 +339,9 @@ class FileController:
             (
                 validators.ValidateStationIdentity,
                 {
-                    "stations": nodc_station.get_station_object(case_sensitive=False),
+                    "stations": nodc_station.get_station_object(
+                        self._nodc_conf, case_sensitive=False
+                    ),
                     "latitude_key": "sample_sweref99tm_y",
                     "longitude_key": "sample_sweref99tm_x",
                 },
