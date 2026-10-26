@@ -61,7 +61,8 @@ class ParameterSelectorView(BaseView):
 
         self._row = row(
             column(
-                self._available_parameters_select, self._available_multi_parameters_select
+                self._available_parameters_select,
+                self._available_multi_parameters_select,
             ),
             column(
                 Spacer(height=20),

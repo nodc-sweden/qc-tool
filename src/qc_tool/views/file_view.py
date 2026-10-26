@@ -56,7 +56,9 @@ class FileView(BaseView):
 
         self._add_to_existing = Switch(label="Add to loaded data", active=False)
         self._load_data_section = Column(
-            self._select_data_button, self._add_to_existing, styles={"margin-top": "20px"}
+            self._select_data_button,
+            self._add_to_existing,
+            styles={"margin-top": "20px"},
         )
 
         self._select_ctd_data_button = Button(

@@ -276,7 +276,11 @@ class FilteredProfilesSlot(BaseView):
             "color": "orange",
             "alpha": 0.1,
         }
-        self._plot_line_min_max_config = {"color": "red", "line_width": 0.5, "alpha": 0.5}
+        self._plot_line_min_max_config = {
+            "color": "red",
+            "line_width": 0.5,
+            "alpha": 0.5,
+        }
 
         # Add statistics
         self._median_values_line = self._figure.line(

@@ -19,7 +19,10 @@ from sharkadm import (
 from sharkadm import (
     controller as sharkadm_controller,
 )
-from sharkadm.controller import SHARKadmPolarsController, get_polars_controller_with_data
+from sharkadm.controller import (
+    SHARKadmPolarsController,
+    get_polars_controller_with_data,
+)
 
 from qc_tool.data_transformation import changes_report, prepare_data
 from qc_tool.models.ctd_file_model import CtdFileModel

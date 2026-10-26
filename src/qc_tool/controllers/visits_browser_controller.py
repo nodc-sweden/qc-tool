@@ -3,7 +3,9 @@ from qc_tool.controllers.comment_dialog_controller import CommentDialogControlle
 from qc_tool.controllers.filtered_profiles_controller import FilteredProfilesController
 from qc_tool.controllers.manual_qc_controller import ManualQcController
 from qc_tool.controllers.map_controller import MapController
-from qc_tool.controllers.parameter_selector_controller import ParameterSelectorController
+from qc_tool.controllers.parameter_selector_controller import (
+    ParameterSelectorController,
+)
 from qc_tool.controllers.profile_grid_controller import ProfileGridController
 from qc_tool.controllers.scatter_controller import ScatterController
 from qc_tool.controllers.visit_info_controller import VisitInfoController
